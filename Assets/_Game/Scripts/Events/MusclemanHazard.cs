@@ -11,11 +11,11 @@ namespace DeliveryRider
         [SerializeField] private Transform runner;
         [SerializeField] private PedestrianNetwork sidewalks;
         [Header("Rush (test values)")]
-        [SerializeField, Min(0.1f)] private float spawnBehindDistance = 20f;
+        [SerializeField, Min(0.1f)] private float spawnBehindDistance = 10f;
         [Tooltip("If less straight sidewalk remains behind, the approach must come around a previous corner.")]
-        [SerializeField, Min(0f)] private float minimumStraightBehind = 20f;
+        [SerializeField, Min(0f)] private float minimumStraightBehind = 10f;
         [SerializeField, Min(0.1f)] private float speedMultiplier = 2.5f;
-        [SerializeField, Min(0.1f)] private float disappearAfterTurn = 3f;
+        [SerializeField, Min(0.1f)] private float disappearAfterTurn = 1f;
         [SerializeField, Min(0.1f)] private float runnerHeight = 3f;
         [SerializeField, Min(0.1f)] private float runnerRadius = 0.75f;
         [Header("Sideways shove (test values)")]
@@ -81,7 +81,7 @@ namespace DeliveryRider
 
         // Use only sidewalk lanes with room behind and an actual left/right corner ahead.
         public static bool TryRoute(PedestrianNetwork network, Vector3 point, Vector3 preferredForward, float behind, float radius,
-            out int pathIndex, out float along, float minimumStraight = 20f)
+            out int pathIndex, out float along, float minimumStraight = 10f)
         {
             pathIndex = -1; along = 0f;
             float best = float.PositiveInfinity;

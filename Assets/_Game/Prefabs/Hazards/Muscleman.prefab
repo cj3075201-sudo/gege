@@ -159,10 +159,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.MusclemanHazard
   runner: {fileID: 5311844959050261010}
   sidewalks: {fileID: 0}
-  spawnBehindDistance: 20
-  minimumStraightBehind: 20
+  spawnBehindDistance: 10
+  minimumStraightBehind: 10
   speedMultiplier: 2.5
-  disappearAfterTurn: 3
+  disappearAfterTurn: 1
   runnerHeight: 3
   runnerRadius: 0.75
   shoveSpeed: 8

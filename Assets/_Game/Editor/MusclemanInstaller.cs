@@ -54,7 +54,7 @@ namespace DeliveryRider.Editor
             var spots = asset.Spots.Take(prefix).ToList();
             bool myeongji = scene.path == MyeongjiScene;
             int count = AppendCandidates(spots, places, session, network, ground, myeongji ? MyeongjiKeepOut : KeepOut, myeongji ? MyeongjiStep : Step);
-            if (count == 0) throw new InvalidOperationException("No sidewalk candidates with a valid 20 m sidewalk approach and valid left/right corners.");
+            if (count == 0) throw new InvalidOperationException("No sidewalk candidates with a valid 10 m sidewalk approach and valid left/right corners.");
             asset.Configure(spots.ToArray(), places.ToArray());
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssetIfDirty(asset);
@@ -131,7 +131,7 @@ namespace DeliveryRider.Editor
                     foreach (int direction in new[] { p, lane.reverse })
                     {
                         float triggerDistance = direction == p ? d : lane.length - d;
-                        if (!MusclemanHazard.TryApproach(network, direction, triggerDistance, 20f, 0.75f, 20f, approach, out float spawnDistance)) { clear = false; break; }
+                        if (!MusclemanHazard.TryApproach(network, direction, triggerDistance, 10f, 0.75f, 10f, approach, out float spawnDistance)) { clear = false; break; }
                         network.Sample(approach[0], spawnDistance, out var position, out _);
                         var hits = Physics.OverlapCapsule(position + Vector3.up * 0.8f, position + Vector3.up * 2.2f, 0.75f, ~0, QueryTriggerInteraction.Ignore);
                         if (hits.Any(h => h.attachedRigidbody == null && !terrain.Contains(h))) { clear = false; break; }
