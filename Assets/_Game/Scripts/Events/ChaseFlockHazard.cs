@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace DeliveryRider
 {
-    // Free birds chase for six seconds. Attached birds share a separate, extendable control timer.
+    // Free birds chase for six seconds. Attached birds share a separate, extendable attachment timer.
     public sealed class ChaseFlockHazard : MonoBehaviour, IPlacedHazard
     {
         private enum Phase { Idle, Chasing, Spent }
@@ -11,9 +11,9 @@ namespace DeliveryRider
         [Header("Test values")]
         [SerializeField, Min(0.1f)] private float triggerRadius = 7f;
         [SerializeField, Min(0.1f)] private float chaseSeconds = 6f;
-        [Tooltip("Control duration when the first chicken attaches.")]
+        [Tooltip("Attachment duration when the first chicken attaches.")]
         [SerializeField, Min(0.1f)] private float attachmentSeconds = 3f;
-        [Tooltip("Time added for each additional chicken while control is already active.")]
+        [Tooltip("Time added for each additional chicken while attached.")]
         [SerializeField, Min(0.1f)] private float extraAttachmentSeconds = 1.5f;
         [SerializeField, Min(0.1f)] private float chaseSpeed = 5.2f;
         [SerializeField, Min(0f)] private float riderSpeedShare = 1.15f;
@@ -33,9 +33,8 @@ namespace DeliveryRider
         private float[] turnAt;
         private bool[] attached;
         private Phase phase;
-        private float elapsed, commandUntil;
-        private Vector3 command;
-        private bool controlling;
+        private float elapsed;
+        private bool hasAttachedBirds;
 
         public void Place(DeliverySession owner, RoadNetwork roadGround, HazardCandidate spot)
         {
@@ -83,12 +82,12 @@ namespace DeliveryRider
 
         private void OnReaction(RiderReactionState state)
         {
-            if (controlling && state != RiderReactionState.Normal) Finish();
+            if (hasAttachedBirds && state != RiderReactionState.Normal) Finish();
         }
 
         private void OnSafePositionRestored()
         {
-            if (controlling) Finish();
+            if (hasAttachedBirds) Finish();
         }
 
         private void Update()
@@ -104,7 +103,7 @@ namespace DeliveryRider
                 case Phase.Idle:
                     if (!session.IsMapOpen && !rider.IsRecovering && Near(transform.position, triggerRadius))
                     {
-                        elapsed = commandUntil = 0f;
+                        elapsed = 0f;
                         for (int i = 0; i < birds.Length; i++) turnAt[i] = 0f;
                         phase = Phase.Chasing;
                     }
@@ -131,16 +130,11 @@ namespace DeliveryRider
             if (elapsed >= chaseSeconds)
             {
                 for (int i = 0; i < birds.Length; i++) if (!attached[i]) birds[i].gameObject.SetActive(false);
-                if (!controlling) { Finish(); return; }
+                if (!hasAttachedBirds) { Finish(); return; }
             }
-            if (controlling)
+            if (hasAttachedBirds)
             {
-                if (elapsed >= commandUntil)
-                {
-                    command = Quaternion.Euler(0f, Random.Range(-120f, 120f), 0f) * rider.transform.forward;
-                    commandUntil = elapsed + NextTurnDelay();
-                }
-                if (!rider.TryChickenControl(this, command))
+                if (!rider.HasChickenAttachment(this))
                 {
                     EndAttachedBirds();
                     if (elapsed >= chaseSeconds) { Finish(); return; }
@@ -181,19 +175,14 @@ namespace DeliveryRider
                 float t = flatStep.sqrMagnitude > 0.0001f ? Mathf.Clamp01(Vector3.Dot(feet - before, flatStep) / flatStep.sqrMagnitude) : 0f;
                 if (Near(Vector3.Lerp(before, position, t), contactRadius) && !rider.IsRecovering)
                 {
-                    if (!controlling)
-                    {
-                        command = Quaternion.Euler(0f, Random.Range(-120f, 120f), 0f) * rider.transform.forward;
-                        commandUntil = elapsed + NextTurnDelay();
-                    }
-                    if (rider.TryAttachChicken(this, command, attachmentSeconds, extraAttachmentSeconds)) { attached[i] = true; controlling = true; }
+                    if (rider.TryAttachChicken(this, attachmentSeconds, extraAttachmentSeconds)) { attached[i] = true; hasAttachedBirds = true; }
                 }
             }
         }
 
         private void LateUpdate()
         {
-            if (!controlling || playerShape == null) return;
+            if (!hasAttachedBirds || playerShape == null) return;
             var head = playerShape.bounds.center + Vector3.up * (playerShape.bounds.extents.y + 0.03f);
             int count = 0;
             for (int i = 0; i < birds.Length; i++) if (attached[i]) count++;
@@ -226,8 +215,8 @@ namespace DeliveryRider
 
         private void EndAttachedBirds()
         {
-            if (rider != null) rider.EndChickenControl(this);
-            controlling = false;
+            if (rider != null) rider.EndChickenAttachment(this);
+            hasAttachedBirds = false;
             if (attached == null) return;
             for (int i = 0; i < birds.Length; i++)
             {

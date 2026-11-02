@@ -66,54 +66,40 @@ namespace DeliveryRider
         private InputAction punch;
         private InputAction jump;
         private Vector2 movement;
-        private UnityEngine.Object chickenControlOwner;
-        private Vector3 chickenControlDirection;
-        private float chickenControlUntil;
-        private readonly System.Collections.Generic.List<UnityEngine.Object> chickenControlSources = new System.Collections.Generic.List<UnityEngine.Object>(4);
+        [Header("Attached chickens")]
+        [SerializeField, Range(0f, 1f)] private float chickenSpeedScale = 0.7f;
+        [SerializeField, Min(0.1f)] private float chickenHopInterval = 1.5f;
+        [SerializeField, Range(0f, 1f)] private float chickenHopHeightScale = 0.5f;
+        private float chickenAttachedUntil, nextChickenHopAt;
+        private readonly System.Collections.Generic.List<UnityEngine.Object> chickenSources = new System.Collections.Generic.List<UnityEngine.Object>(4);
+        private bool HasAttachedChickens => chickenSources.Count > 0 && Time.time < chickenAttachedUntil;
 
-        public bool TryAttachChicken(UnityEngine.Object source, Vector3 direction, float initialSeconds, float extraSeconds)
+        public bool TryAttachChicken(UnityEngine.Object source, float initialSeconds, float extraSeconds)
         {
             if (!isActiveAndEnabled || source == null || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled
                 || ReactionState != RiderReactionState.Normal) return false;
-            if (Time.time >= chickenControlUntil) ClearChickenControl();
-            bool firstAttachment = chickenControlOwner == null;
-            if (!chickenControlSources.Contains(source)) chickenControlSources.Add(source);
-            if (chickenControlOwner == null)
-            {
-                chickenControlOwner = source;
-                chickenControlDirection = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
-            }
-            // Additional birds, including other flocks, extend the shared deadline by the shorter duration.
+            if (!HasAttachedChickens) ClearChickenAttachments();
+            bool firstAttachment = chickenSources.Count == 0;
+            if (!chickenSources.Contains(source)) chickenSources.Add(source);
+            if (firstAttachment) nextChickenHopAt = Time.time + Mathf.Max(0.1f, chickenHopInterval);
             float duration = firstAttachment ? initialSeconds : extraSeconds;
-            chickenControlUntil = Mathf.Max(Time.time, chickenControlUntil) + Mathf.Max(0.1f, duration);
-            jumpQueued = false;
+            chickenAttachedUntil = Mathf.Max(Time.time, chickenAttachedUntil) + Mathf.Max(0.1f, duration);
             return true;
         }
 
-        public bool TryChickenControl(UnityEngine.Object source, Vector3 direction)
+        public bool HasChickenAttachment(UnityEngine.Object source)
+            => isActiveAndEnabled && HasAttachedChickens && ReactionState == RiderReactionState.Normal && chickenSources.Contains(source);
+
+        public void EndChickenAttachment(UnityEngine.Object source)
         {
-            if (!isActiveAndEnabled || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled
-                || ReactionState != RiderReactionState.Normal || Time.time >= chickenControlUntil
-                || !chickenControlSources.Contains(source)) return false;
-            if (chickenControlOwner == source)
-                chickenControlDirection = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
-            return true;
+            chickenSources.Remove(source);
+            if (chickenSources.Count == 0) ClearChickenAttachments();
         }
 
-        public void EndChickenControl(UnityEngine.Object source)
+        private void ClearChickenAttachments()
         {
-            chickenControlSources.Remove(source);
-            if (chickenControlSources.Count == 0) ClearChickenControl();
-            else if (chickenControlOwner == source) chickenControlOwner = chickenControlSources[0];
-        }
-
-        private void ClearChickenControl()
-        {
-            chickenControlSources.Clear();
-            chickenControlOwner = null;
-            chickenControlDirection = Vector3.zero;
-            chickenControlUntil = 0f;
-            movement = Vector2.zero;
+            chickenSources.Clear();
+            chickenAttachedUntil = nextChickenHopAt = 0f;
         }
         private Vector3 spawn;
         public Vector2 Look => session.CanMove ? look.ReadValue<Vector2>() : Vector2.zero;
@@ -124,7 +110,7 @@ namespace DeliveryRider
         public Vector3 Velocity => body == null ? Vector3.zero : body.linearVelocity;
         // Velocity before the latest contacts were solved; a hit uses it rather than the already-pushed velocity.
         public Vector3 ContactVelocity => collisionVelocity;
-        public float Speed => speed * inlineSpeedScale;
+        public float Speed => speed * inlineSpeedScale * (HasAttachedChickens ? chickenSpeedScale : 1f);
         public bool HasInline { get; private set; }
         // Inline skates scale the tuned base values at runtime; the serialized speed and acceleration stay the base.
         private float inlineSpeedScale = 1f, inlineAccelerationScale = 1f;
@@ -313,8 +299,8 @@ namespace DeliveryRider
             airMovement = CanLook ? Vector2.ClampMagnitude(move.ReadValue<Vector2>(), 1f) : Vector2.zero;
             if (CanLook && recover.WasPressedThisFrame()) RestoreSafePosition();
             if (session.CanPickup) session.TryPickup();
-            if (session.CanMove && chickenControlOwner == null && punch.WasPressedThisFrame()) TryPunch();
-            if (session.CanMove && chickenControlOwner == null && jump.WasPressedThisFrame()) jumpQueued = true;
+            if (session.CanMove && punch.WasPressedThisFrame()) TryPunch();
+            if (session.CanMove && jump.WasPressedThisFrame()) jumpQueued = true;
         }
 
         // Punches go where the camera looks, so a standing rider can still aim at the recipient.
@@ -342,7 +328,7 @@ namespace DeliveryRider
 
         private void FixedUpdate()
         {
-            if (chickenControlOwner != null && Time.time >= chickenControlUntil) ClearChickenControl();
+            if (chickenSources.Count > 0 && Time.time >= chickenAttachedUntil) ClearChickenAttachments();
             bool wasGrounded = groundedForHazards;
             groundedForHazards = TryGround(out var supportNormal, false) && Vector3.Dot(body.linearVelocity, supportNormal) <= 0.5f;
             // Only keep an already grounded walk attached to a descending road.
@@ -362,7 +348,6 @@ namespace DeliveryRider
             var forward = Vector3.ProjectOnPlane(view.forward, Vector3.up).normalized;
             var right = Vector3.ProjectOnPlane(view.right, Vector3.up).normalized;
             var direction = session.CanMove ? forward * movement.y + right * movement.x : Vector3.zero;
-            if (session.CanMove && chickenControlOwner != null) direction = chickenControlDirection;
             var current = body.linearVelocity;
             bool jumping = jumpQueued && groundedForHazards && session.CanMove && !IsSlipping;
             jumpQueued = false;
@@ -387,11 +372,19 @@ namespace DeliveryRider
             }
             var horizontal = session.CanMove ? Vector3.MoveTowards(new Vector3(current.x, 0f, current.z), direction * Speed,
                 acceleration * inlineAccelerationScale * Time.fixedDeltaTime) : Vector3.zero;
-            if (jumping)
+            bool chickenHop = HasAttachedChickens && Time.time >= nextChickenHopAt && session.CanMove;
+            if (chickenHop)
+            {
+                nextChickenHopAt = Time.time + Mathf.Max(0.1f, chickenHopInterval);
+                float angle = Random.Range(0f, Mathf.PI * 2f);
+                horizontal = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * Speed;
+            }
+            if (jumping || chickenHop)
             {
                 normalJumpActive = true;
                 groundedForHazards = false;
-                body.linearVelocity = new Vector3(horizontal.x, jumpSpeed, horizontal.z);
+                float lift = jumping ? jumpSpeed : jumpSpeed * Mathf.Sqrt(chickenHopHeightScale);
+                body.linearVelocity = new Vector3(horizontal.x, lift, horizontal.z);
             }
             else if (followSlopes && groundedForHazards && TryGround(out var normal))
             {

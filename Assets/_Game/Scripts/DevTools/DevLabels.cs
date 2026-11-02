@@ -60,8 +60,10 @@ namespace DeliveryRider
             { "fanMassMultiplier", "팬 질량 배율" },
             { "crowdAcceleration", "팬 추진 가속도" }, { "crowdStepHeight", "팬 연석 넘기 높이" },
             // Hazards
-            { "triggerRadius", "발동 반경" }, { "chaseSeconds", "추격 시간" }, { "attachmentSeconds", "조종 시간" },
-            { "extraAttachmentSeconds", "추가 조종 시간" }, { "chaseSpeed", "추격 속도" }, { "riderSpeedShare", "라이더 속도 배율" },
+            { "triggerRadius", "발동 반경" }, { "chaseSeconds", "추격 시간" }, { "attachmentSeconds", "닭 부착 시간" },
+            { "extraAttachmentSeconds", "추가 닭 부착 시간" }, { "chaseSpeed", "추격 속도" }, { "riderSpeedShare", "라이더 속도 배율" },
+            { "chickenSpeedScale", "닭 부착 이동속도 배율" }, { "chickenHopInterval", "닭 무작위 점프 간격" },
+            { "chickenHopHeightScale", "닭 점프 높이 배율" },
             { "maximumChaseSpeed", "최대 추격 속도" }, { "turnInterval", "방향 전환 간격" }, { "wanderRadius", "배회 반경" },
             { "wanderAngle", "배회 각도" }, { "separationDistance", "서로 떨어질 거리" }, { "contactRadius", "접촉 반경" },
             { "maximumLeadDistance", "최대 앞지름 거리" }, { "arrivalMargin", "도착 여유" }, { "waitingSpacing", "대기 간격" },
