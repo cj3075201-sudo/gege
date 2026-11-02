@@ -421,7 +421,12 @@ namespace DeliveryRider
             for (int i = 0; i < count; i++)
             {
                 var other = bodyHits[i].rigidbody;
-                if (other != null && other != body && other.TryGetComponent<TrafficPedestrian>(out var person)) person.TryBodyKnock(velocity);
+                if (other != null && other != body && other.TryGetComponent<TrafficPedestrian>(out var person)
+                    && person.TryBodyKnock(velocity) && person.BodyResistance > 1f)
+                {
+                    var current = body.linearVelocity;
+                    body.linearVelocity = new Vector3(current.x / person.BodyResistance, current.y, current.z / person.BodyResistance);
+                }
             }
         }
 

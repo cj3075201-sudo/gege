@@ -13,6 +13,12 @@ MonoBehaviour:
   m_Name: MyeongjiHazardSpawnSettings
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.HazardSpawnSettings
   kinds:
+  - type: celebrity
+    prefab: {fileID: 6048872110664833949, guid: d6fe7b3a05a19d240a0c176359f28488, type: 3}
+    role: 0
+    unlockDay: 1
+    countPerDay: 09000000
+    poolSize: 10
   - type: manhole
     prefab: {fileID: 6472710267201087100, guid: f596076374953f645ae82da9c8aef1d5, type: 3}
     role: 0
@@ -48,7 +54,7 @@ MonoBehaviour:
     role: 1
     unlockDay: 1
     countPerDay: 
-    poolSize: 10
+    poolSize: 5
   - type: tire
     prefab: {fileID: 187407185860632136, guid: 28a9fcec772ac8948bed51bf36545ddc, type: 3}
     role: 1

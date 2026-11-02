@@ -30,7 +30,7 @@ namespace DeliveryRider.Editor
 
         private sealed class HazardPrefabs
         {
-            public GameObject manhole, hydrant, melon, door, tire, ducks, chickens, pigeon, muscleman;
+            public GameObject manhole, hydrant, melon, door, tire, ducks, chickens, pigeon, muscleman, celebrity;
         }
 
         private sealed class Bake
@@ -82,6 +82,7 @@ namespace DeliveryRider.Editor
             foreach (var road in bake.roads) BakeRoad(bake, road);
             AssignRoutes(bake, shops, doors);
             MusclemanInstaller.AppendCandidates(bake.spots, bake.candidates, session, components.OfType<PedestrianNetwork>().Single(), network);
+            CelebrityCrowdInstaller.AppendCandidates(bake.spots, bake.candidates, session, components.OfType<PedestrianNetwork>().Single(), network);
 
             var asset = AssetDatabase.LoadAssetAtPath<HazardCandidates>(CandidatesPath);
             if (asset == null) { asset = ScriptableObject.CreateInstance<HazardCandidates>(); AssetDatabase.CreateAsset(asset, CandidatesPath); }
@@ -111,6 +112,7 @@ namespace DeliveryRider.Editor
         {
             var defaults = new[]
             {
+                Kind("celebrity", prefabs.celebrity, HazardRole.Object, 1, 1),
                 Kind("manhole", prefabs.manhole, HazardRole.Object, 1, 6, 8, 10, 12),
                 Kind("hydrant", prefabs.hydrant, HazardRole.Object, 1, 4, 5, 6, 6),
                 Kind("melon", prefabs.melon, HazardRole.Object, 1, 4, 5, 6, 8),
@@ -413,6 +415,7 @@ namespace DeliveryRider.Editor
             prefabs.chickens = ChickenPrefab();
             prefabs.pigeon = PigeonPrefab();
             prefabs.muscleman = MusclemanInstaller.CreatePrefab(session);
+            prefabs.celebrity = CelebrityCrowdInstaller.CreatePrefab(UnityEngine.Object.FindFirstObjectByType<PedestrianNetwork>());
             return prefabs;
         }
 

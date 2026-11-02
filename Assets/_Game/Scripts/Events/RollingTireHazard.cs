@@ -22,7 +22,6 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float maximumLifetime = 8;
         [SerializeField, Min(0)] private float impulse = 6;
         [SerializeField, Min(0.1f)] private float recoverySeconds = 1.1f;
-        [SerializeField] private bool rearmOnNextOrder = true;
         [SerializeField, Min(0)] private float rearmSeconds = 8;
         [SerializeField] private LayerMask collisionMask = ~0;
         private readonly Collider[] overlaps = new Collider[32];
@@ -33,7 +32,6 @@ namespace DeliveryRider
         private float speed;
         private float spin;
         private int segment;
-        private int activatedOrder;
         private bool hitThisCycle;
         private bool initialized;
         private Quaternion initialRotation;
@@ -90,7 +88,6 @@ namespace DeliveryRider
         {
             if (!initialized || !isActiveAndEnabled || phase != Phase.Ready || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
             if (slot != null && !slot.StrikeAllowed) return false;
-            activatedOrder = session.ActiveOrder != null ? session.ActiveOrder.Number : 0;
             ResetWheel();
             hitThisCycle = false;
             speed = Mathf.Min(initialSpeed, maximumSpeed);
@@ -120,8 +117,7 @@ namespace DeliveryRider
                     Advance();
                     break;
                 case Phase.Spent:
-                    bool nextOrder = session.ActiveOrder != null && session.ActiveOrder.Number != activatedOrder;
-                    if ((rearmOnNextOrder ? nextOrder : elapsed >= rearmSeconds) && !InApproach() &&
+                    if ((elapsed >= rearmSeconds) && !InApproach() &&
                         Vector3.Distance(rider.transform.position, transform.TransformPoint(localPath[0])) > 4)
                     { ResetWheel(); Enter(Phase.Ready); }
                     break;

@@ -134,7 +134,9 @@ public static class MyeongjiEvents
    if(kind.prefab==null||!bake.candidates.Any(c=>c.type==kind.type))throw new Exception("Missing asset/candidates: "+kind.type);
    if(!kind.prefab.GetComponents<MonoBehaviour>().Any(c=>c is IPlacedHazard))throw new Exception("Missing placement handler: "+kind.type);
   }
-  AssetDatabase.SaveAssets();return "Saved Myeongji-only candidate/settings assets and wall-free door prefab; original day counts and unlock days retained.";
+  AssetDatabase.SaveAssets();
+  var crowd=DeliveryRider.Editor.CelebrityCrowdInstaller.ApplyToScene(Scene());
+  return "Saved Myeongji-only candidate/settings assets and wall-free door prefab; original day counts and unlock days retained. "+crowd;
  }
  public static string Activate()
  {

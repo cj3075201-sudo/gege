@@ -305,6 +305,226 @@ MonoBehaviour:
     routes: 
   - position: {x: 69.450005, y: 0.02, z: -57.450005}
     routes: 
+  - position: {x: -5.5, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 6.5000005, y: 0.02, z: 5.9500003}
+    routes: 
+  - position: {x: 12.499998, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 18.5, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 24.499998, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 30.499998, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 42.499996, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 48.499996, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 54.499996, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 60.5, y: 0.02, z: 5.9500003}
+    routes: 
+  - position: {x: 66.5, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 72.5, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 78.5, y: 0.02, z: 5.9499993}
+    routes: 
+  - position: {x: 84.5, y: 0.02, z: 5.9499993}
+    routes: 
+  - position: {x: 90.5, y: 0.02, z: 5.9499993}
+    routes: 
+  - position: {x: 96.5, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 102.5, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 108.5, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 114.5, y: 0.02, z: 5.95}
+    routes: 
+  - position: {x: 27.988646, y: -0.120000005, z: -5.5607533}
+    routes: 
+  - position: {x: 65.45, y: 0.02, z: -5.95}
+    routes: 
+  - position: {x: 95.450005, y: 0.02, z: -5.95}
+    routes: 
+  - position: {x: 4.9499993, y: 0.02, z: -39.95}
+    routes: 
+  - position: {x: -4.95, y: 0.02, z: -9.3}
+    routes: 
+  - position: {x: -4.9499993, y: 0.02, z: -15.3}
+    routes: 
+  - position: {x: -4.95, y: 0.02, z: -21.300001}
+    routes: 
+  - position: {x: -4.95, y: 0.02, z: -33.300003}
+    routes: 
+  - position: {x: -4.9500003, y: 0.02, z: -39.300003}
+    routes: 
+  - position: {x: -4.95, y: 0.02, z: -45.300003}
+    routes: 
+  - position: {x: -4.95, y: 0.02, z: -51.300003}
+    routes: 
+  - position: {x: -4.9499993, y: 0.02, z: -57.300003}
+    routes: 
+  - position: {x: -4.9499993, y: 0.02, z: -63.300003}
+    routes: 
+  - position: {x: -4.95, y: 0.02, z: -69.3}
+    routes: 
+  - position: {x: -4.95, y: 0.02, z: -75.3}
+    routes: 
+  - position: {x: -4.9499993, y: 0.02, z: -81.3}
+    routes: 
+  - position: {x: -4.9499993, y: 0.02, z: -93.3}
+    routes: 
+  - position: {x: 31.45, y: 0.02, z: -9.95}
+    routes: 
+  - position: {x: 31.450003, y: 0.02, z: -15.95}
+    routes: 
+  - position: {x: 22.55, y: 0.02, z: -39.95}
+    routes: 
+  - position: {x: 27.988665, y: -0.120000005, z: -46.939243}
+    routes: 
+  - position: {x: 116.3269, y: 0.02, z: -9.86763}
+    routes: 
+  - position: {x: 106.893135, y: 0.02, z: -25.197475}
+    routes: 
+  - position: {x: 103.52833, y: 0.02, z: -9.867625}
+    routes: 
+  - position: {x: 98.79766, y: 0.02, z: -17.554976}
+    routes: 
+  - position: {x: 86.92073, y: 0.02, z: -36.854973}
+    routes: 
+  - position: {x: 83.776146, y: 0.02, z: -41.964924}
+    routes: 
+  - position: {x: 47.45, y: 0.02, z: -25.050001}
+    routes: 
+  - position: {x: 59.45, y: 0.02, z: -25.05}
+    routes: 
+  - position: {x: 77.45, y: 0.02, z: -25.05}
+    routes: 
+  - position: {x: 83.450005, y: 0.02, z: -25.05}
+    routes: 
+  - position: {x: 47.45, y: 0.02, z: -32.95}
+    routes: 
+  - position: {x: 53.05, y: 0.02, z: -42.55}
+    routes: 
+  - position: {x: 60.95, y: 0.02, z: -42.55}
+    routes: 
+  - position: {x: 4.9499993, y: 0.02, z: -61.450005}
+    routes: 
+  - position: {x: 4.95, y: 0.02, z: -67.450005}
+    routes: 
+  - position: {x: 87.82387, y: 0.02, z: -57.177055}
+    routes: 
+  - position: {x: 82.64673, y: 0.02, z: -70.37876}
+    routes: 
+  - position: {x: 74.329254, y: 0.02, z: -61.732475}
+    routes: 
+  - position: {x: 72.138725, y: 0.02, z: -67.31831}
+    routes: 
+  - position: {x: 69.948204, y: 0.02, z: -72.90415}
+    routes: 
+  - position: {x: 64.66404, y: 0.02, z: -86.37876}
+    routes: 
+  - position: {x: 62.473522, y: 0.02, z: -91.9646}
+    routes: 
+  - position: {x: 32.95, y: 0.02, z: -98.05}
+    routes: 
+  - position: {x: 13, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 19, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 25, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 37, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 43, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 49, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 55, y: 0.02, z: -107.94999}
+    routes: 
+  - position: {x: 61, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 67, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 73, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 79, y: 0.02, z: -107.94999}
+    routes: 
+  - position: {x: 85, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 97, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 103, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 109, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 115, y: 0.02, z: -107.95}
+    routes: 
+  - position: {x: 35.45, y: 0.02, z: -67.45}
+    routes: 
+  - position: {x: 35.449997, y: 0.02, z: -73.45}
+    routes: 
+  - position: {x: 28.55, y: 0.02, z: -67.45}
+    routes: 
+  - position: {x: 51.45, y: 0.02, z: -82.55}
+    routes: 
+  - position: {x: 32.55, y: 0.02, z: -89.44999}
+    routes: 
+  - position: {x: 44.55, y: 0.02, z: -89.45}
+    routes: 
+  - position: {x: 50.55, y: 0.02, z: -89.45}
+    routes: 
+  - position: {x: 102.35313, y: 0.02, z: -40.05}
+    routes: 
+  - position: {x: 114.35313, y: 0.02, z: -40.05}
+    routes: 
+  - position: {x: 120.94999, y: 0.02, z: -56.95}
+    routes: 
+  - position: {x: 120.950005, y: 0.02, z: -62.95}
+    routes: 
+  - position: {x: 120.94999, y: 0.02, z: -68.950005}
+    routes: 
+  - position: {x: 120.950005, y: 0.02, z: -74.95}
+    routes: 
+  - position: {x: 120.95, y: 0.02, z: -80.950005}
+    routes: 
+  - position: {x: 120.95, y: 0.02, z: -86.95}
+    routes: 
+  - position: {x: 120.94999, y: 0.02, z: -92.95}
+    routes: 
+  - position: {x: 76.39527, y: 0.02, z: -98.05}
+    routes: 
+  - position: {x: 100.39527, y: 0.02, z: -98.049995}
+    routes: 
+  - position: {x: 101.55, y: 0.02, z: -59.55}
+    routes: 
+  - position: {x: 104.450005, y: 0.02, z: -76.45}
+    routes: 
+  - position: {x: 97.549995, y: 0.02, z: -63.550003}
+    routes: 
+  - position: {x: 97.549995, y: 0.02, z: -69.55}
+    routes: 
+  - position: {x: 31.45, y: 0.02, z: -36.95}
+    routes: 
+  - position: {x: 47.45, y: 0.02, z: -46.55}
+    routes: 
+  - position: {x: 64.950005, y: 0.02, z: -32.95}
+    routes: 
+  - position: {x: 70.950005, y: 0.02, z: -32.949997}
+    routes: 
+  - position: {x: 45.450005, y: 0.02, z: -57.45}
+    routes: 
+  - position: {x: 63.450005, y: 0.02, z: -57.45}
+    routes: 
+  - position: {x: 69.450005, y: 0.02, z: -57.450005}
+    routes: 
+  - position: {x: 108.45, y: 0.02, z: -66.45}
+    routes: 
+  - position: {x: 120.94999, y: 0.02, z: -101.05}
+    routes: 
   candidates:
   - type: manhole
     spot: 0
@@ -6302,6 +6522,886 @@ MonoBehaviour:
     spot: 145
     position: {x: 69.450005, y: 0.02, z: -57.450005}
     rotation: {x: 0, y: 0.7071101, z: 0, w: 0.70710343}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 146
+    position: {x: -5.5, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.70710635, z: 0, w: 0.7071072}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 147
+    position: {x: 6.5000005, y: 0.02, z: 5.9500003}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 148
+    position: {x: 12.499998, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 149
+    position: {x: 18.5, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 150
+    position: {x: 24.499998, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 151
+    position: {x: 30.499998, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071072, z: 0, w: 0.70710635}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 152
+    position: {x: 42.499996, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 153
+    position: {x: 48.499996, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 154
+    position: {x: 54.499996, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 155
+    position: {x: 60.5, y: 0.02, z: 5.9500003}
+    rotation: {x: 0, y: 0.70710593, z: 0, w: 0.7071076}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 156
+    position: {x: 66.5, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 157
+    position: {x: 72.5, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 158
+    position: {x: 78.5, y: 0.02, z: 5.9499993}
+    rotation: {x: 0, y: 0.7071072, z: 0, w: 0.70710635}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 159
+    position: {x: 84.5, y: 0.02, z: 5.9499993}
+    rotation: {x: 0, y: 0.7071076, z: 0, w: 0.70710593}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 160
+    position: {x: 90.5, y: 0.02, z: 5.9499993}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 161
+    position: {x: 96.5, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 162
+    position: {x: 102.5, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.70710635, z: 0, w: 0.7071072}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 163
+    position: {x: 108.5, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 164
+    position: {x: 114.5, y: 0.02, z: 5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 165
+    position: {x: 27.988646, y: -0.120000005, z: -5.5607533}
+    rotation: {x: 0, y: 0.7371969, z: 0, w: 0.675678}
+    halfWidth: 0.4
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 166
+    position: {x: 65.45, y: 0.02, z: -5.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 167
+    position: {x: 95.450005, y: 0.02, z: -5.95}
+    rotation: {x: 0, y: 0.7071072, z: 0, w: 0.70710635}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 168
+    position: {x: 4.9499993, y: 0.02, z: -39.95}
+    rotation: {x: 0, y: 1, z: 0, w: -0.0000005991296}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 169
+    position: {x: -4.95, y: 0.02, z: -9.3}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 170
+    position: {x: -4.9499993, y: 0.02, z: -15.3}
+    rotation: {x: 0, y: 1, z: 0, w: 0.0000005976686}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 171
+    position: {x: -4.95, y: 0.02, z: -21.300001}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 172
+    position: {x: -4.95, y: 0.02, z: -33.300003}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 173
+    position: {x: -4.9500003, y: 0.02, z: -39.300003}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 174
+    position: {x: -4.95, y: 0.02, z: -45.300003}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 175
+    position: {x: -4.95, y: 0.02, z: -51.300003}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 176
+    position: {x: -4.9499993, y: 0.02, z: -57.300003}
+    rotation: {x: 0, y: 1, z: 0, w: 0.00000059768007}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 177
+    position: {x: -4.9499993, y: 0.02, z: -63.300003}
+    rotation: {x: 0, y: 1, z: 0, w: 0.00000059765716}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 178
+    position: {x: -4.95, y: 0.02, z: -69.3}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 179
+    position: {x: -4.95, y: 0.02, z: -75.3}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 180
+    position: {x: -4.9499993, y: 0.02, z: -81.3}
+    rotation: {x: 0, y: 1, z: 0, w: -0.00000059767433}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 181
+    position: {x: -4.9499993, y: 0.02, z: -93.3}
+    rotation: {x: 0, y: 1, z: 0, w: -0.00000059767433}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 182
+    position: {x: 31.45, y: 0.02, z: -9.95}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 183
+    position: {x: 31.450003, y: 0.02, z: -15.95}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 184
+    position: {x: 22.55, y: 0.02, z: -39.95}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 185
+    position: {x: 27.988665, y: -0.120000005, z: -46.939243}
+    rotation: {x: 0, y: 0.67567474, z: 0, w: 0.7371999}
+    halfWidth: 0.4
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 186
+    position: {x: 116.3269, y: 0.02, z: -9.86763}
+    rotation: {x: 0, y: 0.96219915, z: 0, w: -0.2723469}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 187
+    position: {x: 106.893135, y: 0.02, z: -25.197475}
+    rotation: {x: 0, y: 0.9622007, z: 0, w: -0.27234146}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 188
+    position: {x: 103.52833, y: 0.02, z: -9.867625}
+    rotation: {x: 0, y: 0.9621979, z: 0, w: -0.2723512}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 189
+    position: {x: 98.79766, y: 0.02, z: -17.554976}
+    rotation: {x: 0, y: 0.9622021, z: 0, w: -0.2723365}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 190
+    position: {x: 86.92073, y: 0.02, z: -36.854973}
+    rotation: {x: 0, y: 0.962199, z: 0, w: -0.27234748}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 191
+    position: {x: 83.776146, y: 0.02, z: -41.964924}
+    rotation: {x: 0, y: 0.96220255, z: 0, w: -0.27233478}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 192
+    position: {x: 47.45, y: 0.02, z: -25.050001}
+    rotation: {x: 0, y: 0.7071085, z: 0, w: 0.70710516}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 193
+    position: {x: 59.45, y: 0.02, z: -25.05}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 194
+    position: {x: 77.45, y: 0.02, z: -25.05}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 195
+    position: {x: 83.450005, y: 0.02, z: -25.05}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 196
+    position: {x: 47.45, y: 0.02, z: -32.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 197
+    position: {x: 53.05, y: 0.02, z: -42.55}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 198
+    position: {x: 60.95, y: 0.02, z: -42.55}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 199
+    position: {x: 4.9499993, y: 0.02, z: -61.450005}
+    rotation: {x: 0, y: 1, z: 0, w: 0.0000005991296}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 200
+    position: {x: 4.95, y: 0.02, z: -67.450005}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 201
+    position: {x: 87.82387, y: 0.02, z: -57.177055}
+    rotation: {x: 0, y: 0.9825921, z: 0, w: -0.18577625}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 202
+    position: {x: 82.64673, y: 0.02, z: -70.37876}
+    rotation: {x: 0, y: 0.9825921, z: 0, w: -0.18577632}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 203
+    position: {x: 74.329254, y: 0.02, z: -61.732475}
+    rotation: {x: 0, y: 0.9825906, z: 0, w: -0.18578406}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 204
+    position: {x: 72.138725, y: 0.02, z: -67.31831}
+    rotation: {x: 0, y: 0.982591, z: 0, w: -0.18578233}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 205
+    position: {x: 69.948204, y: 0.02, z: -72.90415}
+    rotation: {x: 0, y: 0.98259264, z: 0, w: -0.18577349}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 206
+    position: {x: 64.66404, y: 0.02, z: -86.37876}
+    rotation: {x: 0, y: 0.9825908, z: 0, w: -0.18578313}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 207
+    position: {x: 62.473522, y: 0.02, z: -91.9646}
+    rotation: {x: 0, y: 0.9825923, z: 0, w: -0.18577534}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 208
+    position: {x: 32.95, y: 0.02, z: -98.05}
+    rotation: {x: 0, y: 0.70711356, z: 0, w: 0.7071}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 209
+    position: {x: 13, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 210
+    position: {x: 19, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 211
+    position: {x: 25, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 212
+    position: {x: 37, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 213
+    position: {x: 43, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 214
+    position: {x: 49, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 215
+    position: {x: 55, y: 0.02, z: -107.94999}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 216
+    position: {x: 61, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 217
+    position: {x: 67, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.70710003, z: 0, w: 0.7071135}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 218
+    position: {x: 73, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 219
+    position: {x: 79, y: 0.02, z: -107.94999}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 220
+    position: {x: 85, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 221
+    position: {x: 97, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071203, z: 0, w: 0.70709336}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 222
+    position: {x: 103, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.7071203, z: 0, w: 0.70709336}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 223
+    position: {x: 109, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.70710003, z: 0, w: 0.7071135}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 224
+    position: {x: 115, y: 0.02, z: -107.95}
+    rotation: {x: 0, y: 0.70710003, z: 0, w: 0.7071135}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 225
+    position: {x: 35.45, y: 0.02, z: -67.45}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 226
+    position: {x: 35.449997, y: 0.02, z: -73.45}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 227
+    position: {x: 28.55, y: 0.02, z: -67.45}
+    rotation: {x: 0, y: 1, z: 0, w: 0.0000023841767}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 228
+    position: {x: 51.45, y: 0.02, z: -82.55}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 229
+    position: {x: 32.55, y: 0.02, z: -89.44999}
+    rotation: {x: 0, y: 0.7071, z: 0, w: 0.70711356}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 230
+    position: {x: 44.55, y: 0.02, z: -89.45}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 231
+    position: {x: 50.55, y: 0.02, z: -89.45}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 232
+    position: {x: 102.35313, y: 0.02, z: -40.05}
+    rotation: {x: 0, y: 0.7071102, z: 0, w: 0.70710343}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 233
+    position: {x: 114.35313, y: 0.02, z: -40.05}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 234
+    position: {x: 120.94999, y: 0.02, z: -56.95}
+    rotation: {x: 0, y: 1, z: 0, w: -0.00000959389}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 235
+    position: {x: 120.950005, y: 0.02, z: -62.95}
+    rotation: {x: 0, y: 1, z: 0, w: 0.00000959389}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 236
+    position: {x: 120.94999, y: 0.02, z: -68.950005}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 237
+    position: {x: 120.950005, y: 0.02, z: -74.95}
+    rotation: {x: 0, y: 1, z: 0, w: 0.000019187597}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 238
+    position: {x: 120.95, y: 0.02, z: -80.950005}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 239
+    position: {x: 120.95, y: 0.02, z: -86.95}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 240
+    position: {x: 120.94999, y: 0.02, z: -92.95}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 241
+    position: {x: 76.39527, y: 0.02, z: -98.05}
+    rotation: {x: 0, y: 0.7071135, z: 0, w: 0.70710003}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 242
+    position: {x: 100.39527, y: 0.02, z: -98.049995}
+    rotation: {x: 0, y: 0.7071, z: 0, w: 0.70711356}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 243
+    position: {x: 101.55, y: 0.02, z: -59.55}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 244
+    position: {x: 104.450005, y: 0.02, z: -76.45}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 245
+    position: {x: 97.549995, y: 0.02, z: -63.550003}
+    rotation: {x: 0, y: 1, z: 0, w: -0.000009654187}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 246
+    position: {x: 97.549995, y: 0.02, z: -69.55}
+    rotation: {x: 0, y: 1, z: 0, w: -0.000009654187}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 247
+    position: {x: 31.45, y: 0.02, z: -36.95}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 248
+    position: {x: 47.45, y: 0.02, z: -46.55}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 249
+    position: {x: 64.950005, y: 0.02, z: -32.95}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 250
+    position: {x: 70.950005, y: 0.02, z: -32.949997}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 251
+    position: {x: 45.450005, y: 0.02, z: -57.45}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 252
+    position: {x: 63.450005, y: 0.02, z: -57.45}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 253
+    position: {x: 69.450005, y: 0.02, z: -57.450005}
+    rotation: {x: 0, y: 0.7071101, z: 0, w: 0.70710343}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 254
+    position: {x: 108.45, y: 0.02, z: -66.45}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 1
+    side: 0
+    alley: 0
+    flip: 0
+  - type: celebrity
+    spot: 255
+    position: {x: 120.94999, y: 0.02, z: -101.05}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
     halfWidth: 1
     side: 0
     alley: 0

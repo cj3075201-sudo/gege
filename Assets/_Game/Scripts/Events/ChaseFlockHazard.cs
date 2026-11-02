@@ -36,7 +36,6 @@ namespace DeliveryRider
         private float elapsed, commandUntil;
         private Vector3 command;
         private bool controlling;
-        private int activatedOrder = -1;
 
         public void Place(DeliverySession owner, RoadNetwork roadGround, HazardCandidate spot)
         {
@@ -105,7 +104,6 @@ namespace DeliveryRider
                 case Phase.Idle:
                     if (!session.IsMapOpen && !rider.IsRecovering && Near(transform.position, triggerRadius))
                     {
-                        activatedOrder = session.ActiveOrder != null ? session.ActiveOrder.Number : -1;
                         elapsed = commandUntil = 0f;
                         for (int i = 0; i < birds.Length; i++) turnAt[i] = 0f;
                         phase = Phase.Chasing;
@@ -115,8 +113,7 @@ namespace DeliveryRider
                     Chase();
                     break;
                 case Phase.Spent:
-                    var order = session.ActiveOrder;
-                    if (order != null && order.Number != activatedOrder && !Near(transform.position, triggerRadius * 3f))
+                    if (!Near(transform.position, triggerRadius * 3f))
                     {
                         ResetBirds();
                         phase = Phase.Idle;

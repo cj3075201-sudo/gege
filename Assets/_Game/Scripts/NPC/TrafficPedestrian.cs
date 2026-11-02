@@ -4,7 +4,7 @@ namespace DeliveryRider
 {
     // Sidewalk walker spawned from the pedestrian prefab by PedestrianNetwork at start (like TrafficCar).
     [RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
-    public sealed class TrafficPedestrian : MonoBehaviour, IPunchable
+    public sealed partial class TrafficPedestrian : MonoBehaviour, IPunchable
     {
         [SerializeField] private Transform visual;
         [SerializeField] private Renderer coat;
@@ -89,6 +89,13 @@ namespace DeliveryRider
         // Called right after spawning; the walker stays still until then.
         public void Initialize(PedestrianNetwork owner, int route, float along, int randomSeed, Material coatMaterial)
         {
+            InitializeState(owner, route, along, randomSeed, coatMaterial);
+            network.Sample(path, distance, out var feet, out var forward);
+            transform.SetPositionAndRotation(feet + Vector3.Cross(Vector3.up, forward) * Lane(network.Path(path)), Quaternion.LookRotation(forward));
+        }
+
+        private void InitializeState(PedestrianNetwork owner, int route, float along, int randomSeed, Material coatMaterial)
+        {
             network = owner;
             random = new System.Random(randomSeed);
             speed = Mathf.Lerp(walkingSpeed.x, walkingSpeed.y, (float)random.NextDouble());
@@ -97,8 +104,6 @@ namespace DeliveryRider
             idleAt = Time.time + 8f + (float)random.NextDouble() * 15f;
             if (coat != null && coatMaterial != null) coat.sharedMaterial = coatMaterial;
             SetWalking();
-            network.Sample(path, distance, out var feet, out var forward);
-            transform.SetPositionAndRotation(feet + Vector3.Cross(Vector3.up, forward) * Lane(network.Path(path)), Quaternion.LookRotation(forward));
         }
 
         private void SetWalking()
@@ -129,8 +134,9 @@ namespace DeliveryRider
                 return;
             }
             if (returning) { WalkBack(); return; }
+            if (crowdMember && UpdateCrowdGoal()) return;
             if (Time.time < waitUntil) return;
-            if (avoidPhase == AvoidPhase.None && Time.time >= idleAt)
+            if (!crowdMember && avoidPhase == AvoidPhase.None && Time.time >= idleAt)
             {
                 waitUntil = Time.time + 0.5f + (float)random.NextDouble();
                 idleAt = Time.time + 10f + (float)random.NextDouble() * 20f;
@@ -344,7 +350,7 @@ namespace DeliveryRider
         {
             var horizontal = Vector3.ProjectOnPlane(riderVelocity, Vector3.up);
             if (!CanReact || horizontal.magnitude < knockMinimumSpeed) return false;
-            Launch(horizontal * knockSpeedShare + Vector3.up * punchLift, 0);
+            Launch(horizontal * (knockSpeedShare / BodyResistance) + Vector3.up * punchLift, 0);
             return true;
         }
 
@@ -401,6 +407,7 @@ namespace DeliveryRider
         private void BeginReturn(bool snap)
         {
             nextReturnAt = Time.time + 0.5f;
+            if (crowdMember) { BeginCrowdReturn(snap); return; }
             if (!network.FindReturn(body.position, this, out var route, out var along, out var feet)) return;
             body.linearVelocity = body.angularVelocity = Vector3.zero;
             SetWalking();
@@ -423,6 +430,14 @@ namespace DeliveryRider
         private void WalkBack()
         {
             if (Time.time < getUpStartedAt + getUpSeconds) return;
+            if (crowdMember)
+            {
+                returning = false;
+                lying = false;
+                ApplyPose(Quaternion.identity, BodyCenter);
+                SetCrowdWalking();
+                return;
+            }
             var toward = Vector3.ProjectOnPlane(returnFeet - body.position, Vector3.up);
             if (toward.sqrMagnitude <= 0.0144f) { JoinPath(); return; }
             if (Time.time >= returnGiveUpAt)
@@ -504,6 +519,8 @@ namespace DeliveryRider
             {
                 if (poseHeight != BodyCenter || pose != Quaternion.identity) ApplyPose(Quaternion.identity, BodyCenter);
                 visual.localRotation = restVisual * Quaternion.Euler(0f, 0f, !blocked && Time.time >= waitUntil ? Mathf.Sin(Time.time * speed * 5f) * 3f : 0f);
+                if (crowdMember)
+                    visual.localPosition = restVisualPosition + Vector3.up * ((Mathf.Sin(Time.time * 9f + crowdPhase) + 1f) * 0.09f);
             }
         }
 

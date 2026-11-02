@@ -32,7 +32,6 @@ namespace DeliveryRider
         private Phase phase;
         private float head;
         private bool hitThisCrossing;
-        private int activatedOrder = -1;
 
         // Runtime spawn: the ducks cross kerb to kerb (2 m past each kerb), from the slot's side.
         public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot)
@@ -54,7 +53,7 @@ namespace DeliveryRider
         }
 
         private void OnDisable() { HideBirds(); phase = Phase.Spent; }
-        private void OnEnable() { if (rider != null) phase = Phase.Spent; }
+        private void OnEnable() { if (rider != null) { phase = Phase.Ready; ShowWaiting(); } }
 
         private void Update() { if (session.IsSettled && phase == Phase.Crossing) Finish(); }
 
@@ -71,9 +70,8 @@ namespace DeliveryRider
                     Advance();
                     break;
                 case Phase.Spent:
-                    // One crossing per call; the next call re-arms it.
-                    var order = session.ActiveOrder;
-                    if (order != null && order.Number != activatedOrder && !InApproach()) { phase = Phase.Ready; ShowWaiting(); }
+                    // Leaving the approach area re-arms this crossing without a new call.
+                    if (!InApproach()) { phase = Phase.Ready; ShowWaiting(); }
                     break;
             }
         }
@@ -97,7 +95,6 @@ namespace DeliveryRider
 
         private void Begin()
         {
-            activatedOrder = session.ActiveOrder != null ? session.ActiveOrder.Number : -1;
             ShowWaiting();
             head = 0f;
             hitThisCrossing = false;

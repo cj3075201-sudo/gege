@@ -4,7 +4,7 @@ using UnityEngine;
 namespace DeliveryRider
 {
     // Objects are always placed for the day and strike any time (even before pickup).
-    // Triggers are switched on per call and strike only after the food has been picked up.
+    // Placed triggers are active without a call. Only the food thief requires carried food.
     public enum HazardRole { Object, Trigger }
 
     // Planner data for one spawned hazard; HazardPlanner adds it at spawn and turns the hazard on and off.

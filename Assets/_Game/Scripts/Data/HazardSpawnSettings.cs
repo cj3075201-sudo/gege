@@ -16,7 +16,7 @@ namespace DeliveryRider
             [Min(1)] public int unlockDay = 1;
             [Tooltip("Objects: how many are placed on day 1, 2, ...; the last value repeats.")]
             public int[] countPerDay = Array.Empty<int>();
-            [Tooltip("Triggers: how many candidates are placed; the planner lights a few of them per call.")]
+            [Tooltip("Triggers: how many are placed and remain active independently of calls.")]
             [Min(0)] public int poolSize = 10;
 
             public int Count(int day) => role == HazardRole.Trigger ? poolSize

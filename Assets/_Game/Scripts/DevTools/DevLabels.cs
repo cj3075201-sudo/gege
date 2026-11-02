@@ -9,7 +9,7 @@ namespace DeliveryRider
         private static readonly Dictionary<string, string> HazardTypes = new Dictionary<string, string>
         {
             { "manhole", "맨홀" }, { "hydrant", "소화전" }, { "melon", "수박" }, { "door", "문" }, { "duck", "오리" },
-            { "chicken", "닭" }, { "tire", "타이어" }, { "theft", "비둘기 도둑" }, { "muscleman", "근육맨" },
+            { "chicken", "닭" }, { "tire", "타이어" }, { "theft", "비둘기 도둑" }, { "muscleman", "근육맨" }, { "celebrity", "연예인 인파" },
         };
 
         private static readonly Dictionary<string, string> Fields = new Dictionary<string, string>
@@ -53,10 +53,12 @@ namespace DeliveryRider
             { "duskSeconds", "어스름 진행 시간(초)" }, { "duskSunElevation", "어스름 끝 해 높이(도)" },
             { "duskLightIntensity", "어스름 빛 세기" }, { "duskShadowStrength", "어스름 그림자 진하기" },
             // Hazard planning
-            { "randomEachRun", "매번 무작위 배치" }, { "seed", "시드" }, { "triggersPerCall", "콜당 트리거 수 (일차)" },
-            { "routeShare", "경로 근처 비율" }, { "typeGuarantee", "종류 보장 확률" }, { "igniteChance", "연쇄 발동 확률" },
-            { "igniteChanceFromObject", "오브젝트 연쇄 확률" }, { "igniteRadius", "연쇄 반경" }, { "igniteExtraLimit", "연쇄 추가 한도" },
+            { "randomEachRun", "매번 무작위 배치" }, { "seed", "시드" },
             { "HazardSpawnSettings.spacing", "사건 간 최소 거리" }, { "sameTypeSpacing", "같은 종류 최소 거리" },
+            { "spawnRadius", "팬 생성 반경" }, { "waitingFans", "대기 팬 수" }, { "incomingFans", "추가 팬 수" },
+            { "fanSpeedMultiplier", "팬 이동속도 배율" }, { "fanResistance", "팬 충돌 저항 배율" },
+            { "fanMassMultiplier", "팬 질량 배율" },
+            { "crowdAcceleration", "팬 추진 가속도" }, { "crowdStepHeight", "팬 연석 넘기 높이" },
             // Hazards
             { "triggerRadius", "발동 반경" }, { "chaseSeconds", "추격 시간" }, { "attachmentSeconds", "조종 시간" },
             { "extraAttachmentSeconds", "추가 조종 시간" }, { "chaseSpeed", "추격 속도" }, { "riderSpeedShare", "라이더 속도 배율" },

@@ -23,7 +23,6 @@ namespace DeliveryRider
         private Phase phase;
         private float elapsed;
         private Vector3 swoopFrom;
-        private int activatedOrder = -1;
 
         // Runtime spawn: the pole stands beside the road; the escape route runs along the road from the slot.
         public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot)
@@ -46,7 +45,7 @@ namespace DeliveryRider
             Perch();
         }
 
-        private void OnEnable() { if (rider != null) { Perch(); phase = Phase.Spent; } }
+        private void OnEnable() { if (rider != null) { Perch(); phase = Phase.Ready; } }
         private void OnDisable()
         {
             SetLamp(false);
@@ -66,7 +65,6 @@ namespace DeliveryRider
                     if ((slot == null || slot.StrikeAllowed) && !session.IsMapOpen && session.Stage == DeliveryStage.Carrying
                         && !rider.IsRecovering && Vector3.Distance(rider.transform.position, perch.position) <= triggerRadius)
                     {
-                        activatedOrder = session.ActiveOrder.Number;
                         Enter(Phase.Warning);
                     }
                     break;
@@ -87,11 +85,10 @@ namespace DeliveryRider
                     else { Perch(); Enter(Phase.Spent); }
                     break;
                 case Phase.Flying:
-                    if (pigeon.Finished || !pigeon.gameObject.activeInHierarchy) Enter(Phase.Spent);
+                    if (pigeon.Finished || !pigeon.gameObject.activeInHierarchy) { Perch(); Enter(Phase.Spent); }
                     break;
                 case Phase.Spent:
-                    var order = session.ActiveOrder;
-                    if (order != null && order.Number != activatedOrder && Vector3.Distance(rider.transform.position, perch.position) > triggerRadius * 2f)
+                    if (session.Stage == DeliveryStage.Carrying && Vector3.Distance(rider.transform.position, perch.position) > triggerRadius * 2f)
                     {
                         Perch();
                         Enter(Phase.Ready);
@@ -103,6 +100,7 @@ namespace DeliveryRider
         private void Perch()
         {
             if (pigeon == null || perch == null) return;
+            pigeon.Rest();
             pigeon.gameObject.SetActive(true);
             pigeon.transform.SetPositionAndRotation(perch.position, perch.rotation);
             var body = pigeon.GetComponent<Rigidbody>();

@@ -14,6 +14,16 @@ namespace DeliveryRider
         private bool carryingFood;
         public bool Finished { get; private set; }
         private void Awake() => body = GetComponent<Rigidbody>();
+        public void Rest()
+        {
+            session = null;
+            route = null;
+            carryingFood = false;
+            Finished = true;
+            if (body != null && !body.isKinematic) body.linearVelocity = body.angularVelocity = Vector3.zero;
+            var bag = transform.Find("StolenFood");
+            if (bag != null) bag.gameObject.SetActive(false);
+        }
         public void Initialize(DeliverySession owner, Transform[] points, float moveSpeed, float lifetime, bool hasStolenFood = true)
         {
             session = owner;
