@@ -36,8 +36,8 @@ namespace DeliveryRider
             OnSessionChanged();
         }
 
-        // Each unlocked type takes its count from shuffled candidates, keeping the spacing to every hazard placed so far
-        // (objects first, so their daily counts are met before the trigger pools fill the remaining room).
+        // Reserve the flock's scarce main-road candidates first, then place objects and the other triggers.
+        // All passes use the same spacing rules; a later type cannot consume a reserved flock location.
         private void Spawn()
         {
             if (settings == null || candidates == null || ground == null) { Debug.LogError("Hazard planner needs spawn settings, candidates and the road network.", this); return; }
@@ -47,10 +47,11 @@ namespace DeliveryRider
             // Prefabs are instantiated under an inactive parent so they can be fitted before they wake.
             var staging = new GameObject("HazardStaging");
             staging.SetActive(false);
-            foreach (var role in new[] { HazardRole.Object, HazardRole.Trigger })
+            for (int priority = 0; priority < 3; priority++)
                 foreach (var kind in settings.Kinds)
                 {
-                    if (kind.role != role || kind.prefab == null || kind.unlockDay > day) continue;
+                    int placementPriority = kind.type == "pigeonflock" ? 0 : kind.role == HazardRole.Object ? 1 : 2;
+                    if (placementPriority != priority || kind.prefab == null || kind.unlockDay > day) continue;
                     int want = kind.Count(day), count = 0;
                     shuffled.Clear();
                     for (int i = 0; i < candidates.Candidates.Count; i++)

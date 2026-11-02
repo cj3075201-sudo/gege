@@ -99,6 +99,8 @@ namespace DeliveryRider.Editor
             data.FindProperty("candidates").objectReferenceValue = asset;
             data.ApplyModifiedPropertiesWithoutUndo();
 
+            if (AssetDatabase.LoadAssetAtPath<Sprite>(PigeonFlockInstaller.IconPath) != null)
+                PigeonFlockInstaller.ApplyToScene(scene);
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets();
             if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save the hazard planner.");

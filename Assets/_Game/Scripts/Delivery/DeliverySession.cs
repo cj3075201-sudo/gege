@@ -28,6 +28,17 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float recipientHeight = 1.08f;
         [SerializeField] private string startZone = "C";
         public event Action Changed;
+        public event Action<float> PigeonFlockObscured;
+        private float pigeonFlockObscuredUntil;
+
+        public bool TryObscureWithPigeons(float seconds)
+        {
+            if (IsPaused || IsMapOpen || IsSettled || Time.time < pigeonFlockObscuredUntil) return false;
+            float duration = Mathf.Max(0.1f, seconds);
+            pigeonFlockObscuredUntil = Time.time + duration;
+            PigeonFlockObscured?.Invoke(duration);
+            return true;
+        }
         public DeliveryStage Stage { get; private set; }
         public bool IsPaused { get; private set; }
         // The call screen shares the map panel; IsMapOpen means that panel is shown in either mode.

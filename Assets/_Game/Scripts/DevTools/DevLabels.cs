@@ -9,7 +9,7 @@ namespace DeliveryRider
         private static readonly Dictionary<string, string> HazardTypes = new Dictionary<string, string>
         {
             { "manhole", "맨홀" }, { "hydrant", "소화전" }, { "melon", "수박" }, { "door", "문" }, { "duck", "오리" },
-            { "chicken", "닭" }, { "tire", "타이어" }, { "theft", "비둘기 도둑" }, { "muscleman", "근육맨" }, { "celebrity", "연예인 인파" },
+            { "chicken", "닭" }, { "tire", "타이어" }, { "theft", "비둘기 도둑" }, { "muscleman", "근육맨" }, { "celebrity", "연예인 인파" }, { "pigeonflock", "비둘기 떼" },
         };
 
         private static readonly Dictionary<string, string> Fields = new Dictionary<string, string>
@@ -58,6 +58,9 @@ namespace DeliveryRider
             { "spawnRadius", "팬 생성 반경" }, { "waitingFans", "대기 팬 수" }, { "incomingFans", "추가 팬 수" },
             { "fanSpeedMultiplier", "팬 이동속도 배율" }, { "fanResistance", "팬 충돌 저항 배율" },
             { "fanMassMultiplier", "팬 질량 배율" },
+            { "obscureSeconds", "화면 가림 시간" }, { "contactCooldown", "재접촉 대기" },
+            { "driftDistance", "무리 이동 폭" }, { "driftSpeed", "무리 이동 속도" },
+            { "orbitSpeed", "비둘기 공전 속도" }, { "orbitRadius", "비둘기 공전 반경" },
             { "crowdAcceleration", "팬 추진 가속도" }, { "crowdStepHeight", "팬 연석 넘기 높이" },
             // Hazards
             { "triggerRadius", "발동 반경" }, { "chaseSeconds", "추격 시간" }, { "attachmentSeconds", "닭 부착 시간" },

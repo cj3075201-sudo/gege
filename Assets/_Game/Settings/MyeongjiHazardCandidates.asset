@@ -7406,3 +7406,195 @@ MonoBehaviour:
     side: 0
     alley: 0
     flip: 0
+  - type: pigeonflock
+    spot: 7
+    position: {x: 66.99999, y: -0.14, z: -0.000000016070317}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 4
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 7
+    position: {x: 66.99999, y: -0.14, z: -0.000000016070317}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 4
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 15
+    position: {x: 107, y: -0.14, z: -0.00000009167525}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 4
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 15
+    position: {x: 107, y: -0.14, z: -0.00000009167525}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 4
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 24
+    position: {x: 27, y: -0.14, z: -17}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 2.5
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 37
+    position: {x: 102.89756, y: -0.13999999, z: -21.291456}
+    rotation: {x: 0, y: 0.96220016, z: 0, w: -0.27234325}
+    halfWidth: 3.5
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 37
+    position: {x: 102.89756, y: -0.13999999, z: -21.291456}
+    rotation: {x: 0, y: 0.96220016, z: 0, w: -0.27234325}
+    halfWidth: 3.5
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 39
+    position: {x: 94.51201, y: -0.14, z: -34.91799}
+    rotation: {x: 0, y: 0.96220016, z: 0, w: -0.27234325}
+    halfWidth: 3.5
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 39
+    position: {x: 94.51201, y: -0.14, z: -34.91799}
+    rotation: {x: 0, y: 0.96220016, z: 0, w: -0.27234325}
+    halfWidth: 3.5
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 40
+    position: {x: 92.41562, y: -0.14, z: -38.324627}
+    rotation: {x: 0, y: 0.96220016, z: 0, w: -0.27234325}
+    halfWidth: 3.5
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 40
+    position: {x: 92.41562, y: -0.14, z: -38.324627}
+    rotation: {x: 0, y: 0.96220016, z: 0, w: -0.27234325}
+    halfWidth: 3.5
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 49
+    position: {x: -0.00000031012496, y: -0.14, z: -68.99999}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 3
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 49
+    position: {x: -0.00000031012496, y: -0.14, z: -68.99999}
+    rotation: {x: 0, y: 1, z: 0, w: 0}
+    halfWidth: 3
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 54
+    position: {x: 77.79351, y: -0.14, z: -67.826546}
+    rotation: {x: 0, y: 0.9825918, z: 0, w: -0.18577784}
+    halfWidth: 3.5
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 55
+    position: {x: 76.33316, y: -0.13999999, z: -71.55044}
+    rotation: {x: 0, y: 0.9825918, z: 0, w: -0.18577784}
+    halfWidth: 3.5
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 55
+    position: {x: 76.33316, y: -0.13999999, z: -71.55044}
+    rotation: {x: 0, y: 0.9825918, z: 0, w: -0.18577784}
+    halfWidth: 3.5
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 57
+    position: {x: 71.95211, y: -0.14000002, z: -82.722115}
+    rotation: {x: 0, y: 0.9825918, z: 0, w: -0.18577784}
+    halfWidth: 3.5
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 57
+    position: {x: 71.95211, y: -0.14000002, z: -82.722115}
+    rotation: {x: 0, y: 0.9825918, z: 0, w: -0.18577784}
+    halfWidth: 3.5
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 61
+    position: {x: 17.000002, y: -0.14000002, z: -103.00001}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 3
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 63
+    position: {x: 33, y: -0.14, z: -103}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 3
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 82
+    position: {x: 73.00001, y: -0.14000002, z: -103}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 3
+    side: -1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 82
+    position: {x: 73.00001, y: -0.14000002, z: -103}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 3
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 85
+    position: {x: 85, y: -0.14000002, z: -102.99999}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 3
+    side: 1
+    alley: 0
+    flip: 0
+  - type: pigeonflock
+    spot: 87
+    position: {x: 101.00001, y: -0.14, z: -102.99999}
+    rotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+    halfWidth: 3
+    side: 1
+    alley: 0
+    flip: 0

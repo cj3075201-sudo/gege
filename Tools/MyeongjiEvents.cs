@@ -136,7 +136,9 @@ public static class MyeongjiEvents
   }
   AssetDatabase.SaveAssets();
   var crowd=DeliveryRider.Editor.CelebrityCrowdInstaller.ApplyToScene(Scene());
-  return "Saved Myeongji-only candidate/settings assets and wall-free door prefab; original day counts and unlock days retained. "+crowd;
+  var pigeons=AssetDatabase.LoadAssetAtPath<Sprite>(DeliveryRider.Editor.PigeonFlockInstaller.IconPath)!=null
+   ? DeliveryRider.Editor.PigeonFlockInstaller.ApplyToScene(Scene()) : "";
+  return "Saved Myeongji-only candidate/settings assets and wall-free door prefab; original day counts and unlock days retained. "+crowd+" "+pigeons;
  }
  public static string Activate()
  {
