@@ -3,7 +3,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace DeliveryRider
 {
-    // Moves the sun with the work day (DaySkySettings): from the midday sun at departure to the horizon at closing,
+    // Moves the sun with the work day (DaySkySettings): the configured morning/noon/evening arc reaches the horizon at closing,
     // with sunlight colour and intensity, ambient light, fog and the sky shader following, and the far clouds
     // drifting with the wind. Cloud shadows pass over the town as a light cookie: a repeating pattern drawn every
     // frame (CloudShadow.shader) and moved with the wind at the near clouds' speed. After closing, the game time spent on the last delivery carries the sky into a blue dusk
@@ -63,6 +63,16 @@ namespace DeliveryRider
 
         private void Awake()
         {
+            // Reimported map scenes may lose scene-object links. Resolve them once, never every frame.
+            if (sun == null) sun = GetComponent<Light>();
+            if (session == null) session = FindFirstObjectByType<DeliverySession>();
+            if (sun == null || session == null || settings == null)
+            {
+                Debug.LogError("DaySky needs a delivery session, sun and settings.", this);
+                enabled = false;
+                return;
+            }
+            RenderSettings.sun = sun;
             if (skybox != null)
             {
                 sky = new Material(skybox) { hideFlags = HideFlags.HideAndDontSave };
@@ -97,9 +107,10 @@ namespace DeliveryRider
             cloudOffset += settings.WindDirection * (settings.WindSpeed * Time.deltaTime / CloudMetresPerUnit);
             cloudShadowDrift += settings.WindDirection * (settings.NearCloudSpeed * Time.deltaTime);
             cloudTime += settings.CloudChange * Time.deltaTime;
-            if (session.IsDayClosed) duskElapsed += Time.deltaTime;
+            if (session.HasDayStarted && session.IsDayClosed) duskElapsed += Time.deltaTime;
+            else duskElapsed = 0f;
             if (Preview.HasValue) Apply(Mathf.Min(Preview.Value, 1f), Preview.Value - 1f);
-            else Apply((float)session.DayProgress, duskElapsed / settings.DuskSeconds);
+            else Apply(session.HasDayStarted ? (float)session.DayProgress : 0f, duskElapsed / Mathf.Max(1f, settings.DuskSeconds));
         }
 
         public void Apply(float day, float dusk)

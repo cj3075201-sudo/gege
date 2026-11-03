@@ -40,7 +40,10 @@ namespace DeliveryRider.Editor
                 : UnityEngine.Object.FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(l => l.type == LightType.Directional);
             if (session == null || follow == null || sun == null) throw new InvalidOperationException("The delivery session, follow camera and a directional light are required.");
 
-            var settings = AssetDatabase.LoadAssetAtPath<DaySkySettings>(SettingsPath);
+            const string myeongjiSettingsPath = "Assets/_Game/Settings/MyeongjiDaySkySettings.asset";
+            string activeSettingsPath = scene.path.EndsWith("FourDistrictPrototype_Myeongji.unity")
+                && AssetDatabase.LoadAssetAtPath<DaySkySettings>(myeongjiSettingsPath) != null ? myeongjiSettingsPath : SettingsPath;
+            var settings = AssetDatabase.LoadAssetAtPath<DaySkySettings>(activeSettingsPath);
             if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<DaySkySettings>();

@@ -1,0 +1,5 @@
+B02: Shopfront with central double entrance; 15282 vertices
+B04: Shared lobby and paired raised windows; 11970 vertices
+B05: Small residence with offset entrance; 7290 vertices
+B06: Alley residence with central recessed lobby; 11778 vertices
+B03: Existing stepped shopfront retained, glazed entry added; 20907 vertices

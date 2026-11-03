@@ -1,0 +1,41 @@
+{
+  "scene": "Assets/_Game/Scenes/FourDistrictPrototype_Myeongji.unity",
+  "sameClockAsHud": true,
+  "profile": "Assets/_Game/Settings/MyeongjiDaySkySettings.asset",
+  "samples": [
+    {
+      "day": 0.0,
+      "elevation": 35.75,
+      "azimuth": 105.0,
+      "intensity": 1.25,
+      "sun": "RGBA(1.000, 0.900, 0.750, 1.000)",
+      "ambient": "RGBA(0.490, 0.540, 0.630, 1.000)"
+    },
+    {
+      "day": 0.375,
+      "elevation": 65.0,
+      "azimuth": 165.0,
+      "intensity": 1.6,
+      "sun": "RGBA(1.000, 0.970, 0.900, 1.000)",
+      "ambient": "RGBA(0.518, 0.587, 0.686, 1.000)"
+    },
+    {
+      "day": 0.75,
+      "elevation": 28.6,
+      "azimuth": 225.0,
+      "intensity": 1.32740736,
+      "sun": "RGBA(1.000, 0.843, 0.633, 1.000)",
+      "ambient": "RGBA(0.500, 0.520, 0.610, 1.000)"
+    },
+    {
+      "day": 1.0,
+      "elevation": 0.0,
+      "azimuth": 265.0,
+      "intensity": 0.78,
+      "sun": "RGBA(1.000, 0.520, 0.300, 1.000)",
+      "ambient": "RGBA(0.480, 0.430, 0.520, 1.000)"
+    }
+  ],
+  "shadowDisabledMaterials": [],
+  "playTest": false
+}

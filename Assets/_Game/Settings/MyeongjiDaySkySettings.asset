@@ -1,0 +1,264 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09d64a6d9ac8e1548a78860f11c8aee2, type: 3}
+  m_Name: MyeongjiDaySkySettings
+  m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.DaySkySettings
+  startElevation: 65
+  endElevation: 0
+  startAzimuth: 105
+  endAzimuth: 265
+  height:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.55
+      inSlope: 0
+      outSlope: 1.4
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.375
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.75
+      value: 0.44
+      inSlope: -1.8
+      outSlope: -1.8
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -1.4
+      outSlope: -1.4
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  minimumLightElevation: 12
+  sunColor:
+    serializedVersion: 2
+    key0: {r: 1, g: 0.9, b: 0.75, a: 1}
+    key1: {r: 1, g: 0.97, b: 0.9, a: 1}
+    key2: {r: 1, g: 0.9, b: 0.72, a: 0}
+    key3: {r: 1, g: 0.73, b: 0.46, a: 0}
+    key4: {r: 1, g: 0.52, b: 0.3, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 24576
+    ctime2: 45875
+    ctime3: 55705
+    ctime4: 65535
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 5
+    m_NumAlphaKeys: 2
+  sunIntensity:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1.25
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.375
+      value: 1.6
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7
+      value: 1.4
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.85
+      value: 1.12
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0.78
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  ambientColor:
+    serializedVersion: 2
+    key0: {r: 0.49, g: 0.54, b: 0.63, a: 1}
+    key1: {r: 0.52, g: 0.59, b: 0.69, a: 1}
+    key2: {r: 0.5, g: 0.52, b: 0.61, a: 0}
+    key3: {r: 0.48, g: 0.43, b: 0.52, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 26214
+    ctime2: 49151
+    ctime3: 65535
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 4
+    m_NumAlphaKeys: 2
+  fogColor:
+    serializedVersion: 2
+    key0: {r: 0.8, g: 0.86, b: 0.86, a: 1}
+    key1: {r: 0.74, g: 0.84, b: 0.9, a: 1}
+    key2: {r: 0.94, g: 0.78, b: 0.62, a: 0}
+    key3: {r: 0.96, g: 0.55, b: 0.36, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 26214
+    ctime2: 49151
+    ctime3: 65535
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 4
+    m_NumAlphaKeys: 2
+  zenithColor:
+    serializedVersion: 2
+    key0: {r: 0.43, g: 0.65, b: 0.86, a: 1}
+    key1: {r: 0.32, g: 0.58, b: 0.84, a: 1}
+    key2: {r: 0.45, g: 0.54, b: 0.76, a: 0}
+    key3: {r: 0.35, g: 0.29, b: 0.51, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 26214
+    ctime2: 49151
+    ctime3: 65535
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 4
+    m_NumAlphaKeys: 2
+  sunSize: 2.5
+  cloudCoverage: 0.35
+  cloudScale: 1.6
+  windAzimuth: 90
+  windSpeed: 5
+  cloudChange: 0.02
+  cloudShadeTint: 0.5
+  nearCloudCount: 6
+  nearCloudAltitude: {x: 85, y: 125}
+  nearCloudSize: {x: 50, y: 85}
+  nearCloudSpeedShare: 0.5
+  nearCloudLifetime: {x: 180, y: 300}
+  nearCloudFadeSeconds: 20
+  nearCloudRadius: 220
+  nearCloudCurveShare: 0.4
+  nearCloudShadows: 0
+  nearCloudSwell: 0.1
+  nearCloudSwellSpeed: 0.3
+  nearCloudSwellScale: 2.5
+  nearCloudRim: 0.3
+  nearCloudOcclusion: 0.4
+  cloudShadowStrength: 0.22
+  cloudShadowSize: 120
+  duskSeconds: 60
+  duskSunElevation: -8
+  duskZenith: {r: 0.16, g: 0.2, b: 0.42, a: 1}
+  duskHorizon: {r: 0.58, g: 0.45, b: 0.56, a: 1}
+  duskGlow: {r: 0.98, g: 0.55, b: 0.45, a: 1}
+  duskAmbient: {r: 0.39, g: 0.42, b: 0.54, a: 1}
+  duskLightColor: {r: 0.6, g: 0.66, b: 0.92, a: 1}
+  duskLightIntensity: 0.32
+  duskShadowStrength: 0.3

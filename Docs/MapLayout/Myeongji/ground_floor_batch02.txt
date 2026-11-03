@@ -1,0 +1,12 @@
+B07: shopfront, 2 original facade planes retained
+B08: residential entry, 1 original facade planes retained
+B09: shopfront, 1 original facade planes retained
+B10: residential entry, 1 original facade planes retained
+B11: arched shared entrance, 1 original facade planes retained
+B12: residential entry, 1 original facade planes retained
+B13: residential entry, 1 original facade planes retained
+B14: residential entry, 1 original facade planes retained
+B15: shopfront, 1 original facade planes retained
+B16: residential entry, 1 original facade planes retained
+B17: residential entry, 2 original facade planes retained
+B18: shopfront, 1 original facade planes retained
