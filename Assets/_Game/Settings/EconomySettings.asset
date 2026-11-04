@@ -17,6 +17,21 @@ MonoBehaviour:
   limitPadding: 25
   limitRounding: 5
   minimumDistance: 300
+  useDistanceReward: 1
+  rewardBase: 1500
+  rewardPerMeter: 8
+  zoneOrder:
+  - C
+  - A
+  - B
+  - D
+  openCountByDay: 01000000020000000300000004000000
+  minimumDistanceByOpenCount:
+  - 120
+  - 220
+  - 300
+  - 300
+  reuseExclusionDistance: 20
   rewardTiers:
   - maximumDistance: 350
     reward: 3000
@@ -28,6 +43,13 @@ MonoBehaviour:
     reward: 5500
     label: "\uBA40\uB9AC"
   lateRatio: 0.6
+  startingDebt: 100000
+  livingCost: 5000
+  addShortfallToDebt: 0
+  inlinePrice: 8000
+  inlineSaleDay: 1
+  inlineSpeedMultiplier: 1.6
+  inlineAccelerationMultiplier: 0.6
   customerNames:
   - "\uBBFC\uC9C0"
   - "\uC11C\uC900"

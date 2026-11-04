@@ -26,8 +26,8 @@ namespace DeliveryRider
             Debt = Math.Max(0, debt);
         }
 
-        // Income joins the cash, then the living cost is taken; any shortfall becomes debt (cash never goes negative).
-        public void CloseDay(long income, int deliveries, long livingCost)
+        // HTML discards the shortfall; the switch can restore the original debt rule.
+        public void CloseDay(long income, int deliveries, long livingCost, bool addShortfallToDebt = false)
         {
             if (DayClosed || IsEnded) return;
             DayClosed = true;
@@ -35,7 +35,7 @@ namespace DeliveryRider
             TotalDeliveries += Math.Max(0, deliveries);
             livingCost = Math.Max(0, livingCost);
             LivingCostPaid = Math.Min(Cash, livingCost);
-            DebtAddedToday = livingCost - LivingCostPaid;
+            DebtAddedToday = addShortfallToDebt ? livingCost - LivingCostPaid : 0;
             Cash -= LivingCostPaid;
             Debt += DebtAddedToday;
         }

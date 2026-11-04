@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace DeliveryRider
 {
-    public sealed class DeliveryMapView : MonoBehaviour
+    public sealed partial class DeliveryMapView : MonoBehaviour
     {
         [SerializeField] private DeliverySession session;
         [SerializeField] private RectTransform mapArea;
@@ -37,6 +37,7 @@ namespace DeliveryRider
         private void LateUpdate()
         {
             if (!session.IsMapOpen || session.IsPaused) return;
+            RefreshClosedZones();
             playerMarker.anchoredPosition = Point(session.Player.position);
             playerMarker.localRotation = Quaternion.Euler(0, 0, -session.Player.eulerAngles.y);
             for (int i = 0; i < candidateMarkers.Length; i++)
