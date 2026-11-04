@@ -33,6 +33,7 @@ namespace DeliveryRider.Editor
         {
             DevTools.Saver = Save;
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
+            AssemblyReloadEvents.beforeAssemblyReload += DevTuningSession.EndSession;
         }
 
         private static string Save(IReadOnlyList<DevChange> changes)
@@ -76,6 +77,7 @@ namespace DeliveryRider.Editor
 
         private static void OnPlayModeChanged(PlayModeStateChange state)
         {
+            if (state == PlayModeStateChange.ExitingPlayMode) DevTuningSession.EndSession();
             if (state != PlayModeStateChange.EnteredEditMode) return;
             var pending = Load();
             if (pending.values.Count == 0) return;

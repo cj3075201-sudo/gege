@@ -9,17 +9,19 @@ namespace DeliveryRider
     // In-game developer tools (F1; editor and development builds only). Player, hazard, traffic, day/economy and
     // camera values change while the game keeps running; the rider's controls pause and the cursor is free while the
     // panel is open. Most values apply at once; counts and spawn spacing apply with the respawn buttons.
-    // Unsaved changes end with the scene (Play Mode exit or the next day). In the editor the save button writes them
+    // Unsaved changes last for this Play session, including daily scene loads. In the editor the save button writes them
     // to the settings assets and prefabs at once, and to the scene when Play Mode ends (DevToolsSaver).
-    public sealed class DevTools : MonoBehaviour
+    [DefaultExecutionOrder(-150)]
+    public sealed partial class DevTools : MonoBehaviour
     {
         // Set by the editor; null in builds, which hides the save button. Returns the status line to show.
         public static System.Func<IReadOnlyList<DevChange>, string> Saver;
 
         private const float Margin = 12f, PanelWidth = 560f, LabelWidth = 210f, SliderWidth = 150f, FieldWidth = 72f, ButtonWidth = 52f;
-        private static readonly string[] TabNames = { "플레이어", "사건", "교통", "하루·경제", "카메라", "하늘" };
+        private static readonly string[] TabNames = { "결과", "플레이어", "사건", "교통", "하루·경제", "카메라", "하늘" };
         private static readonly string[] TabNotes =
         {
+            "HTML 수치 패널과 같은 식입니다. 기록은 이번 판 동안 유지됩니다. 정산·일시정지는 경과시간에서 제외합니다.",
             "값은 바로 반영됩니다. 이동 속도는 인라인을 적용하기 전 기본값입니다.",
             "개수·간격·등장 일차는 '사건 다시 배치'를 눌러야 반영됩니다. 사건 내부 값은 지금 있는 사건과 다시 배치될 사건에 모두 적용되며, 크기·배치에 쓰이는 일부 값은 다시 배치한 뒤 반영됩니다.",
             "차량 수·보행자 수·배치 간격은 다시 배치할 때, 주행·보행 값은 바로 반영됩니다.",
@@ -57,6 +59,8 @@ namespace DeliveryRider
         private readonly List<HazardPart> hazardParts = new List<HazardPart>();
         private readonly List<DevTarget> vehicleTargets = new List<DevTarget>();
         private DevTarget walkerTarget;
+        private DevTarget seedTarget;
+        private RunStats stats;
         private readonly Dictionary<DevValue, string> controlNames = new Dictionary<DevValue, string>();
         private readonly Dictionary<DevValue, string> typing = new Dictionary<DevValue, string>();
         private readonly Dictionary<string, int> placed = new Dictionary<string, int>();
@@ -64,14 +68,22 @@ namespace DeliveryRider
         private readonly Vector2[] scroll = new Vector2[TabNames.Length];
         private int tab;
         private bool open;
+        private bool initialCopiesApplied;
         private float frameMilliseconds = 16.7f;
         private string status = "";
         private GUISkin skin;
-        private GUIStyle panel, title, foldout, changedLabel, note;
+        private GUIStyle panel, title, foldout, changedLabel, note, resultText;
         private Texture2D background;
 
         // Release builds leave the tools out.
-        private void Awake() { if (!Debug.isDebugBuild) enabled = false; }
+        private void Awake()
+        {
+            if (!Debug.isDebugBuild) { enabled = false; return; }
+            // Restore before DeliverySession.Awake captures the day length, economy and inline multipliers.
+            Build();
+            stats = gameObject.AddComponent<RunStats>();
+            stats.Initialize(session, rider, daySettings);
+        }
 
         private void OnEnable() { if (hazards != null) hazards.HazardSpawned += OnHazardSpawned; }
 
@@ -83,11 +95,7 @@ namespace DeliveryRider
 
         private void OnDestroy()
         {
-            // Settings assets outlive the scene, so their unsaved changes are undone; scene objects and copies just go.
-            if (tabs != null)
-                foreach (var list in tabs)
-                    foreach (var target in list)
-                        if (target.Source is ScriptableObject) target.RevertAll();
+            // Tuning persists through scene destruction; DevToolsSaver restores unsaved assets when Play ends.
             if (skin != null) Destroy(skin);
             if (background != null) Destroy(background);
         }
@@ -103,6 +111,13 @@ namespace DeliveryRider
         // The session locks the cursor again on every state change; keep it free while the panel is open.
         private void LateUpdate()
         {
+            // Traffic and pedestrians spawn in Start, after this tool restores the authored scene fields in Awake.
+            if (!initialCopiesApplied && tabs != null)
+            {
+                foreach (var list in tabs)
+                    foreach (var target in list) { target.Refresh(); target.ReapplyChanges(); }
+                initialCopiesApplied = true;
+            }
             if (!open) return;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
@@ -128,39 +143,47 @@ namespace DeliveryRider
             tabs = new List<DevTarget>[TabNames.Length];
             for (int i = 0; i < tabs.Length; i++) tabs[i] = new List<DevTarget>();
 
-            Single(tabs[0], "라이더 이동·점프·사고", rider, ShowJumpHeight);
-            Single(tabs[0], "사고 연출", riderVisual);
-            Single(tabs[0], "안전 위치 복귀", safeRecovery);
-            Single(tabs[0], "걷기 먼지", riderDust);
+            Single(tabs[1], "라이더 이동·점프·사고", rider, ShowJumpHeight);
+            Single(tabs[1], "사고 연출", riderVisual);
+            Single(tabs[1], "안전 위치 복귀", safeRecovery);
+            Single(tabs[1], "걷기 먼지", riderDust);
 
-            if (hazardSettings != null) tabs[1].Add(HazardCounts());
-            Single(tabs[1], "사건 발동 규칙", hazards);
-            if (hazardSettings != null && hazards != null) AddHazardParts(tabs[1]);
+            if (hazardSettings != null) tabs[2].Add(HazardCounts());
+            if (hazards != null)
+            {
+                seedTarget = new DevTarget("배치 시드", hazards, () => new UnityEngine.Object[] { hazards });
+                seedTarget.Add(new[] { DevValue.Find(hazards, "randomEachRun", "무작위 배치 (끄면 고정 시드)"),
+                    DevValue.Find(hazards, "seed", "고정 시드") });
+                tabs[2].Insert(0, seedTarget);
+            }
+            Single(tabs[2], "사건 발동 규칙", hazards,
+                values => values.RemoveAll(value => value.PropertyPath == "randomEachRun" || value.PropertyPath == "seed"));
+            if (hazardSettings != null && hazards != null) AddHazardParts(tabs[2]);
 
-            Single(tabs[2], "차량 배치", traffic);
-            if (traffic != null) AddVehicles(tabs[2]);
-            Single(tabs[2], "보행자 배치", pedestrians);
+            Single(tabs[3], "차량 배치", traffic);
+            if (traffic != null) AddVehicles(tabs[3]);
+            Single(tabs[3], "보행자 배치", pedestrians);
             if (pedestrians != null && pedestrians.Prefab != null)
             {
                 walkerTarget = new DevTarget("보행자", pedestrians.Prefab, () => pedestrians.Pedestrians);
                 walkerTarget.Add(DevValue.Discover(pedestrians.Prefab));
-                tabs[2].Add(walkerTarget);
+                tabs[3].Add(walkerTarget);
             }
 
-            Single(tabs[3], "배달 진행", session);
-            Single(tabs[3], "하루 길이", daySettings);
-            Single(tabs[3], "경제·보상", session != null ? session.Economy : null);
+            Single(tabs[4], "배달 진행", session);
+            Single(tabs[4], "하루 길이", daySettings);
+            Single(tabs[4], "경제·보상", session != null ? session.Economy : null);
 
-            Single(tabs[4], "3인칭 카메라", followCamera);
-            Single(tabs[4], "커브드월드", curvedWorld);
+            Single(tabs[5], "3인칭 카메라", followCamera);
+            Single(tabs[5], "커브드월드", curvedWorld);
 
-            Single(tabs[5], "해 경로·빛", daySky != null ? daySky.Settings : null);
+            Single(tabs[6], "해 경로·빛", daySky != null ? daySky.Settings : null);
             // The pipeline asset is shared by every scene; a save writes the distance project-wide.
             if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset pipeline)
             {
                 var shadows = new DevTarget("그림자 (렌더 파이프라인)", pipeline, () => new UnityEngine.Object[] { pipeline });
                 shadows.Add(new[] { DevValue.Find(pipeline, "m_ShadowDistance", "그림자 거리(m)") });
-                tabs[5].Add(shadows);
+                tabs[6].Add(shadows);
             }
 
             int id = 0;
@@ -195,7 +218,7 @@ namespace DeliveryRider
         // Objects place their daily count; triggers place a pool and a few of them light up per call.
         private DevTarget HazardCounts()
         {
-            int day = session != null && session.Progress != null ? session.Progress.Day : 1;
+            DevTuningSession.EnsureFourDays(hazardSettings);
             var values = new List<DevValue>();
             for (int i = 0; i < hazardSettings.Kinds.Count; i++)
             {
@@ -203,8 +226,10 @@ namespace DeliveryRider
                 string name = DevLabels.HazardType(kind.type), at = $"kinds.Array.data[{i}].";
                 if (kind.role == HazardRole.Trigger) values.Add(DevValue.Find(hazardSettings, at + "poolSize", name + " 배치 수 (트리거)"));
                 else if (kind.countPerDay.Length > 0)
-                    values.Add(DevValue.Find(hazardSettings, $"{at}countPerDay.Array.data[{Mathf.Clamp(day - 1, 0, kind.countPerDay.Length - 1)}]",
-                        $"{name} 개수 ({day}일차)"));
+                    for (int day = 1; day <= 4; day++)
+                    {
+                        values.Add(DevValue.Find(hazardSettings, $"{at}countPerDay.Array.data[{day - 1}]", $"{name} 개수 ({day}일차)"));
+                    }
                 values.Add(DevValue.Find(hazardSettings, at + "unlockDay", name + " 등장 일차"));
             }
             values.AddRange(DevValue.Discover(hazardSettings));
@@ -346,7 +371,12 @@ namespace DeliveryRider
                     foreach (var (value, before, after) in target.Edits)
                         text.Append(target.Title).Append(" / ").Append(value.Label).Append(" (").Append(value.PropertyPath).Append("): ")
                             .Append(value.Format(value.ToDisplay(before))).Append(" → ").Append(value.Format(value.ToDisplay(after))).AppendLine();
-            return text.Length > 0 ? text.ToString() : "변경 없음";
+            if (text.Length == 0) text.AppendLine("변경 없음");
+            text.AppendLine().AppendLine("결과 요약").Append(stats != null ? stats.Describe() : "진행 정보 없음");
+            if (seedTarget != null)
+                foreach (var value in seedTarget.Values)
+                    text.AppendLine().Append(value.Label).Append(": ").Append(value.Format(seedTarget.Get(value)));
+            return text.ToString();
         }
 
         private string PlacedSummary()
@@ -384,7 +414,8 @@ namespace DeliveryRider
             GUILayout.Label(TabNotes[tab], note);
             DrawTabActions();
             scroll[tab] = GUILayout.BeginScrollView(scroll[tab]);
-            foreach (var target in tabs[tab]) DrawTarget(target);
+            if (tab == 0) DrawResults();
+            else foreach (var target in tabs[tab]) if (target != seedTarget) DrawTarget(target);
             GUILayout.EndScrollView();
             DrawFooter();
             GUILayout.EndArea();
@@ -392,19 +423,21 @@ namespace DeliveryRider
 
         private void DrawTabActions()
         {
-            if (tab == 1 && hazards != null && hazardSettings != null)
+            if (tab == 2 && hazards != null && hazardSettings != null)
             {
+                GUILayout.Label("배치 시드 (아래 값을 바꾼 뒤 다시 배치)", note);
+                if (seedTarget != null) foreach (var value in seedTarget.Values) DrawValue(seedTarget, value);
                 if (GUILayout.Button("사건 다시 배치")) RespawnHazards();
                 GUILayout.Label(PlacedSummary(), note);
             }
-            else if (tab == 2)
+            else if (tab == 3)
             {
                 GUILayout.BeginHorizontal();
                 if (traffic != null && GUILayout.Button("차량 다시 배치")) RespawnTraffic();
                 if (pedestrians != null && GUILayout.Button("보행자 다시 배치")) RespawnWalkers();
                 GUILayout.EndHorizontal();
             }
-            else if (tab == 5 && daySky != null) DrawSkyPreview();
+            else if (tab == 6 && daySky != null) DrawSkyPreview();
         }
 
         // Sky preview: another time for the sky and light only, from departure through closing to the end of the dusk;
@@ -517,8 +550,8 @@ namespace DeliveryRider
             }
             if (Saver != null && GUILayout.Button($"저장 ({pending})")) Save();
             GUILayout.EndHorizontal();
-            GUILayout.Label(Saver != null ? "저장하지 않은 변경은 Play 종료·다음 날 이동 때 원래대로 돌아갑니다."
-                : "변경은 다음 날 이동 때 원래대로 돌아갑니다.", note);
+            GUILayout.Label(Saver != null ? "변경은 다음 날에도 유지됩니다. 저장하지 않은 값은 Play 종료 때 복원합니다."
+                : "변경은 다음 날에도 유지되며 게임 실행 종료 때 초기화됩니다.", note);
             GUILayout.Label(status, note);
             GUILayout.Label(GUI.tooltip, note);
         }
@@ -539,6 +572,7 @@ namespace DeliveryRider
             changedLabel.normal.textColor = new Color(1f, 0.78f, 0.3f);
             note = new GUIStyle(skin.label) { wordWrap = true, fontSize = 12 };
             note.normal.textColor = new Color(0.72f, 0.77f, 0.83f);
+            resultText = new GUIStyle(skin.label) { wordWrap = true };
         }
     }
 }
