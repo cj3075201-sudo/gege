@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -152,7 +153,11 @@ namespace DeliveryRider
         }
 
         private string ZoneLabel(string zone)
-            => session.RouteTable != null ? $"{zone} {session.RouteTable.ZoneName(zone)}" : zone;
+        {
+            string name = session.RouteTable != null ? session.RouteTable.ZoneName(zone) : null;
+            return string.IsNullOrEmpty(name) || name == zone ? zone
+                : name.StartsWith(zone + " ", StringComparison.Ordinal) ? name : $"{zone} {name}";
+        }
 
         private void Update()
         {

@@ -1032,7 +1032,7 @@ MonoBehaviour:
   continueButton: {fileID: 153827840}
   quitButton: {fileID: 759524642}
   startDayLabel: {fileID: 1589930185}
-  economy: {fileID: 0}
+  economy: {fileID: 11400000, guid: 6b97c7a0a8cf31a43a7a6e3cf64ec754, type: 2}
 --- !u!1 &1029398326
 GameObject:
   m_ObjectHideFlags: 0

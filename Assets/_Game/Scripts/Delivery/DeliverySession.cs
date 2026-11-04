@@ -11,7 +11,7 @@ namespace DeliveryRider
     public sealed class DeliverySession : MonoBehaviour
     {
         [SerializeField] private Transform player;
-        [SerializeField, Range(1, 3)] private int candidateCount = 2;
+        [SerializeField, Range(1, 2)] private int candidateCount = 2;
         [Tooltip("The day clock starts once the player walks this far from the start point. 0 starts it immediately.")]
         [SerializeField, Min(0f)] private float homeLeaveDistance = 6f;
         [SerializeField] private GameObject foodBag;
@@ -27,6 +27,8 @@ namespace DeliveryRider
         [SerializeField] private DeliveryResident recipient;
         [SerializeField, Min(0f)] private float recipientHeight = 1.08f;
         [SerializeField] private string startZone = "C";
+        [Tooltip("Optional district polygons; populated by the map author.")]
+        [SerializeField] private ZoneMap zoneMap;
         public event Action Changed;
         public event Action<float> PigeonFlockObscured;
         private float pigeonFlockObscuredUntil;
@@ -87,11 +89,20 @@ namespace DeliveryRider
         public bool CanOpenCall => !IsPaused && !IsSettled && !IsDayClosed && ActiveOrder == null && (Stage == DeliveryStage.Available || Stage == DeliveryStage.Complete);
         public bool CanChooseOrder => IsCallOpen && CanOpenCall;
         private RiderMotor rider;
-        // Calls come from the zone where the last delivery ended and never send the rider straight back.
+        // Prefer other open zones; with fewer zones, HTML allows a return or a same-zone delivery.
         public string CurrentZone { get; private set; }
+        public ZoneMap ZoneMap => zoneMap;
+        private IReadOnlyList<string> openZones = Array.Empty<string>();
+        public IReadOnlyCollection<string> OpenZones => openZones;
+        public bool IsZoneOpen(string zone)
+        {
+            for (int i = 0; i < openZones.Count; i++)
+                if (openZones[i] == zone) return true;
+            return false;
+        }
         private string previousZone;
         private readonly HashSet<int> usedDoors = new HashSet<int>();
-        private readonly List<string> zonePool = new List<string>(4);
+        private readonly HashSet<int> offeredDoors = new HashSet<int>();
         private readonly List<int> doorPool = new List<int>(32);
         private readonly List<int> shopPool = new List<int>(4);
         public DeliveryRouteTable RouteTable => routeTable;
@@ -123,6 +134,7 @@ namespace DeliveryRider
                 rider.EquipInline(economy.InlineSpeedMultiplier, economy.InlineAccelerationMultiplier);
             homePosition = player.position;
             CurrentZone = startZone;
+            openZones = economy != null ? economy.ZonesForDay(Progress.Day) : Array.Empty<string>();
             dayDuration = daySettings != null ? daySettings.DurationSeconds : 300d;
             if (homeLeaveDistance <= 0f) StartDay();
             FillCandidates(); SelectedOrder = candidates.Count > 0 ? candidates[0] : null;
@@ -188,7 +200,8 @@ namespace DeliveryRider
             if (IsSettled) return;
             DayPhase = WorkDayPhase.Settlement;
             SettlementElapsedSeconds = HasDayStarted ? Time.timeAsDouble - dayStartedAt : 0d;
-            Progress.CloseDay(Cash, CompletedCount, economy != null ? economy.LivingCost : 0);
+            Progress.CloseDay(Cash, CompletedCount, economy != null ? economy.LivingCost : 0,
+                economy != null && economy.AddShortfallToDebt);
             IsPaused = false;
             IsCallOpen = false;
             mapOpen = false;
@@ -258,7 +271,7 @@ namespace DeliveryRider
             if (ActiveOrder.DoorIndex >= 0)
             {
                 usedDoors.Add(ActiveOrder.DoorIndex);
-                previousZone = ActiveOrder.PickupZone;
+                previousZone = CurrentZone;
                 CurrentZone = ActiveOrder.DestinationZone;
             }
             ActiveOrder = null;
@@ -290,31 +303,27 @@ namespace DeliveryRider
             FillGeneratedCandidates();
         }
 
-        // Based on the v5.2 trial: one call per other zone (not the zone the rider just came from), doors not reused
-        // within the day, main-road distance pricing. Each call picks up at a different shop of the current zone,
-        // nearest first, so the call screen offers distinct shops.
+        // HTML v5.5: both calls use the nearest shop in the current zone, then choose two open-zone houses.
         private void FillGeneratedCandidates()
         {
             if (candidates.Count > 0) return;
             ShopsByDistance(CurrentZone);
             if (shopPool.Count == 0) return;
-            zonePool.Clear();
-            for (int i = 0; i < routeTable.DoorCount; i++)
-            {
-                string zone = routeTable.DoorZone(i);
-                if (zone != CurrentZone && zone != previousZone && !zonePool.Contains(zone)) zonePool.Add(zone);
-            }
-            while (zonePool.Count > candidateCount) zonePool.RemoveAt(UnityEngine.Random.Range(0, zonePool.Count));
+            var zonePool = DeliveryZoneRules.CandidateZones(openZones, CurrentZone, previousZone,
+                Mathf.Clamp(candidateCount, 1, 2), count => UnityEngine.Random.Range(0, count));
+            offeredDoors.Clear();
+            int shop = shopPool[0];
             for (int z = 0; z < zonePool.Count; z++)
             {
                 string zone = zonePool[z];
-                int shop = shopPool[z % shopPool.Count];
                 int door = PickDoor(shop, zone);
                 if (door < 0) continue;
+                offeredDoors.Add(door);
                 float distance = routeTable.ShopToDoor(shop, door);
                 var tier = economy.Tier(distance);
+                int reward = economy.Reward(distance);
                 candidates.Add(new DeliveryOrderOffer(nextOrderNumber++, shopPoints[shop], recipient, doorPoints[door],
-                    routeTable.ShopName(shop), economy.RandomCustomer(), economy.RandomFood(), tier.reward, economy.LateReward(tier.reward),
+                    routeTable.ShopName(shop), economy.RandomCustomer(), economy.RandomFood(), reward, economy.LateReward(reward),
                     economy.TimeLimit(distance), distance, tier.label, routeTable.ShopZone(shop), zone, shop, door));
             }
         }
@@ -323,30 +332,26 @@ namespace DeliveryRider
         private void ShopsByDistance(string zone)
         {
             shopPool.Clear();
+            bool currentOpen = IsZoneOpen(zone);
             for (int i = 0; i < routeTable.ShopCount; i++)
-                if (routeTable.ShopZone(i) == zone && shopPoints[i] != null) shopPool.Add(i);
+                if (shopPoints[i] != null && (currentOpen ? routeTable.ShopZone(i) == zone : IsZoneOpen(routeTable.ShopZone(i)))) shopPool.Add(i);
             var from = player.position;
-            shopPool.Sort((a, b) => (shopPoints[a].position - from).sqrMagnitude.CompareTo((shopPoints[b].position - from).sqrMagnitude));
+            shopPool.Sort((a, b) => HorizontalDistance(shopPoints[a].position, from).CompareTo(HorizontalDistance(shopPoints[b].position, from)));
         }
 
         private int PickDoor(int shop, string zone)
         {
             doorPool.Clear();
-            for (int pass = 0; pass < 2 && doorPool.Count == 0; pass++)
-                for (int i = 0; i < routeTable.DoorCount; i++)
-                    if (routeTable.DoorZone(i) == zone && doorPoints[i] != null && (pass == 1 || !usedDoors.Contains(i))) doorPool.Add(i);
-            if (doorPool.Count == 0) return -1;
-            doorPool.RemoveAll(i => routeTable.ShopToDoor(shop, i) < economy.MinimumDistance);
-            if (doorPool.Count == 0)
-            {
-                // Every door is too close: fall back to the two farthest, as the trial build does.
-                for (int i = 0; i < routeTable.DoorCount; i++)
-                    if (routeTable.DoorZone(i) == zone && doorPoints[i] != null) doorPool.Add(i);
-                doorPool.Sort((a, c) => routeTable.ShopToDoor(shop, c).CompareTo(routeTable.ShopToDoor(shop, a)));
-                if (doorPool.Count > 2) doorPool.RemoveRange(2, doorPool.Count - 2);
-            }
-            return doorPool[UnityEngine.Random.Range(0, doorPool.Count)];
+            for (int i = 0; i < routeTable.DoorCount; i++)
+                if (routeTable.DoorZone(i) == zone && doorPoints[i] != null) doorPool.Add(i);
+            var eligible = DeliveryZoneRules.EligibleDoors(doorPool, usedDoors, offeredDoors,
+                i => routeTable.ShopToDoor(shop, i), i => HorizontalDistance(doorPoints[i].position, player.position),
+                economy.MinimumDistanceForOpenCount(openZones.Count), economy.ReuseExclusionDistance);
+            return eligible.Count == 0 ? -1 : eligible[UnityEngine.Random.Range(0, eligible.Count)];
         }
+
+        private static float HorizontalDistance(Vector3 a, Vector3 b)
+            => new Vector2(a.x - b.x, a.z - b.z).magnitude;
 
         public void TogglePause()
         {

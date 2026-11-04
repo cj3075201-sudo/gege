@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace DeliveryRider
 {
-    // Generated-call pricing. Every value is a prototype test value (system plan v0.6, trial build v5.2).
+    // Trial copy: HTML v5.5 zone unlock and distance-pricing values.
     [CreateAssetMenu(menuName = "Delivery Rider/Economy Settings", fileName = "EconomySettings")]
     public sealed class DeliveryEconomySettings : ScriptableObject
     {
@@ -22,6 +22,15 @@ namespace DeliveryRider
         [SerializeField, Min(1f)] private float limitRounding = 5f;
         [Header("Rewards")]
         [SerializeField, Min(0f)] private float minimumDistance = 300f;
+        [SerializeField] private bool useDistanceReward = true;
+        [SerializeField, Min(0)] private int rewardBase = 1500;
+        [SerializeField, Min(0f)] private float rewardPerMeter = 8f;
+        [Header("Zone unlocks (day 1 onward; last value repeats)")]
+        [SerializeField] private string[] zoneOrder = { "C", "A", "B", "D" };
+        [SerializeField, Min(1)] private int[] openCountByDay = { 1, 2, 3, 4 };
+        [SerializeField, Min(0f)] private float[] minimumDistanceByOpenCount = { 120f, 220f, 300f, 300f };
+        [SerializeField, Min(0f)] private float reuseExclusionDistance = 20f;
+        [Header("Legacy reward tiers (also used as distance labels)")]
         [SerializeField] private RewardTier[] rewardTiers =
         {
             new RewardTier { maximumDistance = 350f, reward = 3000, label = "가까움" },
@@ -32,8 +41,9 @@ namespace DeliveryRider
         [Header("Run economy")]
         [SerializeField, Min(0)] private int startingDebt = 100000;
         [SerializeField, Min(0)] private int livingCost = 5000;
+        [SerializeField] private bool addShortfallToDebt;
         [SerializeField, Min(0)] private int inlinePrice = 8000;
-        [SerializeField, Min(1)] private int inlineSaleDay = 2;
+        [SerializeField, Min(1)] private int inlineSaleDay = 1;
         [SerializeField, Min(1f)] private float inlineSpeedMultiplier = 1.6f;
         [Tooltip("Lower than 1 gives the inline skates some inertia.")]
         [SerializeField, Range(0.1f, 1f)] private float inlineAccelerationMultiplier = 0.6f;
@@ -44,10 +54,23 @@ namespace DeliveryRider
         public float MinimumDistance => minimumDistance;
         public int StartingDebt => startingDebt;
         public int LivingCost => livingCost;
+        public bool AddShortfallToDebt => addShortfallToDebt;
+        public float ReuseExclusionDistance => reuseExclusionDistance;
         public int InlinePrice => inlinePrice;
         public int InlineSaleDay => inlineSaleDay;
         public float InlineSpeedMultiplier => inlineSpeedMultiplier;
         public float InlineAccelerationMultiplier => inlineAccelerationMultiplier;
+
+        public System.Collections.Generic.List<string> ZonesForDay(int day)
+            => DeliveryZoneRules.OpenZonesForDay(day, zoneOrder, openCountByDay);
+
+        public float MinimumDistanceForOpenCount(int count)
+            => minimumDistanceByOpenCount == null || minimumDistanceByOpenCount.Length == 0 ? minimumDistance
+                : minimumDistanceByOpenCount[Mathf.Clamp(count - 1, 0, minimumDistanceByOpenCount.Length - 1)];
+
+        public int Reward(float distance) => useDistanceReward
+            ? Mathf.FloorToInt((rewardBase + rewardPerMeter * Mathf.Max(0f, distance)) / 100f + 0.5f) * 100
+            : Tier(distance).reward;
 
         public float TimeLimit(float distance)
         {
@@ -62,8 +85,8 @@ namespace DeliveryRider
             return rewardTiers.Length > 0 ? rewardTiers[rewardTiers.Length - 1] : default;
         }
 
-        // Rounded to 100 won so the call screen shows clean amounts.
-        public int LateReward(int onTimeReward) => Mathf.RoundToInt(onTimeReward * lateRatio / 100f) * 100;
+        // HTML rounds the distance reward to hundreds, then applies lateness to whole won.
+        public int LateReward(int onTimeReward) => Mathf.FloorToInt(onTimeReward * lateRatio + 0.5f);
         public string RandomCustomer() => customerNames.Length == 0 ? "손님" : customerNames[UnityEngine.Random.Range(0, customerNames.Length)];
         public string RandomFood() => foodNames.Length == 0 ? "음식" : foodNames[UnityEngine.Random.Range(0, foodNames.Length)];
     }
