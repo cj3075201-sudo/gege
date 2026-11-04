@@ -50,6 +50,13 @@ namespace DeliveryRider
             { "nearCloudShadows", "가까운 구름 그림자" }, { "nearCloudSwell", "구름 꿈틀거림(크기 대비)" },
             { "nearCloudSwellSpeed", "구름 꿈틀거림 속도" }, { "nearCloudSwellScale", "구름 노이즈 촘촘함(작을수록 크게)" }, { "nearCloudRim", "구름 테두리 빛" }, { "nearCloudOcclusion", "구름 아랫면·틈 어둡기" },
             { "cloudShadowStrength", "구름 그림자 진하기" }, { "cloudShadowSize", "구름 그림자 무늬 크기(m)" },
+            { "RiderDust.minimumSpeed", "먼지 나는 최저 속도(m/s)" }, { "RiderDust.fullSpeed", "먼지 최대 속도(m/s)" },
+            { "RiderDust.spacing", "먼지 간격(m, x 느릴 때·y 빠를 때)" }, { "RiderDust.size", "먼지 크기(m, x 느릴 때·y 빠를 때)" },
+            { "RiderDust.lifetime", "먼지 수명(초)" }, { "RiderDust.swellShare", "부푸는 시간 비율" }, { "RiderDust.widening", "퍼지는 정도" },
+            { "RiderDust.rise", "떠오르는 속도(m/s)" }, { "RiderDust.spread", "옆으로 흩어지는 속도(m/s)" }, { "RiderDust.footSpacing", "좌우 발 간격(m)" },
+            { "RiderDust.maximumPuffs", "동시 먼지 수" }, { "RiderDust.dustRed", "먼지 색 빨강" }, { "RiderDust.dustGreen", "먼지 색 초록" }, { "RiderDust.dustBlue", "먼지 색 파랑" },
+            { "fogStart", "안개 시작 거리(m)" }, { "fogEnd", "안개 끝 거리(m)" }, { "fogHeightShare", "높은 곳 안개 옅어짐" },
+            { "fogHeightRange", "안개 옅어지는 높이 범위(m)" }, { "fogBlue", "옅은 안개의 푸른 정도" },
             { "duskSeconds", "어스름 진행 시간(초)" }, { "duskSunElevation", "어스름 끝 해 높이(도)" },
             { "duskLightIntensity", "어스름 빛 세기" }, { "duskShadowStrength", "어스름 그림자 진하기" },
             // Hazard planning

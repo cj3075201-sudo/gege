@@ -92,7 +92,7 @@ Assets/
       Props/         문·타이어·차량 머티리얼
       Roads/         도로·인도·골목·차선 머티리얼
       Materials/     캐릭터·소품 공용 머티리얼, 하늘·구름·해시계 머티리얼
-      Clouds/        가까운 구름 메시(설치기가 생성, Rebuild Cloud Shapes로 다시 생성)
+      Clouds/        가까운 구름·걷기 먼지 메시(설치기가 생성, Rebuild Cloud Shapes로 다시 생성)
       UI/            HUD 둥근 카드·그림자 스프라이트(Apply HUD Style이 생성)
       Shaders/       커브드월드 Lit 셰이더(URP Lit 기반), UI 해시계·하늘·구름·구름 그림자 셰이더
   Settings/          URP 렌더 파이프라인(프로젝트 설정)

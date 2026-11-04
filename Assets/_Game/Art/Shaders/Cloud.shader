@@ -16,6 +16,7 @@ Shader "DeliveryRider/Cloud"
         _FadeEnd ("Melt Into Horizon At (m)", Float) = 240
         [HideInInspector] _Fade ("Fade (set per cloud)", Range(0, 1)) = 1
         [HideInInspector] _Seed ("Seed (set per cloud)", Float) = 0
+        [HideInInspector] _Tint ("Tint (set per dust puff, RiderDust)", Color) = (1, 1, 1, 1)
     }
 
     SubShader
@@ -29,18 +30,16 @@ Shader "DeliveryRider/Cloud"
 
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-        #include "CurvedWorld.hlsl"
+        #include "DaySkyFog.hlsl"
 
         CBUFFER_START(UnityPerMaterial)
         float _FadeStart, _FadeEnd, _Fade, _Seed;
+        float4 _Tint;
         CBUFFER_END
 
-        // Shared cloud colours and the visible sun (xyz toward it, w dusk after closing), set every frame by DaySky.
-        // The sunlight itself never goes below its minimum height, but the clouds follow the sun past the horizon like
-        // the far cloud layer.
-        float4 _DayCloudLit, _DayCloudShade, _DayCloudSun;
-        // Sky colour overhead (DaySky); the horizon is the fog colour. Unset (alpha 0, edit mode) melts into the fog.
-        float4 _DaySkyZenith;
+        // Shared cloud colours, set every frame by DaySky. The clouds follow the visible sun past the horizon like the
+        // far cloud layer.
+        float4 _DayCloudLit, _DayCloudShade;
         // Set every frame by CloudField. Swell: x height (share of the cloud's size), y phase, z noise cells across a
         // cloud. Look: x rim, y occlusion.
         float4 _NearCloudSwell, _NearCloudLook;
@@ -146,10 +145,9 @@ Shader "DeliveryRider/Cloud"
                 float3 color = lerp(_DayCloudShade.rgb, _DayCloudLit.rgb, lit) * lerp(1.0, input.openness, _NearCloudLook.y);
                 float3 toCamera = normalize(_WorldSpaceCameraPos - input.positionWS);
                 color += _DayCloudLit.rgb * pow(1.0 - saturate(dot(normalWS, toCamera)), 3.0) * _NearCloudLook.x;
+                color *= _Tint.rgb;
                 float distance = length(input.positionWS.xz - _WorldSpaceCameraPos.xz);
-                float up = saturate(normalize(input.positionWS - _WorldSpaceCameraPos).y);
-                float3 skyBehind = lerp(unity_FogColor.rgb, _DaySkyZenith.rgb, pow(up, 0.45) * _DaySkyZenith.a);
-                color = lerp(color, skyBehind, smoothstep(_FadeStart, _FadeEnd, distance));
+                color = lerp(color, DaySkyBehind(-toCamera), smoothstep(_FadeStart, _FadeEnd, distance));
                 return half4(color, 1.0);
             }
             ENDHLSL

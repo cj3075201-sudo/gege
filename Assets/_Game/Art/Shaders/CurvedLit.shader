@@ -171,8 +171,12 @@ Shader "DeliveryRider/Curved Lit"
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+            // Lighting.hlsl has its own MixFog call, so it comes before the define below.
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "DaySkyFog.hlsl"
+            // LitPassFragment mixes its fog through this name, so the sky-coloured fog needs no copy of URP's fragment.
+            #define MixFog(color, fogCoord) DayFogMix(color, fogCoord, inputData.positionWS)
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitForwardPass.hlsl"
-            #include "CurvedWorld.hlsl"
 
             // The instance must be set up before the bend reads the object matrix.
             Varyings CurvedLitPassVertex(Attributes input)

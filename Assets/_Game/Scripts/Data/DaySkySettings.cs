@@ -79,6 +79,18 @@ namespace DeliveryRider
         [Tooltip("Metres the pattern spans before it repeats; the shadows themselves are a fraction of it.")]
         [SerializeField, Range(30f, 400f)] private float cloudShadowSize = 120f;
 
+        [Header("Fog (the world dissolves into the sky behind it)")]
+        [Tooltip("Metres from the camera with no fog.")]
+        [SerializeField, Min(0f)] private float fogStart = 10f;
+        [Tooltip("Metres from the camera where the ground is about 98% sky.")]
+        [SerializeField, Min(1f)] private float fogEnd = 170f;
+        [Tooltip("How much the fog thins on high parts, so rooftops stay clearer than the street below them.")]
+        [SerializeField, Range(0f, 1f)] private float fogHeightShare = 0.5f;
+        [Tooltip("Metres over which the fog thins with height.")]
+        [SerializeField, Min(0.1f)] private float fogHeightRange = 15f;
+        [Tooltip("How far thin haze leans to the zenith colour, which separates near and far buildings (aerial perspective).")]
+        [SerializeField, Range(0f, 1f)] private float fogBlue = 0.35f;
+
         [Header("After closing (dusk; blends from the closing look)")]
         [Tooltip("Game seconds from closing to the end of dusk; the dusk then holds until the settlement.")]
         [SerializeField, Min(1f)] private float duskSeconds = 60f;
@@ -112,6 +124,11 @@ namespace DeliveryRider
         public float NearCloudOcclusion => nearCloudOcclusion;
         public float CloudShadowStrength => cloudShadowStrength;
         public float CloudShadowSize => cloudShadowSize;
+        public float FogStart => fogStart;
+        public float FogEnd => Mathf.Max(fogEnd, fogStart + 1f);
+        public float FogHeightShare => fogHeightShare;
+        public float FogHeightRange => fogHeightRange;
+        public float FogBlue => fogBlue;
         public float DuskSeconds => duskSeconds;
         public float DuskSunElevation => duskSunElevation;
         public Color DuskZenith => duskZenith;

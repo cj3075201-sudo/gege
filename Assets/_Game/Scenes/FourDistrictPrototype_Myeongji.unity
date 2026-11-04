@@ -50244,6 +50244,70 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 430105439}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &430257764
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 430257766}
+  - component: {fileID: 430257765}
+  m_Layer: 0
+  m_Name: RiderDust
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &430257765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 430257764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f2f096117d9a734f89bb1a56b358909, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.RiderDust
+  rider: {fileID: 424159419}
+  shapes:
+  - {fileID: 4300000, guid: 8d27ae7580e05414cb5fb0f0b9e23583, type: 2}
+  - {fileID: 4300000, guid: 6244c5d5b31626344b062491f880ad72, type: 2}
+  - {fileID: 4300000, guid: 228e5640898e1594e899f427aad434b2, type: 2}
+  material: {fileID: 2100000, guid: 41b28bc3b42e404448a72df71792dc41, type: 2}
+  minimumSpeed: 1.5
+  fullSpeed: 16
+  spacing: {x: 2.2, y: 1}
+  size: {x: 0.35, y: 0.8}
+  lifetime: 0.5
+  swellShare: 0.35
+  widening: 0.4
+  rise: 0.5
+  spread: 0.25
+  footSpacing: 0.18
+  maximumPuffs: 12
+  dustRed: 0.8
+  dustGreen: 0.74
+  dustBlue: 0.65
+--- !u!4 &430257766
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 430257764}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &430777986
 GameObject:
   m_ObjectHideFlags: 0
@@ -152399,6 +152463,7 @@ MonoBehaviour:
   rider: {fileID: 424159419}
   riderVisual: {fileID: 424159425}
   safeRecovery: {fileID: 424159424}
+  riderDust: {fileID: 430257765}
   followCamera: {fileID: 1684003830}
   curvedWorld: {fileID: 1684003833}
   hazards: {fileID: 32693207}
@@ -240197,3 +240262,4 @@ SceneRoots:
   - {fileID: 175134121}
   - {fileID: 1242996223}
   - {fileID: 1180177595}
+  - {fileID: 430257766}

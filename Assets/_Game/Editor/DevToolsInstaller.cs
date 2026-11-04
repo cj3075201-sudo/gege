@@ -36,6 +36,7 @@ namespace DeliveryRider.Editor
             data.FindProperty("rider").objectReferenceValue = rider;
             data.FindProperty("riderVisual").objectReferenceValue = rider.GetComponent<RiderReactionVisual>();
             data.FindProperty("safeRecovery").objectReferenceValue = rider.GetComponent<RiderSafeRecovery>();
+            data.FindProperty("riderDust").objectReferenceValue = UnityEngine.Object.FindFirstObjectByType<RiderDust>(FindObjectsInactive.Include);
             data.FindProperty("followCamera").objectReferenceValue = follow;
             data.FindProperty("curvedWorld").objectReferenceValue = follow.GetComponent<CurvedWorld>();
             data.FindProperty("hazards").objectReferenceValue = planner;

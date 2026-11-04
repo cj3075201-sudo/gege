@@ -32,6 +32,7 @@ namespace DeliveryRider
         [SerializeField] private RiderMotor rider;
         [SerializeField] private RiderReactionVisual riderVisual;
         [SerializeField] private RiderSafeRecovery safeRecovery;
+        [SerializeField] private RiderDust riderDust;
         [SerializeField] private ThirdPersonCamera followCamera;
         [SerializeField] private CurvedWorld curvedWorld;
         [SerializeField] private HazardPlanner hazards;
@@ -130,6 +131,7 @@ namespace DeliveryRider
             Single(tabs[0], "라이더 이동·점프·사고", rider, ShowJumpHeight);
             Single(tabs[0], "사고 연출", riderVisual);
             Single(tabs[0], "안전 위치 복귀", safeRecovery);
+            Single(tabs[0], "걷기 먼지", riderDust);
 
             if (hazardSettings != null) tabs[1].Add(HazardCounts());
             Single(tabs[1], "사건 발동 규칙", hazards);

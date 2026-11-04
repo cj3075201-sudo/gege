@@ -31,6 +31,8 @@ namespace DeliveryRider
         private static readonly int CloudShadeId = Shader.PropertyToID("_DayCloudShade");
         private static readonly int CloudSunId = Shader.PropertyToID("_DayCloudSun");
         private static readonly int SkyZenithId = Shader.PropertyToID("_DaySkyZenith");
+        private static readonly int SkyGlowId = Shader.PropertyToID("_DaySkyGlow");
+        private static readonly int FogId = Shader.PropertyToID("_DayFog");
         private static readonly int ShadowCoverageId = Shader.PropertyToID("_Coverage");
         private static readonly int ShadowStrengthId = Shader.PropertyToID("_Strength");
         private static readonly int ShadowTimeId = Shader.PropertyToID("_ShapeTime");
@@ -92,6 +94,8 @@ namespace DeliveryRider
 
         private void OnDestroy()
         {
+            // Shader globals outlive Play Mode; edit mode and other scenes go back to the URP fog.
+            Shader.SetGlobalVector(FogId, Vector4.zero);
             if (sky != null) Destroy(sky);
             if (cloudShadows == null) return;
             if (sun != null && sun.cookie == cloudShadows) sun.cookie = null;
@@ -146,6 +150,12 @@ namespace DeliveryRider
             Shader.SetGlobalVector(CloudSunId, new Vector4(visibleSun.x, visibleSun.y, visibleSun.z, blend));
             // Distant near clouds melt into the sky behind them, not only the horizon colour.
             Shader.SetGlobalColor(SkyZenithId, ShaderColor(new Color(zenith.r, zenith.g, zenith.b, 1f)));
+            // So does the town (DaySkyFog.hlsl).
+            Shader.SetGlobalColor(SkyGlowId, ShaderColor(new Color(glow.r, glow.g, glow.b, settings.FogBlue)));
+            float fogSpan = settings.FogEnd - settings.FogStart;
+            Shader.SetGlobalVector(FogId, RenderSettings.fog
+                ? new Vector4(settings.FogStart, 1f / fogSpan, settings.FogHeightShare, 1f / settings.FogHeightRange)
+                : Vector4.zero);
             if (sky == null) return;
             sky.SetColor(ZenithId, zenith);
             sky.SetColor(HorizonId, horizon);
