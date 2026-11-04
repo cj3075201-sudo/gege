@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace DeliveryRider
 {
-    // Every placed hazard is active without a call; only theft needs food.
+    // Objects are active all the time; triggers strike only while the rider carries the food.
     public sealed class HazardPlanner : MonoBehaviour
     {
         [SerializeField] private DeliverySession session;
@@ -14,6 +14,17 @@ namespace DeliveryRider
         [Tooltip("Off: always use the seed below, to reproduce a layout.")]
         [SerializeField] private bool randomEachRun = true;
         [SerializeField] private int seed = 11;
+        [Header("Food knocked loose by a hazard (test values)")]
+        [SerializeField, Range(0f, 1f)] private float foodDropChance = 0.18f;
+        [SerializeField, Min(0.1f)] private float foodPickupRadius = 1.8f;
+        [Tooltip("Share of the rider's launch speed the food keeps sideways.")]
+        [SerializeField, Min(0f)] private float foodSpeedShare = 0.55f;
+        [Tooltip("Random sideways speed added on each axis.")]
+        [SerializeField, Min(0f)] private float foodSpreadSpeed = 5f;
+        [Tooltip("Upward speed = rider's launch upward speed x this + foodExtraUp.")]
+        [SerializeField, Min(0f)] private float foodUpShare = 0.7f;
+        [SerializeField, Min(0f)] private float foodExtraUp = 2.23f;
+        private DroppedFood droppedFood;
         private readonly List<HazardSlot> slots = new List<HazardSlot>();
         private int day = 1;
         public int LiveTriggers
@@ -102,7 +113,7 @@ namespace DeliveryRider
             foreach (var hazard in obj.GetComponents<IPlacedHazard>()) hazard.Place(session, ground, spot);
             var slot = obj.AddComponent<HazardSlot>();
             slot.Configure(kind.type, kind.role, kind.unlockDay, candidates.Routes(spot.spot));
-            slot.StrikeAllowed = kind.type != "theft" || session.Stage == DeliveryStage.Carrying;
+            slot.StrikeAllowed = CanStrike(slot);
             obj.SetActive(true);
             obj.transform.SetParent(transform, true);
             slots.Add(slot);
@@ -111,17 +122,51 @@ namespace DeliveryRider
         private void OnEnable()
         {
             session.Changed += OnSessionChanged;
+            if (rider != null) rider.HazardHit += OnRiderHazardHit;
         }
 
         private void OnDisable()
         {
             session.Changed -= OnSessionChanged;
+            if (rider != null) rider.HazardHit -= OnRiderHazardHit;
         }
 
         private void OnSessionChanged()
         {
             foreach (var slot in slots)
-                if (slot != null) slot.StrikeAllowed = slot.Type != "theft" || session.Stage == DeliveryStage.Carrying;
+                if (slot != null) slot.StrikeAllowed = CanStrike(slot);
+        }
+
+        private bool CanStrike(HazardSlot slot) => slot.Role == HazardRole.Object || session.Stage == DeliveryStage.Carrying;
+
+        // Melons are the weak hits that never cost the food.
+        private void OnRiderHazardHit(Object source)
+        {
+            if (source is RollingMelon || droppedFood != null || session.Stage != DeliveryStage.Carrying || Random.value >= foodDropChance) return;
+            var launch = rider.ContactVelocity;
+            var sideways = Vector3.ProjectOnPlane(launch, Vector3.up) * foodSpeedShare
+                + new Vector3(Random.Range(-foodSpreadSpeed, foodSpreadSpeed), 0f, Random.Range(-foodSpreadSpeed, foodSpreadSpeed));
+            float up = Mathf.Max(0f, launch.y) * foodUpShare + foodExtraUp;
+            var start = rider.transform.position;
+            var landing = start + sideways * (2f * up / Mathf.Max(0.01f, -Physics.gravity.y));
+            // Food always comes to rest where the rider can walk to it, never on a roof.
+            var recovery = rider.GetComponent<RiderSafeRecovery>();
+            if (recovery != null) landing = recovery.FindSafePosition(landing, start);
+            droppedFood = new GameObject("DroppedFood").AddComponent<DroppedFood>();
+            droppedFood.Launch(session, rider.transform, start, ground.OnGround(landing, 0.25f), up, foodPickupRadius, StolenFoodLook());
+        }
+
+        // The food looks the same as the bag a thief carries; without that art the guide marker still leads to it.
+        private GameObject StolenFoodLook()
+        {
+            foreach (var kind in settings.Kinds)
+            {
+                if (kind.type != "theft" || kind.prefab == null) continue;
+                var thief = kind.prefab.GetComponentInChildren<FoodThief>(true);
+                var bag = thief != null ? thief.transform.Find("StolenFood") : null;
+                if (bag != null) return bag.gameObject;
+            }
+            return null;
         }
 
     }

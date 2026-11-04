@@ -46,10 +46,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.CelebrityCrowdHazard
   celebrityCoat: {fileID: 2100000, guid: 81e19c5c2554ccc4f89c6a65469d1ebd, type: 2}
   glowMaterial: {fileID: 2100000, guid: 9a2759e04a748f243b7e62dce1ca7877, type: 2}
-  triggerRadius: 10
-  spawnRadius: 15
-  waitingFans: 6
+  triggerRadius: 16
+  spawnRadius: 26
+  waitingFans: 0
   incomingFans: 26
-  fanSpeedMultiplier: 3.75
-  fanResistance: 2
+  fanSpeedMultiplier: 4
+  fanResistance: 1.35
   fanMassMultiplier: 3

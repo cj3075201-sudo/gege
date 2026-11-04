@@ -17,6 +17,8 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float activeSeconds = 0.6f;
         [SerializeField, Min(0)] private float forwardImpulse = 6;
         [SerializeField, Min(0)] private float upwardImpulse = 4.5f;
+        [Tooltip("Manhole only: rider speed share added to forwardImpulse, thrown along the rider's heading.")]
+        [SerializeField, Min(0)] private float riderSpeedShare;
         [SerializeField, Min(0.1f)] private float slipSeconds = 2.2f;
         private BoxCollider volume;
         private CapsuleCollider playerShape;
@@ -80,7 +82,16 @@ namespace DeliveryRider
             Enter(Phase.Active);
             if (warningLamp != null) warningLamp.enabled = true;
             if (effect != null) effect.SetActive(true);
-            rider.TryHazardCrash(this, transform.forward * forwardImpulse + transform.up * upwardImpulse, 0.6f);
+            rider.TryHazardCrash(this, LaunchHorizontal() + transform.up * upwardImpulse, 0.6f);
+        }
+        // A manhole throws the rider onward the way they were heading; a standing rider goes along the road.
+        private Vector3 LaunchHorizontal()
+        {
+            if (kind != GroundHazardKind.Manhole) return transform.forward * forwardImpulse;
+            var heading = Vector3.ProjectOnPlane(rider.Velocity, Vector3.up);
+            float speed = heading.magnitude;
+            var direction = speed > 0.5f ? heading / speed : transform.forward;
+            return direction * (forwardImpulse + speed * riderSpeedShare);
         }
         private void Enter(Phase value) { phase = value; elapsed = 0; if (value == Phase.Ready) contactConsumed = false; }
         private void Finish() { if (phase != Phase.Spent) Enter(Phase.Spent); ClearEffects(); }

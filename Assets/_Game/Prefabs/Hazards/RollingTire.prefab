@@ -72,12 +72,12 @@ MonoBehaviour:
   approachCenter: {x: -89.54105, y: 2.522353, z: 104.823166}
   approachSize: {x: 3, y: 4, z: 5}
   radius: 0.55
-  warningSeconds: 0.8
-  initialSpeed: 4
-  maximumSpeed: 7
+  warningSeconds: 0.1
+  initialSpeed: 12
+  maximumSpeed: 12
   slopeAcceleration: 8
-  maximumLifetime: 8
-  impulse: 6
+  maximumLifetime: 5
+  impulse: 20
   recoverySeconds: 1.1
   rearmOnNextOrder: 0
   rearmSeconds: 8

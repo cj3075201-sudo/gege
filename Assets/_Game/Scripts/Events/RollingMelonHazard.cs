@@ -23,8 +23,13 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float burstLift = 1.2f;
         [SerializeField, Range(0.1f, 10f)] private float waveSeconds = 10f;
         [SerializeField, Min(0.1f)] private float tumbleSeconds = 0.1f;
-        [Tooltip("Extra horizontal speed when another melon hits the rider while rolling or getting up.")]
-        [SerializeField, Min(0f)] private float downedPushSpeed = 1.5f;
+        [Tooltip("Seconds between melons leaving the pile, smallest and largest.")]
+        [SerializeField] private Vector2 releaseInterval = new Vector2(0.2f, 0.25f);
+        [Tooltip("Each melon aims at the rider, turned by up to this many degrees.")]
+        [SerializeField, Range(0f, 45f)] private float aimSpread = 7f;
+        [Tooltip("Horizontal speed a melon hit throws the rider away from it.")]
+        [SerializeField, Min(0f)] private float hitSpeed = 7f;
+        [SerializeField, Min(0f)] private float hitLift = 3.01f;
         [SerializeField, Min(0f)] private float rearmSeconds = 10f;
         [SerializeField, Min(0f)] private float rearmDistance = 8f;
         // A compact three-level pyramid: nine on the ground, four above, one on top.
@@ -35,7 +40,8 @@ namespace DeliveryRider
         private Phase phase;
         private float elapsed;
         private bool ready;
-        private int active;
+        private int active, released;
+        private float nextReleaseAt;
 
         public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot) => session = owner;
 
@@ -74,6 +80,7 @@ namespace DeliveryRider
                     if ((slot == null || slot.StrikeAllowed) && Mathf.Abs(offset.y) < 3f && distance <= reach) BeginWave();
                     break;
                 case Phase.Rolling:
+                    while (released < active && elapsed >= nextReleaseAt) ReleaseNext(flatOffset);
                     if (elapsed >= Mathf.Min(waveSeconds, 10f)) Finish();
                     break;
                 case Phase.Spent:
@@ -86,27 +93,33 @@ namespace DeliveryRider
         {
             phase = Phase.Rolling;
             elapsed = 0f;
-            float startAngle = Random.Range(0f, 360f);
+            released = 0;
+            nextReleaseAt = 0f;
+            // Melons leave one at a time, so a loose one must not bounce off those still parked.
+            // Ignored pairs reset when a collider is deactivated, so this runs for every wave.
             for (int i = 0; i < active; i++)
             {
-                // Distribute around the whole circle, with a little variation per melon.
-                float angle = startAngle + i * 360f / active + Random.Range(-10f, 10f);
-                var outward = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
-                melons[i].Release(outward, rollSpeed * Random.Range(0.65f, 1f), burstLift);
+                var first = melons[i].GetComponent<Collider>();
+                for (int j = i + 1; j < active; j++) Physics.IgnoreCollision(first, melons[j].GetComponent<Collider>());
             }
+        }
+
+        // Each melon is aimed where the rider is now, so the column follows a rider coming down the road.
+        private void ReleaseNext(Vector3 toRider)
+        {
+            var aim = toRider.sqrMagnitude > 0.01f ? toRider.normalized : transform.forward;
+            var outward = Quaternion.Euler(0f, Random.Range(-aimSpread, aimSpread), 0f) * aim;
+            melons[released++].Release(outward, rollSpeed * Random.Range(0.65f, 1f), burstLift);
+            nextReleaseAt += Random.Range(releaseInterval.x, Mathf.Max(releaseInterval.x, releaseInterval.y));
         }
 
         public void Contact(RollingMelon melon, RiderMotor target)
         {
             if (phase != Phase.Rolling || melon == null || target != rider || session.IsMapOpen || session.IsSettled) return;
-            var push = Vector3.zero;
-            if (rider.ReactionState == RiderReactionState.Rolling || rider.ReactionState == RiderReactionState.GettingUp)
-            {
-                var away = Vector3.ProjectOnPlane(rider.transform.position - melon.transform.position, Vector3.up);
-                if (away.sqrMagnitude < 0.0001f) away = -rider.transform.forward;
-                push = away.normalized * downedPushSpeed;
-            }
-            rider.TryHazardTumble(melon, tumbleSeconds, true, push);
+            var away = Vector3.ProjectOnPlane(rider.transform.position - melon.transform.position, Vector3.up);
+            if (away.sqrMagnitude < 0.0001f) away = -rider.transform.forward;
+            // Each melon is its own source, so the next one can hit again once the 0.35 s hit gap has passed.
+            rider.TryHazardCrash(melon, away.normalized * hitSpeed + Vector3.up * hitLift, tumbleSeconds);
         }
 
         private void ResetWave()

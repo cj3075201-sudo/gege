@@ -13,6 +13,8 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float airInputSpeedLimit = 10f;
         [SerializeField, Range(0f, 1f)] private float wallReflection = 0.5f;
         [SerializeField, Range(0f, 1f)] private float floorReflection = 0.35f;
+        [Tooltip("Horizontal speed kept after each floor bounce.")]
+        [SerializeField, Range(0f, 1f)] private float floorFriction = 0.78f;
         [SerializeField, Min(0f)] private float minimumBounceSpeed = 5f;
         [SerializeField, Min(0)] private int maximumFloorBounces = 2;
         [SerializeField, Min(0.01f)] private float contactInterval = 0.12f;
@@ -272,7 +274,11 @@ namespace DeliveryRider
                 return;
             }
             var outgoing = pendingVelocity + pendingNormal * (strength * (1f + (floor ? floorReflection : wallReflection)));
-            if (floor) floorBounces++;
+            if (floor)
+            {
+                floorBounces++;
+                outgoing = new Vector3(outgoing.x * floorFriction, outgoing.y, outgoing.z * floorFriction);
+            }
             if (ReactionState == RiderReactionState.Sliding)
             {
                 slipOwner = null;

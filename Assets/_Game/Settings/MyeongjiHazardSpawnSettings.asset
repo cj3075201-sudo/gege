@@ -15,33 +15,33 @@ MonoBehaviour:
   kinds:
   - type: celebrity
     prefab: {fileID: 6048872110664833949, guid: d6fe7b3a05a19d240a0c176359f28488, type: 3}
-    role: 0
+    role: 1
     unlockDay: 1
     countPerDay: 05000000
-    poolSize: 10
+    poolSize: 1
   - type: manhole
     prefab: {fileID: 6472710267201087100, guid: f596076374953f645ae82da9c8aef1d5, type: 3}
     role: 0
     unlockDay: 1
-    countPerDay: 06000000030000000a0000000c000000
+    countPerDay: 04000000060000000800000009000000
     poolSize: 10
   - type: hydrant
     prefab: {fileID: 5070404547343383542, guid: 7d4ef1a04abf7c843beb66a684257e83, type: 3}
     role: 0
     unlockDay: 1
-    countPerDay: 04000000020000000600000006000000
+    countPerDay: 04000000040000000400000004000000
     poolSize: 10
   - type: melon
     prefab: {fileID: 6530980163086158173, guid: f76f44a5a22529a44bd073b5059e96e2, type: 3}
-    role: 0
-    unlockDay: 1
+    role: 1
+    unlockDay: 2
     countPerDay: 04000000030000000600000008000000
-    poolSize: 10
+    poolSize: 3
   - type: door
     prefab: {fileID: 2258765552048652787, guid: d9aa1405f52194043a5a9a9cb9a9c575, type: 3}
     role: 0
     unlockDay: 1
-    countPerDay: 03000000020000000500000006000000
+    countPerDay: 00000000000000000000000000000000
     poolSize: 10
   - type: duck
     prefab: {fileID: 2613456982075538471, guid: 8c84d1a05a662454f881b318ef2c31fb, type: 3}
@@ -54,30 +54,30 @@ MonoBehaviour:
     role: 1
     unlockDay: 1
     countPerDay: 
-    poolSize: 5
+    poolSize: 8
   - type: tire
     prefab: {fileID: 187407185860632136, guid: 28a9fcec772ac8948bed51bf36545ddc, type: 3}
     role: 1
     unlockDay: 2
     countPerDay: 
-    poolSize: 5
+    poolSize: 3
   - type: theft
     prefab: {fileID: 5341357968200033377, guid: c25a8024297b4e64fb874d7dbf50beaf, type: 3}
     role: 1
     unlockDay: 2
     countPerDay: 
-    poolSize: 6
+    poolSize: 3
   - type: muscleman
     prefab: {fileID: 7860594623088957268, guid: 9015fd045a43cb34f92ac4ee68005237, type: 3}
-    role: 0
+    role: 1
     unlockDay: 1
     countPerDay: 08000000050000000800000008000000
-    poolSize: 10
+    poolSize: 6
   - type: pigeonflock
     prefab: {fileID: 3615365105597982156, guid: 25b3eca937e83684896c0efb18a72047, type: 3}
     role: 1
     unlockDay: 2
     countPerDay: 
-    poolSize: 8
+    poolSize: 2
   spacing: 8
-  sameTypeSpacing: 25
+  sameTypeSpacing: 8

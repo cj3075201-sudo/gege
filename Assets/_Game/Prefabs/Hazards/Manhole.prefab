@@ -344,6 +344,7 @@ MonoBehaviour:
   warningLamp: {fileID: 8950364542859183388}
   effect: {fileID: 5652806652849708612}
   activeSeconds: 0.6
-  forwardImpulse: 6
-  upwardImpulse: 4.5
+  forwardImpulse: 13
+  upwardImpulse: 10.7
+  riderSpeedShare: 1.25
   slipSeconds: 2.2

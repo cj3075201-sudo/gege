@@ -435,6 +435,6 @@ MonoBehaviour:
   warningLamp: {fileID: 5304651947921607340}
   effect: {fileID: 1390390226027736659}
   activeSeconds: 0.8
-  forwardImpulse: 2
-  upwardImpulse: 11
+  forwardImpulse: 7
+  upwardImpulse: 13.38
   slipSeconds: 2.2

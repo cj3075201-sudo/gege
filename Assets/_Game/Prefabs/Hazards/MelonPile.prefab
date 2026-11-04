@@ -1307,14 +1307,14 @@ MonoBehaviour:
   - {fileID: 2687707914588690681}
   - {fileID: 3092833399659494199}
   pileOffset: {x: 0, y: 0, z: 0}
-  pileCount: {x: 14, y: 14}
-  approachRadius: 6
-  approachLeadSeconds: 1.2
-  rollSpeed: 6
-  burstLift: 1.2
-  waveSeconds: 10
+  pileCount: {x: 5, y: 5}
+  approachRadius: 26
+  approachLeadSeconds: 0
+  rollSpeed: 10.8
+  burstLift: 0
+  waveSeconds: 7
   tumbleSeconds: 0.1
-  downedPushSpeed: 1.5
+  hitSpeed: 7
   rearmSeconds: 10
   rearmDistance: 8
 --- !u!1 &6753727072951545744

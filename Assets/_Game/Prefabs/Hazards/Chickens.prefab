@@ -54,12 +54,12 @@ MonoBehaviour:
   - {fileID: 266839353001756334}
   - {fileID: 7091117577642646442}
   - {fileID: 6746447372287291489}
-  triggerRadius: 7
-  chaseSeconds: 6
-  attachmentSeconds: 3
-  extraAttachmentSeconds: 1.5
-  chaseSpeed: 5.2
-  riderSpeedShare: 1.15
+  triggerRadius: 3
+  chaseSeconds: 14
+  attachmentSeconds: 5
+  extraAttachmentSeconds: 3
+  chaseSpeed: 6.5
+  riderSpeedShare: 0
   maximumChaseSpeed: 20
   turnInterval: {x: 0.35, y: 0.8}
   wanderRadius: 2.5

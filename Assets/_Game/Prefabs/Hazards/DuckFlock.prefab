@@ -435,11 +435,11 @@ MonoBehaviour:
   maximumLeadDistance: 50
   arrivalMargin: 0.3
   waitingSpacing: 0.7
-  walkSpeed: 2.6
-  spacing: 1.1
-  hitRadius: 0.7
-  bounceImpulse: 6.5
-  bounceLift: 3
+  walkSpeed: 1.5
+  spacing: 1.6
+  hitRadius: 0.85
+  bounceImpulse: 18.8
+  bounceLift: 6.96
   recoverySeconds: 0.8
 --- !u!1 &2631520743083561295
 GameObject:

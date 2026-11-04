@@ -21,9 +21,22 @@ namespace DeliveryRider
         [SerializeField, Min(0)] private float slopeAcceleration = 8;
         [SerializeField, Min(0.1f)] private float maximumLifetime = 8;
         [SerializeField, Min(0)] private float impulse = 6;
+        [SerializeField, Min(0)] private float upwardImpulse = 5.8f;
         [SerializeField, Min(0.1f)] private float recoverySeconds = 1.1f;
         [SerializeField, Min(0)] private float rearmSeconds = 8;
         [SerializeField] private LayerMask collisionMask = ~0;
+        [Header("Road run (test values)")]
+        [Tooltip("Half length along the road of the zone that starts the tire.")]
+        [SerializeField, Min(0.1f)] private float triggerHalfLength = 26f;
+        [Tooltip("The tire starts this far past its slot, on the far side from the rider.")]
+        [SerializeField, Min(0f)] private float startBehind = 18f;
+        [Tooltip("How far past the slot the tire keeps rolling toward the rider's side.")]
+        [SerializeField, Min(0.1f)] private float rollPast = 40f;
+        private const float PathStep = 0.75f, WheelHeight = 0.65f, ClearanceRayHeight = 1.2f;
+        private RoadNetwork road;
+        private Vector3 parkedLocal;
+        private float laneHalfWidth;
+        private bool roadRun;
         private readonly Collider[] overlaps = new Collider[32];
         private readonly RaycastHit[] sweepHits = new RaycastHit[32];
         private RiderMotor rider;
@@ -37,25 +50,23 @@ namespace DeliveryRider
         private Quaternion initialRotation;
         private HazardSlot slot;
 
-        // Runtime spawn: the tire rolls across the road from the slot's sidewalk to just past the far kerb.
+        // Runtime spawn: the tire waits parked at the kerb; when started it rolls down the road toward the rider.
         public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot)
         {
             session = owner;
             linkedDoor = null;
             proximityActivation = true;
             approachCenter = new Vector3(0f, 1f, 0f);
-            approachSize = new Vector3(spot.halfWidth * 2f + 4f, 3f, 14f);
-            float start = spot.halfWidth + (spot.alley ? 0.5f : 2.5f), end = spot.halfWidth + 1f;
+            road = ground;
+            roadRun = true;
+            laneHalfWidth = Mathf.Max(0f, spot.halfWidth - 1f);
+            // Tall enough that a sloped road does not hide a rider at the far end of the zone.
+            approachSize = new Vector3((spot.halfWidth + 1.5f) * 2f, 6f, triggerHalfLength * 2f);
+            float start = spot.halfWidth + (spot.alley ? 0.5f : 2.5f);
             var right = transform.right;
-            localPath = new Vector3[17];
-            var first = Vector3.zero;
-            for (int i = 0; i < localPath.Length; i++)
-            {
-                float lateral = Mathf.Lerp(start, -end, i / (float)(localPath.Length - 1)) * spot.side;
-                var world = ground.OnGround(transform.position + right * lateral, 0.65f);
-                if (i == 0) first = world;
-                localPath[i] = transform.InverseTransformPoint(world);
-            }
+            var first = ground.OnGround(transform.position + right * (start * spot.side), WheelHeight);
+            parkedLocal = transform.InverseTransformPoint(first);
+            localPath = new[] { parkedLocal, parkedLocal };
             wheel.SetPositionAndRotation(first, Quaternion.LookRotation(-right * spot.side));
             if (warningLamp != null) { warningLamp.transform.position = first + Vector3.up; warningLamp.enabled = false; }
         }
@@ -89,6 +100,7 @@ namespace DeliveryRider
             if (!initialized || !isActiveAndEnabled || phase != Phase.Ready || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
             if (slot != null && !slot.StrikeAllowed) return false;
             ResetWheel();
+            if (roadRun) BuildRoadRun();
             hitThisCycle = false;
             speed = Mathf.Min(initialSpeed, maximumSpeed);
             segment = 1;
@@ -122,6 +134,34 @@ namespace DeliveryRider
                     { ResetWheel(); Enter(Phase.Ready); }
                     break;
             }
+        }
+
+        // A straight line down the road at the rider's lane, from behind the slot to past it on the rider's side.
+        private void BuildRoadRun()
+        {
+            var local = transform.InverseTransformPoint(rider.transform.position);
+            var along = transform.forward * (local.z >= 0f ? 1f : -1f);
+            var lane = transform.position + transform.right * Mathf.Clamp(local.x, -laneHalfWidth, laneHalfWidth);
+            float behind = ClearDistanceBehind(lane, -along);
+            int steps = Mathf.Max(1, Mathf.CeilToInt((behind + rollPast) / PathStep));
+            localPath = new Vector3[steps + 1];
+            for (int i = 0; i <= steps; i++)
+                localPath[i] = transform.InverseTransformPoint(road.OnGround(lane + along * Mathf.Lerp(-behind, rollPast, i / (float)steps), WheelHeight));
+            wheel.localPosition = localPath[0];
+        }
+
+        // A wall behind the slot shortens the run-up; a wheel started inside it would end at once.
+        private float ClearDistanceBehind(Vector3 lane, Vector3 direction)
+        {
+            int count = Physics.RaycastNonAlloc(road.OnGround(lane, ClearanceRayHeight), direction, sweepHits, startBehind, collisionMask, QueryTriggerInteraction.Ignore);
+            float clear = startBehind;
+            for (int i = 0; i < count; i++)
+            {
+                var hit = sweepHits[i];
+                if (hit.collider.transform.IsChildOf(transform) || hit.collider.transform.IsChildOf(rider.transform)) continue;
+                clear = Mathf.Min(clear, hit.distance - radius * 2f);
+            }
+            return Mathf.Max(0f, clear);
         }
 
         private void Advance()
@@ -178,7 +218,7 @@ namespace DeliveryRider
             {
                 hitThisCycle = true;
                 Vector3 push = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
-                rider.TryHazardCrash(this, push * impulse + Vector3.up * 2.5f, recoverySeconds);
+                rider.TryHazardCrash(this, push * impulse + Vector3.up * upwardImpulse, recoverySeconds);
             }
             return obstruction <= distance;
         }
@@ -191,7 +231,7 @@ namespace DeliveryRider
         }
         private void Enter(Phase value) { phase = value; elapsed = 0; }
         private void SetLamp(bool on) { if (warningLamp != null) warningLamp.enabled = on; }
-        private void ResetWheel() { spin = 0; wheel.localPosition = localPath[0]; wheel.localRotation = initialRotation; wheel.gameObject.SetActive(true); }
+        private void ResetWheel() { spin = 0; wheel.localPosition = roadRun ? parkedLocal : localPath[0]; wheel.localRotation = initialRotation; wheel.gameObject.SetActive(true); }
         private void Finish() { if (phase != Phase.Spent) Enter(Phase.Spent); SetLamp(false); wheel.gameObject.SetActive(false); }
         private void OnDrawGizmosSelected()
         {

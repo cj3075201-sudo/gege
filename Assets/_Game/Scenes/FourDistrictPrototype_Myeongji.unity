@@ -49363,25 +49363,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64d6d6962a77ad4292b2b6bd14df57c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.RiderMotor
-  airSteering: 5
+  airSteering: 7
   airInputSpeedLimit: 10
-  wallReflection: 0.5
-  floorReflection: 0.35
-  minimumBounceSpeed: 5
-  maximumFloorBounces: 2
+  wallReflection: 0.58
+  floorReflection: 0.46
+  minimumBounceSpeed: 2.23
+  maximumFloorBounces: 3
   contactInterval: 0.12
-  rollDeceleration: 8
-  getUpSpeed: 1.5
+  rollDeceleration: 14
+  getUpSpeed: 1.7
   stableGroundSeconds: 0.5
-  getUpSeconds: 0.45
+  getUpSeconds: 0.6
   accidentTimeout: 8
   stuckSeconds: 2
   rollingStaticFriction: 0.6
   rollingDynamicFriction: 0.6
   view: {fileID: 1684003829}
   session: {fileID: 421427440}
-  speed: 10
-  acceleration: 22
+  speed: 6
+  acceleration: 28
   turnSpeed: 12
   recoveryHeight: -8
   followSlopes: 1
@@ -49392,19 +49392,19 @@ MonoBehaviour:
   groundReach: 0.3
   groundContactTolerance: 0.03
   safeFallDepth: 6
-  punchCooldown: 0.35
+  punchCooldown: 0.42
   punchReach: 1.2
   punchRadius: 0.9
   punchHeight: 0.9
   punchMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  jumpSpeed: 5.5
+  jumpSpeed: 4.24
   slipSteering: 4
   slipMaximumSpeed: 8
-  chickenSpeedScale: 0.7
-  chickenHopInterval: 1.5
-  chickenHopHeightScale: 0.5
+  chickenSpeedScale: 0.3
+  chickenHopInterval: 1.4
+  chickenHopHeightScale: 0.62
 --- !u!54 &424159420
 Rigidbody:
   m_ObjectHideFlags: 0

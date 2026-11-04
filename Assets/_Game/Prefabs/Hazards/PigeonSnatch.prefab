@@ -825,9 +825,9 @@ MonoBehaviour:
   - {fileID: 1694866427901067907}
   - {fileID: 6887092616088407061}
   warningLamp: {fileID: 2773409333477708376}
-  triggerRadius: 4
-  warningSeconds: 0.5
-  swoopSeconds: 0.35
+  triggerRadius: 8
+  warningSeconds: 0.05
+  swoopSeconds: 0.05
   flySpeed: 5.4
   escapeSeconds: 35
 --- !u!1 &5938563372978294395

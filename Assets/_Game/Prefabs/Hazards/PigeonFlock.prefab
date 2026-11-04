@@ -2395,7 +2395,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 2.25
+  m_Radius: 3.5
   m_Center: {x: 0, y: 1.7, z: 0}
 --- !u!54 &3231409655207276652
 Rigidbody:
@@ -2465,7 +2465,7 @@ MonoBehaviour:
   - {fileID: 9193762397537726773}
   obscureSeconds: 3
   contactCooldown: 8
-  driftDistance: 2.5
+  driftDistance: 0
   driftSpeed: 0.8
   orbitSpeed: 1.4
   orbitRadius: 1.45

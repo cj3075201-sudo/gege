@@ -101,7 +101,7 @@ namespace DeliveryRider
             switch (phase)
             {
                 case Phase.Idle:
-                    if (!session.IsMapOpen && !rider.IsRecovering && Near(transform.position, triggerRadius))
+                    if ((slot == null || slot.StrikeAllowed) && !session.IsMapOpen && !rider.IsRecovering && Near(transform.position, triggerRadius))
                     {
                         elapsed = 0f;
                         for (int i = 0; i < birds.Length; i++) turnAt[i] = 0f;

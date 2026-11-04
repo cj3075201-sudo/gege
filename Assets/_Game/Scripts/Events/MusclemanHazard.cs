@@ -20,6 +20,10 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float runnerRadius = 0.75f;
         [Header("Sideways shove (test values)")]
         [SerializeField, Min(0f)] private float shoveSpeed = 8f;
+        [SerializeField, Min(0f)] private float shoveForward = 4f;
+        [Tooltip("Share of the rider's own horizontal speed kept in the shove.")]
+        [SerializeField, Min(0f)] private float shoveRiderShare = 0.3f;
+        [SerializeField, Min(0f)] private float shoveLift = 2.9f;
         [SerializeField, Min(0f)] private float pedestrianLift = 1f;
         [SerializeField, Min(0.1f)] private float recoverySeconds = 0.6f;
         private DeliverySession session;
@@ -254,7 +258,11 @@ namespace DeliveryRider
             var right = Vector3.Cross(Vector3.up, forward).normalized;
             float side = Vector3.Dot(body.position - runner.position, right) >= 0f ? 1f : -1f;
             var sideways = right * (side * shoveSpeed);
-            if (player != null) player.TryHazardTumble(this, recoverySeconds, true, sideways);
+            if (player != null)
+            {
+                var carried = Vector3.ProjectOnPlane(player.Velocity, Vector3.up) * shoveRiderShare;
+                player.TryHazardCrash(this, sideways + forward * shoveForward + carried + Vector3.up * shoveLift, recoverySeconds);
+            }
             else if (body.TryGetComponent<TrafficPedestrian>(out var pedestrian)) pedestrian.TryHazardKnock(sideways + Vector3.up * pedestrianLift);
         }
 
