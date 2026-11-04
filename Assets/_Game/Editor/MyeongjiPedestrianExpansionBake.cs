@@ -46,7 +46,7 @@ namespace DeliveryRider.Editor
             if (old.Any(p => p.points.Any(q => !OriginalMap.Contains(new Vector2(q.x, q.z)))))
                 throw new InvalidOperationException("The widened paths are already baked; restore the scene first.");
             LoadFloors(network);
-            if (floors.Count < 2) throw new InvalidOperationException("The new ground is not in RoadNetwork.ground yet.");
+            if (floors.All(f => ((MeshCollider)f.collider).sharedMesh.name != "Ground_Expanded")) throw new InvalidOperationException("The new ground is not in RoadNetwork.ground yet.");
             var barriers = roots.FirstOrDefault(g => g.name == "ZoneBarriers");
             bool barriersActive = barriers != null && barriers.activeSelf;
             if (barriers != null) barriers.SetActive(false); // their walls are not obstacles to walkers
