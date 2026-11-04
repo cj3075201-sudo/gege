@@ -1,0 +1,295 @@
+{
+ "existingRoadCount": 18,
+ "newRoadCount": 59,
+ "newRoadLength": 2838,
+ "existingRoadLength": 888,
+ "connected": true,
+ "nodes": 176,
+ "edges": 211,
+ "zones": {
+  "A": {
+   "current": 2257,
+   "area": 16032,
+   "added": 13775,
+   "roadLength": 913,
+   "moved": 7,
+   "kept": 4
+  },
+  "B": {
+   "current": 4678,
+   "area": 18492,
+   "added": 13814,
+   "roadLength": 1002,
+   "moved": 7,
+   "kept": 4
+  },
+  "C": {
+   "current": 4802,
+   "area": 16997,
+   "added": 12195,
+   "roadLength": 989,
+   "moved": 7,
+   "kept": 4
+  },
+  "D": {
+   "current": 4328,
+   "area": 16629,
+   "added": 12301,
+   "roadLength": 823,
+   "moved": 7,
+   "kept": 4
+  }
+ },
+ "totalArea": 68150,
+ "distance": {
+  "same": {
+   "count": 96,
+   "min": 25,
+   "mean": 119,
+   "max": 246,
+   "at120": 0.531,
+   "at220": 0.031,
+   "at300": 0.0
+  },
+  "neighbor": {
+   "count": 240,
+   "min": 60,
+   "mean": 227,
+   "max": 437,
+   "at120": 0.921,
+   "at220": 0.562,
+   "at300": 0.192
+  },
+  "far": {
+   "count": 48,
+   "min": 169,
+   "mean": 325,
+   "max": 480,
+   "at120": 1.0,
+   "at220": 0.875,
+   "at300": 0.688
+  },
+  "all_other": {
+   "count": 288,
+   "min": 60,
+   "mean": 244,
+   "max": 480,
+   "at120": 0.934,
+   "at220": 0.615,
+   "at300": 0.274
+  }
+ },
+ "pairs": {
+  "AA": {
+   "count": 24,
+   "min": 25,
+   "mean": 111,
+   "max": 199,
+   "at120": 0.5,
+   "at220": 0.0,
+   "at300": 0.0
+  },
+  "AB": {
+   "count": 24,
+   "min": 98,
+   "mean": 224,
+   "max": 338,
+   "at120": 0.917,
+   "at220": 0.542,
+   "at300": 0.167
+  },
+  "AC": {
+   "count": 24,
+   "min": 78,
+   "mean": 221,
+   "max": 327,
+   "at120": 0.833,
+   "at220": 0.583,
+   "at300": 0.25
+  },
+  "AD": {
+   "count": 24,
+   "min": 169,
+   "mean": 322,
+   "max": 456,
+   "at120": 1.0,
+   "at220": 0.875,
+   "at300": 0.708
+  },
+  "BA": {
+   "count": 24,
+   "min": 72,
+   "mean": 200,
+   "max": 346,
+   "at120": 0.875,
+   "at220": 0.375,
+   "at300": 0.125
+  },
+  "BB": {
+   "count": 24,
+   "min": 25,
+   "mean": 122,
+   "max": 241,
+   "at120": 0.458,
+   "at220": 0.042,
+   "at300": 0.0
+  },
+  "BC": {
+   "count": 24,
+   "min": 120,
+   "mean": 265,
+   "max": 405,
+   "at120": 0.958,
+   "at220": 0.708,
+   "at300": 0.333
+  },
+  "BD": {
+   "count": 24,
+   "min": 97,
+   "mean": 230,
+   "max": 336,
+   "at120": 0.958,
+   "at220": 0.542,
+   "at300": 0.167
+  },
+  "CA": {
+   "count": 24,
+   "min": 100,
+   "mean": 213,
+   "max": 319,
+   "at120": 0.917,
+   "at220": 0.625,
+   "at300": 0.083
+  },
+  "CB": {
+   "count": 24,
+   "min": 120,
+   "mean": 278,
+   "max": 437,
+   "at120": 1.0,
+   "at220": 0.792,
+   "at300": 0.417
+  },
+  "CC": {
+   "count": 24,
+   "min": 48,
+   "mean": 137,
+   "max": 246,
+   "at120": 0.75,
+   "at220": 0.083,
+   "at300": 0.0
+  },
+  "CD": {
+   "count": 24,
+   "min": 60,
+   "mean": 209,
+   "max": 377,
+   "at120": 0.875,
+   "at220": 0.458,
+   "at300": 0.125
+  },
+  "DA": {
+   "count": 24,
+   "min": 177,
+   "mean": 327,
+   "max": 480,
+   "at120": 1.0,
+   "at220": 0.875,
+   "at300": 0.667
+  },
+  "DB": {
+   "count": 24,
+   "min": 97,
+   "mean": 219,
+   "max": 315,
+   "at120": 0.958,
+   "at220": 0.542,
+   "at300": 0.083
+  },
+  "DC": {
+   "count": 24,
+   "min": 70,
+   "mean": 214,
+   "max": 354,
+   "at120": 0.917,
+   "at220": 0.458,
+   "at300": 0.167
+  },
+  "DD": {
+   "count": 24,
+   "min": 25,
+   "mean": 105,
+   "max": 182,
+   "at120": 0.417,
+   "at220": 0.0,
+   "at300": 0.0
+  }
+ },
+ "days": {
+  "1": {
+   "open": [
+    "C"
+   ],
+   "pairs": 24,
+   "longerThanTable": 0,
+   "unreachable": 0
+  },
+  "2": {
+   "open": [
+    "C",
+    "A"
+   ],
+   "pairs": 96,
+   "longerThanTable": 0,
+   "unreachable": 0
+  },
+  "3": {
+   "open": [
+    "C",
+    "A",
+    "B"
+   ],
+   "pairs": 216,
+   "longerThanTable": 0,
+   "unreachable": 0
+  },
+  "4": {
+   "open": [
+    "C",
+    "A",
+    "B",
+    "D"
+   ],
+   "pairs": 384,
+   "longerThanTable": 0,
+   "unreachable": 0
+  }
+ },
+ "homeToShopsC": [
+  134,
+  58,
+  67
+ ],
+ "barrierCount": 15,
+ "borderLengthMeters": {
+  "AB": 132,
+  "AC": 121,
+  "BC": 62,
+  "BD": 130,
+  "CD": 107
+ },
+ "borderTotalMeters": 553,
+ "misplacedOldAnchors": [],
+ "closestTrafficJunctions": {
+  "meters": 8.0,
+  "a": [
+   116.0,
+   0.0
+  ],
+  "b": [
+   124,
+   0
+  ],
+  "count": 33
+ }
+}

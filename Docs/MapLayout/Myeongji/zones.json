@@ -1,0 +1,599 @@
+{
+ "bounds": {
+  "minimum": [
+   -90.0,
+   -150.0
+  ],
+  "size": [
+   290.0,
+   235.0
+  ]
+ },
+ "openOrder": [
+  "C",
+  "A",
+  "B",
+  "D"
+ ],
+ "home": "C",
+ "zones": [
+  {
+   "id": "A",
+   "polygon": [
+    [
+     -90,
+     85
+    ],
+    [
+     31,
+     85
+    ],
+    [
+     31,
+     -47.5
+    ],
+    [
+     -90,
+     -47.5
+    ]
+   ],
+   "label": [
+    -30,
+    62
+   ],
+   "area": 16032
+  },
+  {
+   "id": "B",
+   "polygon": [
+    [
+     31,
+     85
+    ],
+    [
+     200,
+     85
+    ],
+    [
+     200,
+     -6
+    ],
+    [
+     118.8,
+     -6
+    ],
+    [
+     93.2,
+     -47.5
+    ],
+    [
+     31,
+     -47.5
+    ]
+   ],
+   "label": [
+    98,
+    62
+   ],
+   "area": 18492
+  },
+  {
+   "id": "C",
+   "polygon": [
+    [
+     -90,
+     -47.5
+    ],
+    [
+     93.2,
+     -47.5
+    ],
+    [
+     89.9,
+     -52
+    ],
+    [
+     69.9,
+     -103
+    ],
+    [
+     69.9,
+     -150
+    ],
+    [
+     -90,
+     -150
+    ]
+   ],
+   "label": [
+    -24,
+    -122
+   ],
+   "area": 16997
+  },
+  {
+   "id": "D",
+   "polygon": [
+    [
+     93.2,
+     -47.5
+    ],
+    [
+     118.8,
+     -6
+    ],
+    [
+     200,
+     -6
+    ],
+    [
+     200,
+     -150
+    ],
+    [
+     69.9,
+     -150
+    ],
+    [
+     69.9,
+     -103
+    ],
+    [
+     89.9,
+     -52
+    ]
+   ],
+   "label": [
+    138,
+    -72
+   ],
+   "area": 16629
+  }
+ ],
+ "borders": [
+  {
+   "zones": [
+    "A",
+    "B"
+   ],
+   "from": [
+    31,
+    85.0
+   ],
+   "to": [
+    31,
+    -47.5
+   ]
+  },
+  {
+   "zones": [
+    "A",
+    "C"
+   ],
+   "from": [
+    31,
+    -47.5
+   ],
+   "to": [
+    -90,
+    -47.5
+   ]
+  },
+  {
+   "zones": [
+    "B",
+    "C"
+   ],
+   "from": [
+    93.2,
+    -47.5
+   ],
+   "to": [
+    31.0,
+    -47.5
+   ]
+  },
+  {
+   "zones": [
+    "B",
+    "D"
+   ],
+   "from": [
+    200.0,
+    -6
+   ],
+   "to": [
+    118.8,
+    -6
+   ]
+  },
+  {
+   "zones": [
+    "B",
+    "D"
+   ],
+   "from": [
+    118.8,
+    -6.0
+   ],
+   "to": [
+    93.2,
+    -47.5
+   ]
+  },
+  {
+   "zones": [
+    "C",
+    "D"
+   ],
+   "from": [
+    93.2,
+    -47.5
+   ],
+   "to": [
+    89.9,
+    -52.0
+   ]
+  },
+  {
+   "zones": [
+    "C",
+    "D"
+   ],
+   "from": [
+    89.9,
+    -52
+   ],
+   "to": [
+    69.9,
+    -103
+   ]
+  },
+  {
+   "zones": [
+    "C",
+    "D"
+   ],
+   "from": [
+    69.9,
+    -103
+   ],
+   "to": [
+    69.9,
+    -150
+   ]
+  }
+ ],
+ "barriers": [
+  {
+   "id": "AB_main",
+   "zones": [
+    "A",
+    "B"
+   ],
+   "requiredZones": [
+    "A",
+    "B"
+   ],
+   "road": "main",
+   "position": [
+    31.0,
+    0.0
+   ],
+   "roadDirection": [
+    1.0,
+    0.0
+   ],
+   "width": 8,
+   "span": 12.0
+  },
+  {
+   "id": "AB_B_dead_end_west",
+   "zones": [
+    "A",
+    "B"
+   ],
+   "requiredZones": [
+    "A",
+    "B"
+   ],
+   "road": "B_dead_end_west",
+   "position": [
+    31.0,
+    -29.0
+   ],
+   "roadDirection": [
+    1.0,
+    0.0
+   ],
+   "width": 4,
+   "span": 8.0
+  },
+  {
+   "id": "AB_b_cross1",
+   "zones": [
+    "A",
+    "B"
+   ],
+   "requiredZones": [
+    "A",
+    "B"
+   ],
+   "road": "b_cross1",
+   "position": [
+    31.0,
+    49.83
+   ],
+   "roadDirection": [
+    0.9991,
+    -0.0425
+   ],
+   "width": 7,
+   "span": 11.0
+  },
+  {
+   "id": "AB_b_top1",
+   "zones": [
+    "A",
+    "B"
+   ],
+   "requiredZones": [
+    "A",
+    "B"
+   ],
+   "road": "b_top1",
+   "position": [
+    31.0,
+    78.16
+   ],
+   "roadDirection": [
+    0.9992,
+    0.0392
+   ],
+   "width": 6,
+   "span": 10.0
+  },
+  {
+   "id": "AC_west",
+   "zones": [
+    "A",
+    "C"
+   ],
+   "requiredZones": [
+    "A",
+    "C"
+   ],
+   "road": "west",
+   "position": [
+    0.0,
+    -47.5
+   ],
+   "roadDirection": [
+    0.0,
+    -1.0
+   ],
+   "width": 6,
+   "span": 10.0
+  },
+  {
+   "id": "AC_A_B_connector",
+   "zones": [
+    "A",
+    "C"
+   ],
+   "requiredZones": [
+    "A",
+    "C"
+   ],
+   "road": "A_B_connector",
+   "position": [
+    27.0,
+    -47.5
+   ],
+   "roadDirection": [
+    0.0,
+    -1.0
+   ],
+   "width": 5,
+   "span": 9.0
+  },
+  {
+   "id": "AC_a_south",
+   "zones": [
+    "A",
+    "C"
+   ],
+   "requiredZones": [
+    "A",
+    "C"
+   ],
+   "road": "a_south",
+   "position": [
+    -30.0,
+    -47.5
+   ],
+   "roadDirection": [
+    0.0,
+    -1.0
+   ],
+   "width": 5,
+   "span": 9.0
+  },
+  {
+   "id": "AC_a_outer",
+   "zones": [
+    "A",
+    "C"
+   ],
+   "requiredZones": [
+    "A",
+    "C"
+   ],
+   "road": "a_outer",
+   "position": [
+    -84.0,
+    -47.5
+   ],
+   "roadDirection": [
+    0.0,
+    -1.0
+   ],
+   "width": 6,
+   "span": 10.0
+  },
+  {
+   "id": "BC_east",
+   "zones": [
+    "B",
+    "C"
+   ],
+   "requiredZones": [
+    "B",
+    "C"
+   ],
+   "road": "east",
+   "position": [
+    86.77,
+    -47.5
+   ],
+   "roadDirection": [
+    -0.5241,
+    -0.8517
+   ],
+   "width": 7,
+   "span": 11.0
+  },
+  {
+   "id": "BC_B_dead_end_south",
+   "zones": [
+    "B",
+    "C"
+   ],
+   "requiredZones": [
+    "B",
+    "C"
+   ],
+   "road": "B_dead_end_south",
+   "position": [
+    57.0,
+    -47.5
+   ],
+   "roadDirection": [
+    0.0,
+    1.0
+   ],
+   "width": 4,
+   "span": 8.0
+  },
+  {
+   "id": "BD_d_outer",
+   "zones": [
+    "B",
+    "D"
+   ],
+   "requiredZones": [
+    "B",
+    "D"
+   ],
+   "road": "d_outer",
+   "position": [
+    192.0,
+    -6.0
+   ],
+   "roadDirection": [
+    0.0,
+    -1.0
+   ],
+   "width": 6,
+   "span": 10.0
+  },
+  {
+   "id": "BD_d_mid1",
+   "zones": [
+    "B",
+    "D"
+   ],
+   "requiredZones": [
+    "B",
+    "D"
+   ],
+   "road": "d_mid1",
+   "position": [
+    155.0,
+    -6.0
+   ],
+   "roadDirection": [
+    0.0,
+    -1.0
+   ],
+   "width": 5,
+   "span": 9.0
+  },
+  {
+   "id": "BD_east_infill_top",
+   "zones": [
+    "B",
+    "D"
+   ],
+   "requiredZones": [
+    "B",
+    "D"
+   ],
+   "road": "east_infill_top",
+   "position": [
+    95.36,
+    -44.0
+   ],
+   "roadDirection": [
+    1.0,
+    0.0
+   ],
+   "width": 4,
+   "span": 8.0
+  },
+  {
+   "id": "CD_east_infill_bottom",
+   "zones": [
+    "C",
+    "D"
+   ],
+   "requiredZones": [
+    "C",
+    "D"
+   ],
+   "road": "east_infill_bottom",
+   "position": [
+    69.9,
+    -103.0
+   ],
+   "roadDirection": [
+    1.0,
+    0.0
+   ],
+   "width": 6,
+   "span": 10.0
+  },
+  {
+   "id": "CD_d_s1",
+   "zones": [
+    "C",
+    "D"
+   ],
+   "requiredZones": [
+    "C",
+    "D"
+   ],
+   "road": "d_s1",
+   "position": [
+    69.9,
+    -142.78
+   ],
+   "roadDirection": [
+    0.9993,
+    0.0377
+   ],
+   "width": 6,
+   "span": 10.0
+  }
+ ]
+}
