@@ -84,8 +84,11 @@ namespace DeliveryRider
                         $"배달 완료 · {(session.LastResult.WasLate ? "지각" : "정시")} +{session.LastResult.Reward:N0}원";
                     break;
                 case DeliveryStage.FoodLost:
-                    objective.text = session.IsChasingFood ? "도둑을 주먹으로 쳐서 음식을 회수하세요" : $"{session.ActiveOrder.RestaurantName}에서 음식 다시 받기";
-                    cardTitle.text = session.IsChasingFood ? "음식 도난 · 도둑 추격" : "음식 분실 · 음식점 재수령";
+                    bool dropped = DroppedFood.IsTarget(session);
+                    objective.text = dropped ? "떨어진 음식에 다가가 주우세요"
+                        : session.IsChasingFood ? "도둑을 주먹으로 쳐서 음식을 회수하세요" : $"{session.ActiveOrder.RestaurantName}에서 음식 다시 받기";
+                    cardTitle.text = dropped ? "음식 떨어짐 · 주우러 가기"
+                        : session.IsChasingFood ? "음식 도난 · 도둑 추격" : "음식 분실 · 음식점 재수령";
                     break;
             }
             if (session.IsCallOpen) cardTitle.text = callCards.Length > 0 ? $"새 콜 {session.Candidates.Count}건" : "콜 확인   ·   1 / 2  수락";
@@ -173,6 +176,7 @@ namespace DeliveryRider
                 : session.IsPaused ? $"{Key("Esc")} 계속하기"
                 : session.IsCallOpen ? $"{Key("1")} {Key("2")} 콜 수락   ·   클릭 자세히 보기   ·   {Key("Esc")} 닫기"
                 : session.IsMapOpen ? $"{Key("M")} {Key("Esc")} 지도 닫기   ·   지도를 보는 동안에도 시간이 흐릅니다"
+                : DroppedFood.IsTarget(session) ? $"떨어진 음식에 다가가면 자동으로 줍습니다   ·   {common}"
                 : session.IsChasingFood ? $"{Key("F")} 음식을 가져간 도둑을 쳐서 회수   ·   {common}"
                 : session.IsRecoveringFood ? $"음식점에 가면 자동으로 다시 받습니다   ·   {common}"
                 : session.Stage == DeliveryStage.Carrying ? $"{Key("F")} {session.ActiveOrder.CustomerName} 쳐서 전달   {Key("Space")} 점프   ·   {common}"

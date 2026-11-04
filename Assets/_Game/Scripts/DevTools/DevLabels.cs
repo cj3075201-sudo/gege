@@ -86,7 +86,8 @@ namespace DeliveryRider
             { "warningSeconds", "경고 시간" }, { "swoopSeconds", "급강하 시간" }, { "flySpeed", "비행 속도" }, { "escapeSeconds", "도주 시간" },
             { "pileCount", "더미 크기" }, { "approachRadius", "접근 반경" }, { "approachLeadSeconds", "접근 예측 시간" },
             { "rollSpeed", "구르는 속도" }, { "burstLift", "흩어질 때 높이" }, { "waveSeconds", "흩어지는 시간" },
-            { "tumbleSeconds", "넘어지는 시간" }, { "downedPushSpeed", "쓰러진 뒤 미는 속도" }, { "rearmSeconds", "재작동 대기" },
+            { "tumbleSeconds", "넘어지는 시간" }, { "hitSpeed", "맞을 때 밀리는 속도" }, { "hitLift", "맞을 때 뜨는 속도" },
+            { "releaseInterval", "하나씩 굴러 나오는 간격" }, { "aimSpread", "조준 흔들림(도)" }, { "rearmSeconds", "재작동 대기" },
             { "rearmDistance", "재작동 거리" }, { "proximityActivation", "근접 발동" }, { "radius", "반경" },
             { "initialSpeed", "시작 속도" }, { "maximumSpeed", "최고 속도" }, { "slopeAcceleration", "경사 가속" },
             { "maximumLifetime", "최대 지속 시간" }, { "impulse", "충격량" }, { "rearmOnNextOrder", "다음 주문에 재작동" },
@@ -114,6 +115,17 @@ namespace DeliveryRider
             { "maximumDistance", "최대 거리" }, { "reward", "보상" }, { "lateRatio", "지각 보상 비율" }, { "startingDebt", "시작 빚" },
             { "livingCost", "생활비" }, { "inlinePrice", "인라인 가격" }, { "inlineSaleDay", "인라인 판매 일차" },
             { "inlineSpeedMultiplier", "인라인 속도 배율" }, { "inlineAccelerationMultiplier", "인라인 가속 배율" },
+            // Zone unlocks and distance reward
+            { "useDistanceReward", "거리 보상 사용" }, { "rewardBase", "기본 보상" }, { "rewardPerMeter", "m당 보상" },
+            { "openCountByDay", "일차별 열린 구역 수" }, { "minimumDistanceByOpenCount", "열린 구역 수별 최소 거리" },
+            { "reuseExclusionDistance", "집 재사용 제외 거리" }, { "addShortfallToDebt", "생활비 부족분을 빚에 더하기" },
+            { "zoneMaskResolution", "닫힌 구역 음영 해상도" },
+            // HTML tuning: hazards and rider
+            { "triggersRequireFood", "트리거는 음식 든 뒤에만" }, { "foodDropChance", "음식 떨어질 확률" }, { "foodPickupRadius", "음식 줍는 거리" },
+            { "foodSpeedShare", "음식 수평 속도 비율" }, { "foodSpreadSpeed", "음식 무작위 수평 속도" },
+            { "foodUpShare", "음식 위쪽 속도 비율" }, { "foodExtraUp", "음식 추가 위쪽 속도" }, { "floorFriction", "바닥 튕김 뒤 수평 속도 비율" },
+            { "shoveForward", "앞으로 미는 속도" }, { "shoveRiderShare", "라이더 속도 유지 비율" }, { "shoveLift", "뜨는 속도" },
+            { "triggerHalfLength", "발동 거리(길 따라 앞뒤)" }, { "startBehind", "출발 거리(라이더 반대쪽)" }, { "rollPast", "지나서 더 구르는 거리" },
         };
 
         public static string Find(string type, string field)

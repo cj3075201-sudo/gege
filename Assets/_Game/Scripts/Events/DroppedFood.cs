@@ -14,6 +14,10 @@ namespace DeliveryRider
         private float elapsed, flightSeconds, peak, pickupRadius;
         private bool lost;
 
+        // The session treats dropped food like a thief to chase; the on-screen guidance tells the two apart.
+        public static bool IsTarget(DeliverySession session)
+            => session.IsChasingFood && session.Target.TryGetComponent<DroppedFood>(out _);
+
         public void Launch(DeliverySession owner, Transform player, Vector3 start, Vector3 restingPoint, float upSpeed, float radius, GameObject look)
         {
             session = owner;
