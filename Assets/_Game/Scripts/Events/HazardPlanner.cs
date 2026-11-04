@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace DeliveryRider
 {
-    // Objects are active all the time; triggers strike only while the rider carries the food.
+    // Objects are active all the time; triggers wait for the food when triggersRequireFood is on. Theft always needs food.
     public sealed class HazardPlanner : MonoBehaviour
     {
         [SerializeField] private DeliverySession session;
@@ -14,6 +14,8 @@ namespace DeliveryRider
         [Tooltip("Off: always use the seed below, to reproduce a layout.")]
         [SerializeField] private bool randomEachRun = true;
         [SerializeField] private int seed = 11;
+        [Tooltip("On: triggers strike only while the rider carries the food (HTML prototype). Off: they strike regardless (team rule).")]
+        [SerializeField] private bool triggersRequireFood = true;
         [Header("Food knocked loose by a hazard (test values)")]
         [SerializeField, Range(0f, 1f)] private float foodDropChance = 0.18f;
         [SerializeField, Min(0.1f)] private float foodPickupRadius = 1.8f;
@@ -25,6 +27,7 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float foodUpShare = 0.7f;
         [SerializeField, Min(0f)] private float foodExtraUp = 2.23f;
         private DroppedFood droppedFood;
+        private bool appliedFoodRule;
         private readonly List<HazardSlot> slots = new List<HazardSlot>();
         private int day = 1;
         public int LiveTriggers
@@ -133,11 +136,22 @@ namespace DeliveryRider
 
         private void OnSessionChanged()
         {
+            appliedFoodRule = triggersRequireFood;
             foreach (var slot in slots)
                 if (slot != null) slot.StrikeAllowed = CanStrike(slot);
         }
 
-        private bool CanStrike(HazardSlot slot) => slot.Role == HazardRole.Object || session.Stage == DeliveryStage.Carrying;
+        private bool CanStrike(HazardSlot slot)
+        {
+            bool needsFood = slot.Type == "theft" || triggersRequireFood && slot.Role == HazardRole.Trigger;
+            return !needsFood || session.Stage == DeliveryStage.Carrying;
+        }
+
+        // The developer panel can flip the rule mid-run, between session changes.
+        private void Update()
+        {
+            if (appliedFoodRule != triggersRequireFood) OnSessionChanged();
+        }
 
         // Melons are the weak hits that never cost the food.
         private void OnRiderHazardHit(Object source)
