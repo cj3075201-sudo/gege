@@ -28,11 +28,13 @@ namespace DeliveryRider
         private readonly List<UnityEngine.Object> live = new List<UnityEngine.Object>();
         private readonly Dictionary<DevValue, float> baseline = new Dictionary<DevValue, float>();
         private readonly Dictionary<DevValue, float> changes = new Dictionary<DevValue, float>();
+        private readonly string sessionKey;
 
         public DevTarget(string title, UnityEngine.Object source, Func<IEnumerable<UnityEngine.Object>> find)
         {
             Title = title;
             Source = source;
+            sessionKey = DevTuningSession.Key(title, source);
             this.find = find;
             Refresh();
         }
@@ -50,6 +52,12 @@ namespace DeliveryRider
             {
                 Values.Add(value);
                 baseline[value] = value.Read(sample);
+                if (DevTuningSession.TryGet(sessionKey, value.PropertyPath, out float original, out float current, out bool pending))
+                {
+                    baseline[value] = original;
+                    Write(value, current);
+                    if (pending) changes[value] = current;
+                }
             }
         }
 
@@ -65,12 +73,15 @@ namespace DeliveryRider
         public void Set(DevValue value, float raw)
         {
             changes[value] = raw;
+            DevTuningSession.Keep(sessionKey, Source, value, baseline[value], raw, true);
             Write(value, raw);
         }
 
         public void Revert(DevValue value)
         {
-            if (changes.Remove(value)) Write(value, baseline[value]);
+            if (!changes.Remove(value)) return;
+            Write(value, baseline[value]);
+            DevTuningSession.Keep(sessionKey, Source, value, baseline[value], baseline[value], false);
         }
 
         public void RevertAll()
@@ -111,7 +122,12 @@ namespace DeliveryRider
         // Saved values become the new baseline, so ending the scene keeps them.
         public void MarkSaved()
         {
-            foreach (var change in changes) baseline[change.Key] = change.Value;
+            if (changes.Count > 0) DevTuningSession.MarkSaved(Source);
+            foreach (var change in changes)
+            {
+                baseline[change.Key] = change.Value;
+                DevTuningSession.Keep(sessionKey, Source, change.Key, change.Value, change.Value, false);
+            }
             changes.Clear();
         }
 
