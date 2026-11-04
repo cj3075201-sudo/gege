@@ -71,7 +71,7 @@ namespace DeliveryRider
             {
                 var point = points[i];
                 float distance = (new Vector2(point.x - from.x, point.z - from.z)).sqrMagnitude;
-                if (distance >= closest || openRoads != null && !openRoads.RoadOpen(point, halfWidths[i], alleys[i])
+                if (distance >= closest || openRoads != null && (!openRoads.RoadOpen(point, halfWidths[i], alleys[i]) || !openRoads.PointOpen(point))
                     || !TryStand(point, out var stand) || !HasRoom(stand)) continue;
                 // A roof above a road centre is not a valid recovery floor.
                 if (Mathf.Abs(stand.y - (point.y + HalfHeight - capsule.center.y)) > 0.75f) continue;
@@ -112,8 +112,10 @@ namespace DeliveryRider
             {
                 var point = points[i];
                 var toward = new Vector3(from.x - point.x, 0f, from.z - point.z);
-                if (toward.sqrMagnitude >= closest || !openRoads.RoadOpen(point, halfWidths[i], alleys[i])) continue;
-                if (!StandsOnRoad(point + Vector3.ClampMagnitude(toward, widths[i]), point, out var stand)
+                if (toward.sqrMagnitude >= closest || !openRoads.RoadOpen(point, halfWidths[i], alleys[i]) || !openRoads.PointOpen(point)) continue;
+                var nearest = point + Vector3.ClampMagnitude(toward, widths[i]);
+                if (!openRoads.PointOpen(nearest)) nearest = point;
+                if (!StandsOnRoad(nearest, point, out var stand)
                     && !StandsOnRoad(point, point, out stand)) continue;
                 closest = toward.sqrMagnitude;
                 destination = stand;

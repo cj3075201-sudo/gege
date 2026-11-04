@@ -34,11 +34,19 @@ namespace DeliveryRider
             return !anyZone;
         }
 
+        // A road running on across a border wall counts as open by its side probes for a few metres past the wall. Nobody
+        // may be put there: this asks about the spot itself. Outside every zone nothing can be closed.
+        public bool PointOpen(Vector3 position)
+        {
+            if (zones == null) return true;
+            return !ZoneAllows(zones.ZoneAt(position), out bool open) || open;
+        }
+
         // A landing is closed when its road is closed, or off road where no open zone holds it.
         public bool LandingClosed(Vector3 position, bool onRoad, Vector3 roadCentre, float halfWidth, bool alley)
         {
             if (zones == null) return false;
-            if (onRoad) return !RoadOpen(roadCentre, halfWidth, alley);
+            if (onRoad) return !RoadOpen(roadCentre, halfWidth, alley) || !PointOpen(roadCentre);
             return !ZoneAllows(zones.ZoneAt(position), out bool open) || !open;
         }
 

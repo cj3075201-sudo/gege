@@ -362,6 +362,65 @@ namespace DeliveryRider.Editor
             return "none";
         }
 
+        // Density of the original map, on 4.8 times the sidewalk and 4.2 times the car lanes. Unmeasured test values; F1 changes them.
+        private const int WalkerCount = 110, VehicleCount = 50;
+        // Fog ends at 100 m and the curve hides buildings soon after; near clouds reach about 250 m.
+        private const float FarClip = 250f;
+
+        public static void ApplyTuning()
+        {
+            var scene = OpenScene();
+            var camera = Root(scene, "Main Camera").GetComponent<Camera>();
+            camera.farClipPlane = FarClip;
+            var walkers = new SerializedObject(Root(scene, "Pedestrians").GetComponent<PedestrianNetwork>());
+            walkers.FindProperty("population").intValue = WalkerCount;
+            walkers.ApplyModifiedPropertiesWithoutUndo();
+            var cars = new SerializedObject(Root(scene, "Traffic").GetComponent<TrafficNetwork>());
+            cars.FindProperty("vehicleCount").intValue = VehicleCount;
+            cars.ApplyModifiedPropertiesWithoutUndo();
+            Save(scene);
+            Debug.Log($"[MapExpansion] Tuning: far clip {FarClip}, walkers {WalkerCount}, vehicles {VehicleCount}.");
+        }
+
+        // Read-only: from beyond every map edge, on every day's open zones, recovery must land on an open road on the floor.
+        public static void CheckRecovery()
+        {
+            var scene = OpenScene();
+            Physics.SyncTransforms();
+            var player = Root(scene, "Player");
+            var recovery = player.GetComponent<RiderSafeRecovery>();
+            var motor = new SerializedObject(player.GetComponent<RiderMotor>());
+            if (!motor.FindProperty("followSlopes").boolValue || motor.FindProperty("safeFallDepth").floatValue <= 0f) throw new InvalidOperationException("The fall check that starts recovery is off.");
+            var map = new SerializedObject(Root(scene, "DeliverySession").GetComponent<DeliverySession>()).FindProperty("zoneMap").objectReferenceValue as ZoneMap;
+            var outside = new[] { new Vector3(-120f, -7f, 0f), new Vector3(230f, -7f, 0f), new Vector3(50f, -7f, 115f), new Vector3(50f, -7f, -180f), new Vector3(-120f, -7f, 115f), new Vector3(230f, -7f, -180f) };
+            var days = new[] { new[] { "C" }, new[] { "C", "A" }, new[] { "C", "A", "B" }, new[] { "C", "A", "B", "D" } };
+            var far = new Vector3(4000f, 0f, 4000f);
+            var results = new List<string>();
+            for (int d = 0; d < days.Length; d++)
+            {
+                var open = days[d];
+                var filter = new HazardZoneFilter(map, z => open.Contains(z));
+                foreach (var from in outside)
+                {
+                    var landed = recovery.FindSafePosition(from, far, filter);
+                    string zone = map.ZoneAt(landed);
+                    if (landed == far || zone == null || !open.Contains(zone) || !recovery.IsSafe(landed)) throw new InvalidOperationException($"Day {d + 1}: from {from} recovery gave {landed} in zone {zone ?? "none"}.");
+                    results.Add($"{d + 1}:{zone}");
+                    if (!recovery.LandedClosed(from, filter)) throw new InvalidOperationException($"Day {d + 1}: resting at {from} does not count as closed.");
+                    if (!recovery.TryFindOpenRoad(from, filter, out var hop) || !open.Contains(map.ZoneAt(hop))) throw new InvalidOperationException($"Day {d + 1}: no open road from {from}.");
+                }
+            }
+            // Road samples just past a closed border wall: they must count as closed and never be a target.
+            var firstDay = new HazardZoneFilter(map, z => z == "C");
+            foreach (var behindWall in new[] { new Vector3(-84f, 0f, -44f), new Vector3(0f, 0f, -44f), new Vector3(-30f, 0f, -44f), new Vector3(57f, 0f, -44f) })
+            {
+                if (!recovery.LandedClosed(behindWall, firstDay)) throw new InvalidOperationException($"Day 1: landing at {behindWall}, behind a wall, does not count as closed.");
+                if (!recovery.TryFindOpenRoad(behindWall, firstDay, out var hop) || map.ZoneAt(hop) != "C") throw new InvalidOperationException($"Day 1: hop from {behindWall} goes to {hop}.");
+                results.Add("wall:" + map.ZoneAt(hop));
+            }
+            Debug.Log($"[MapExpansion] Recovery check: {results.Count} falls land on open roads: {string.Join(" ", results)}.");
+        }
+
         // Editor renders for the report: no Play mode and nothing saved. Fog is off so the far blocks read.
         public static void RenderViews()
         {
