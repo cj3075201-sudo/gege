@@ -35244,7 +35244,7 @@ MonoBehaviour:
     colors:
     - {r: 0.93, g: 0.93, b: 0.9, a: 1}
     - {r: 0.6, g: 0.62, b: 0.64, a: 1}
-  vehicleCount: 12
+  vehicleCount: 50
   minimumSpacing: 14
   playerClearance: 10
   randomEachRun: 1
@@ -143468,7 +143468,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 97afcc29617a9a34582841d5666127c8, type: 2}
   - {fileID: 2100000, guid: 48d30aecccb782f4d91b707351d32d14, type: 2}
   spawnSpacing: 3
-  population: 24
+  population: 110
   playerClearance: 10
   randomEachRun: 1
   seed: 37
@@ -254815,7 +254815,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.1
-  far clip plane: 800
+  far clip plane: 250
   field of view: 58
   orthographic: 0
   orthographic size: 5

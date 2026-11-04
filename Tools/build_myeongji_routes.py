@@ -102,6 +102,8 @@ def main():
  zone_names=['A 정문 앞','B 북쪽 상가','C 남쪽 주택','D 동쪽 골목']
  if args.expanded:
   layout=read_json('layout_expanded.json');anchors=read_json('anchors_expanded.json');zones=read_json('zones.json')
+  # The map shows every building; the road graph does not depend on them.
+  layout['lots']=layout['lots']+[[l['id'],l['sourceBuildingId'],l['x'],l['z'],l['width'],l['depth'],0,l['rotationDeg']] for l in read_json('lots_expanded.json')['lots']]
   polygons={z['id']:z['polygon'] for z in zones['zones']}
   def zone_of(ident,x,z):
    return next((k for k,p in polygons.items() if inside(p,x,z)),original_zone(ident,x,z))
