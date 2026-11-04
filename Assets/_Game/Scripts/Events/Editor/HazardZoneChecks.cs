@@ -43,6 +43,27 @@ namespace DeliveryRider.Editor
                 Check(HazardZoneFilter.ScaleCount(9, 0.5f) == 5, "9 x 0.5 rounds up to 5");
 
                 Check(DevLabels.Find("HazardPlanner", "triggersRequireFood") != null, "new toggle has a Korean name");
+
+                var centre = new Vector3(50f, 0f, 50f);
+                var closedCentre = new Vector3(150f, 0f, 50f);
+                Check(!none.LandingClosed(closedCentre, true, closedCentre, 4f, false), "no map: no landing is closed");
+                Check(!onlyC.LandingClosed(centre, true, centre, 4f, false), "landing on an open road");
+                Check(onlyC.LandingClosed(closedCentre, true, closedCentre, 4f, false), "landing on a closed road");
+                Check(!onlyC.LandingClosed(new Vector3(103f, 0f, 50f), true, new Vector3(100f, 0f, 50f), 4f, false), "closed side of an open border road");
+                Check(onlyC.LandingClosed(new Vector3(105f, 0f, 50f), true, new Vector3(105f, 0f, 50f), 2.25f, true), "landing in a closed alley");
+                Check(!onlyC.LandingClosed(centre, false, centre, 0f, false), "off road inside an open zone");
+                Check(onlyC.LandingClosed(closedCentre, false, closedCentre, 0f, false), "off road inside a closed zone");
+                Check(onlyC.LandingClosed(new Vector3(500f, 0f, 500f), false, Vector3.zero, 0f, false), "off road outside every zone");
+                Check(!onlyC.LandingClosed(new Vector3(500f, 0f, 500f), true, new Vector3(500f, 0f, 500f), 4f, false), "road outside every zone");
+
+                Check(Mathf.Approximately(RiderMotor.ZoneHopDuration(2f, 13f, 0.55f, 1.5f), 0.55f), "short hop uses the shortest time");
+                Check(Mathf.Approximately(RiderMotor.ZoneHopDuration(13f, 13f, 0.55f, 1.5f), 1f), "hop time follows distance");
+                Check(Mathf.Approximately(RiderMotor.ZoneHopDuration(100f, 13f, 0.55f, 1.5f), 1.5f), "long hop uses the longest time");
+                var hopFrom = new Vector3(0f, 2f, 0f);
+                var hopTo = new Vector3(10f, 0f, 0f);
+                Check(RiderMotor.ZoneHopPoint(hopFrom, hopTo, 0f, 3f) == hopFrom, "hop starts where the rider lies");
+                Check(Vector3.Distance(RiderMotor.ZoneHopPoint(hopFrom, hopTo, 1f, 3f), hopTo) < 0.0001f, "hop ends on the road");
+                Check(Vector3.Distance(RiderMotor.ZoneHopPoint(hopFrom, hopTo, 0.5f, 3f), new Vector3(5f, 4f, 0f)) < 0.0001f, "hop peaks halfway");
                 Debug.Log("HazardZoneChecks PASS: all checks.");
                 EditorApplication.Exit(0);
             }

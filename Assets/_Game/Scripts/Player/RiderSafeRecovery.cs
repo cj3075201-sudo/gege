@@ -13,6 +13,9 @@ namespace DeliveryRider
         [SerializeField, Min(0.01f)] private float groundClearance = 0.04f;
         private readonly List<Vector3> points = new List<Vector3>();
         private readonly List<float> widths = new List<float>();
+        private readonly List<float> halfWidths = new List<float>();
+        private readonly List<float> roadReaches = new List<float>();
+        private readonly List<bool> alleys = new List<bool>();
         private readonly Collider[] overlaps = new Collider[32];
         private readonly RaycastHit[] groundHits = new RaycastHit[32];
         private CapsuleCollider capsule;
@@ -34,6 +37,9 @@ namespace DeliveryRider
                     Vector3 position = road.Container.EvaluatePosition(i / (float)count);
                     points.Add(network.OnGround(position, 0f));
                     widths.Add(Mathf.Max(0.5f, road.HalfWidth - capsule.radius));
+                    halfWidths.Add(road.HalfWidth);
+                    roadReaches.Add(road.HalfWidth + road.SidewalkWidth + sampleSpacing * 0.5f);
+                    alleys.Add(road.Kind == RoadKind.Alley);
                 }
             }
         }
@@ -55,15 +61,18 @@ namespace DeliveryRider
             return false;
         }
 
-        public Vector3 FindSafePosition(Vector3 from, Vector3 fallback)
+        // openRoads, when given, limits the search to roads open today.
+        public Vector3 FindSafePosition(Vector3 from, Vector3 fallback, HazardZoneFilter openRoads = null)
         {
             CacheRoads();
             Vector3 best = fallback;
             float closest = float.PositiveInfinity;
-            foreach (var point in points)
+            for (int i = 0; i < points.Count; i++)
             {
+                var point = points[i];
                 float distance = (new Vector2(point.x - from.x, point.z - from.z)).sqrMagnitude;
-                if (distance >= closest || !TryStand(point, out var stand) || !HasRoom(stand)) continue;
+                if (distance >= closest || openRoads != null && !openRoads.RoadOpen(point, halfWidths[i], alleys[i])
+                    || !TryStand(point, out var stand) || !HasRoom(stand)) continue;
                 // A roof above a road centre is not a valid recovery floor.
                 if (Mathf.Abs(stand.y - (point.y + HalfHeight - capsule.center.y)) > 0.75f) continue;
                 closest = distance;
@@ -74,6 +83,49 @@ namespace DeliveryRider
             if (TryStand(start, out var safeStart) && HasRoom(safeStart)) return safeStart;
             return fallback;
         }
+
+        // Whether a rider coming to rest here is on a closed road, or off road outside any open zone.
+        public bool LandedClosed(Vector3 position, HazardZoneFilter openRoads)
+        {
+            CacheRoads();
+            int nearest = -1;
+            float best = float.PositiveInfinity;
+            for (int i = 0; i < points.Count; i++)
+            {
+                float distance = new Vector2(points[i].x - position.x, points[i].z - position.z).sqrMagnitude;
+                if (distance < best) { best = distance; nearest = i; }
+            }
+            bool onRoad = nearest >= 0 && best <= roadReaches[nearest] * roadReaches[nearest];
+            return nearest >= 0
+                ? openRoads.LandingClosed(position, onRoad, points[nearest], halfWidths[nearest], alleys[nearest])
+                : openRoads.LandingClosed(position, false, position, 0f, true);
+        }
+
+        // The nearest standable point inside an open road, as close to the rider as the road's width allows.
+        public bool TryFindOpenRoad(Vector3 from, HazardZoneFilter openRoads, out Vector3 destination)
+        {
+            CacheRoads();
+            destination = from;
+            bool found = false;
+            float closest = float.PositiveInfinity;
+            for (int i = 0; i < points.Count; i++)
+            {
+                var point = points[i];
+                var toward = new Vector3(from.x - point.x, 0f, from.z - point.z);
+                if (toward.sqrMagnitude >= closest || !openRoads.RoadOpen(point, halfWidths[i], alleys[i])) continue;
+                if (!StandsOnRoad(point + Vector3.ClampMagnitude(toward, widths[i]), point, out var stand)
+                    && !StandsOnRoad(point, point, out stand)) continue;
+                closest = toward.sqrMagnitude;
+                destination = stand;
+                found = true;
+            }
+            return found;
+        }
+
+        // A roof above a road is not a valid recovery floor.
+        private bool StandsOnRoad(Vector3 position, Vector3 roadPoint, out Vector3 stand)
+            => TryStand(position, out stand) && HasRoom(stand)
+                && Mathf.Abs(stand.y - (roadPoint.y + HalfHeight - capsule.center.y)) <= 0.75f;
 
         private float HalfHeight => capsule.height * Mathf.Abs(transform.lossyScale.y) * 0.5f;
         private bool TryStand(Vector3 position, out Vector3 stand)

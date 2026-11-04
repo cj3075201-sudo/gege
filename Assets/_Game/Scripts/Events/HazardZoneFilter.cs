@@ -34,6 +34,14 @@ namespace DeliveryRider
             return !anyZone;
         }
 
+        // A landing is closed when its road is closed, or off road where no open zone holds it.
+        public bool LandingClosed(Vector3 position, bool onRoad, Vector3 roadCentre, float halfWidth, bool alley)
+        {
+            if (zones == null) return false;
+            if (onRoad) return !RoadOpen(roadCentre, halfWidth, alley);
+            return !ZoneAllows(zones.ZoneAt(position), out bool open) || !open;
+        }
+
         // Share of the whole road length open today; counts in the settings are for the whole map.
         public float OpenRoadShare(IReadOnlyList<RoadSurface> roads)
         {

@@ -114,6 +114,7 @@ namespace DeliveryRider
         private void ResetReaction()
         {
             ClearChickenAttachments();
+            CancelZoneHop();
             slipOwner = null;
             airMovement = Vector2.zero;
             jumpQueued = false;
@@ -126,8 +127,9 @@ namespace DeliveryRider
 
         private void RestoreSafePosition()
         {
+            CancelZoneHop();
             Vector3 destination = spawn;
-            if (safeRecovery != null) destination = safeRecovery.FindSafePosition(body.position, spawn);
+            if (safeRecovery != null) destination = safeRecovery.FindSafePosition(body.position, spawn, OpenRoads);
             body.position = destination;
             body.linearVelocity = body.angularVelocity = Vector3.zero;
             spawn = destination;
@@ -139,6 +141,7 @@ namespace DeliveryRider
         private bool TickReaction()
         {
             float dt = Time.fixedDeltaTime;
+            if (zoneHopping) { AdvanceZoneHop(); return true; }
             if (ReactionState == RiderReactionState.Sliding && !IsSlipping) SetReactionState(RiderReactionState.Normal);
             ApplyPendingContact();
             IsReactionGrounded = ReactionState != RiderReactionState.Normal && TryReactionSupport();
@@ -187,6 +190,8 @@ namespace DeliveryRider
                     if (IsReactionGrounded)
                     {
                         var tangent = Vector3.MoveTowards(Vector3.ProjectOnPlane(body.linearVelocity, ReactionGroundNormal), Vector3.zero, rollDeceleration * dt);
+                        // Only a rider coming to rest is checked: flying over a closed zone is allowed.
+                        if (stableGroundTime == 0f && tangent.magnitude <= getUpSpeed && TryBeginZoneHop()) break;
                         body.linearVelocity = tangent;
                         stableGroundTime = tangent.magnitude <= getUpSpeed ? stableGroundTime + dt : 0f;
                         if (stableGroundTime >= stableGroundSeconds && (!physicalTumble || Time.time >= trafficRecoveryUntil)) SetReactionState(RiderReactionState.GettingUp);

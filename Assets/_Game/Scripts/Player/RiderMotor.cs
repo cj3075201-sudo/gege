@@ -142,7 +142,7 @@ namespace DeliveryRider
         // instead of pushing the rider along. minimumInterval keeps one contact from relaunching every step.
         public bool TryTrafficRelaunch(Vector3 velocity, float recoverySeconds, float minimumInterval)
         {
-            if (session == null || session.IsPaused || session.IsMapOpen || session.IsSettled || Time.time < nextRelaunchAt) return false;
+            if (zoneHopping || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled || Time.time < nextRelaunchAt) return false;
             nextRelaunchAt = Time.time + minimumInterval;
             lastHazard = null;
             hazardChainCount = 0;
@@ -175,7 +175,7 @@ namespace DeliveryRider
             if (repeatContact)
             {
                 // Each melon is consumed on contact, so a new melon can restart the accident reaction.
-                if (source == null || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
+                if (zoneHopping || source == null || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
                 hazardChainCount = lastHazard != null && Time.time - lastHazardHitAt <= 8f ? hazardChainCount + 1 : 1;
                 lastHazard = source;
                 lastHazardHitAt = Time.time;
@@ -212,7 +212,7 @@ namespace DeliveryRider
 
         private bool AcceptHazard(UnityEngine.Object source)
         {
-            if (source == null || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
+            if (zoneHopping || source == null || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
             bool chain = lastHazard != null && lastHazard != source && Time.time - lastHazardHitAt <= 8;
             if (Time.time - lastHazardHitAt < 0.35f) return false;
             if (!chain && (IsRecovering || Time.time < nextTrafficHitAt)) return false;
@@ -284,6 +284,7 @@ namespace DeliveryRider
         {
             if (session.IsSettled)
             {
+                CancelZoneHop();
                 slipOwner = null;
                 trafficRecoveryActive = false;
                 groundedForHazards = false;
