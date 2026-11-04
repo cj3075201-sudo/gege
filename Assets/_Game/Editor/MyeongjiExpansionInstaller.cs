@@ -16,7 +16,7 @@ namespace DeliveryRider.Editor
     // Applies the widened Myeongji map (Docs/MapLayout/Myeongji/*_expanded.json, zones.json from
     // Tools/build_myeongji_expansion.py) to the Myeongji scene. Each step can be run again: it skips what is already
     // there and fails loudly on a mismatch. Run in batch mode with -executeMethod, one step at a time.
-    public static class MyeongjiExpansionInstaller
+    public static partial class MyeongjiExpansionInstaller
     {
         private const string ScenePath = "Assets/_Game/Scenes/FourDistrictPrototype_Myeongji.unity";
         private const string DataFolder = "Docs/MapLayout/Myeongji";

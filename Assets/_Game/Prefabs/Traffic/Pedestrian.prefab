@@ -221,6 +221,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83f495595a537d64db6b8866adde113e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.TrafficPedestrian
+  crowdAcceleration: 30
+  crowdStepHeight: 0.3
   visual: {fileID: 9180963251460460451}
   coat: {fileID: 420023027647532180}
   walkingSpeed: {x: 1.1, y: 1.65}
@@ -229,7 +231,7 @@ MonoBehaviour:
   obstacleReach: 1.1
   obstacleMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967039
   avoidHoldSeconds: 1.2
   turnBackSeconds: 1
   punchSpeed: 5
