@@ -91,7 +91,7 @@ namespace DeliveryRider
         {
             // Starts well above the feet so a sloped sidewalk does not count as an obstruction.
             int count = Physics.OverlapCapsuleNonAlloc(feet + Vector3.up * 0.55f, feet + Vector3.up * 1.45f,
-                0.27f, spawnHits, ~0, QueryTriggerInteraction.Ignore);
+                0.27f, spawnHits, HazardPhysics.Everything, QueryTriggerInteraction.Ignore);
             return count == 0;
         }
 

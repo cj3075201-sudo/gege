@@ -83,7 +83,7 @@ MonoBehaviour:
   rearmSeconds: 8
   collisionMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967039
 --- !u!1 &450590073268603388
 GameObject:
   m_ObjectHideFlags: 0

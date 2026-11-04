@@ -130,7 +130,7 @@ namespace DeliveryRider
         }
 
         public static bool Clear(Vector3 feet) => !Physics.CheckCapsule(feet + Vector3.up * 0.55f,
-            feet + Vector3.up * 1.45f, 0.3f, ~0, QueryTriggerInteraction.Ignore);
+            feet + Vector3.up * 1.45f, 0.3f, HazardPhysics.Everything, QueryTriggerInteraction.Ignore);
 
         // Spawn only where a fan can reach the two-metre ring directly. Do not place fans behind buildings.
         public static bool HasDirectApproach(Vector3 feet, Vector3 center)
@@ -140,7 +140,7 @@ namespace DeliveryRider
             var delta = target - feet;
             if (delta.sqrMagnitude < 0.0001f) return true;
             foreach (var hit in Physics.CapsuleCastAll(feet + Vector3.up * 0.65f, feet + Vector3.up * 1.45f,
-                0.3f, delta.normalized, delta.magnitude, ~0, QueryTriggerInteraction.Ignore))
+                0.3f, delta.normalized, delta.magnitude, HazardPhysics.Everything, QueryTriggerInteraction.Ignore))
                 if (hit.rigidbody == null && hit.normal.y < 0.7f) return false;
             return true;
         }

@@ -160,7 +160,7 @@ namespace DeliveryRider
         {
             local.y = 0f;
             var world = transform.TransformPoint(local);
-            int count = Physics.RaycastNonAlloc(world + Vector3.up * 5f, Vector3.down, groundHits, 10f, ~0, QueryTriggerInteraction.Ignore);
+            int count = Physics.RaycastNonAlloc(world + Vector3.up * 5f, Vector3.down, groundHits, 10f, HazardPhysics.Everything, QueryTriggerInteraction.Ignore);
             float nearest = float.PositiveInfinity, height = 0f;
             for (int i = 0; i < count; i++)
             {

@@ -242,10 +242,10 @@ namespace DeliveryRider
             var delta = to - from;
             if (delta.sqrMagnitude > 0.00001f)
             {
-                int count = Physics.CapsuleCastNonAlloc(bottom, top, runnerRadius, delta.normalized, sweepHits, delta.magnitude, ~0, QueryTriggerInteraction.Ignore);
+                int count = Physics.CapsuleCastNonAlloc(bottom, top, runnerRadius, delta.normalized, sweepHits, delta.magnitude, HazardPhysics.Everything, QueryTriggerInteraction.Ignore);
                 for (int i = 0; i < count; i++) Shove(sweepHits[i].collider, forward);
             }
-            int overlapCount = Physics.OverlapCapsuleNonAlloc(to + Vector3.up * runnerRadius, to + Vector3.up * (runnerHeight - runnerRadius), runnerRadius, overlaps, ~0, QueryTriggerInteraction.Ignore);
+            int overlapCount = Physics.OverlapCapsuleNonAlloc(to + Vector3.up * runnerRadius, to + Vector3.up * (runnerHeight - runnerRadius), runnerRadius, overlaps, HazardPhysics.Everything, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < overlapCount; i++) Shove(overlaps[i], forward);
         }
 
