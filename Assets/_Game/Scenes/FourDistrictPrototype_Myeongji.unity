@@ -2971,7 +2971,7 @@ MonoBehaviour:
   rider: {fileID: 424159419}
   ground: {fileID: 1954410165}
   settings: {fileID: 11400000, guid: c66b4ebd32bedfd4781784f0e9c0c6d6, type: 2}
-  candidates: {fileID: 11400000, guid: 0ab704724f312854f94054f48c38994e, type: 2}
+  candidates: {fileID: 11400000, guid: 4c35b47633e9d9440b89bc3649a5dec5, type: 2}
   randomEachRun: 1
   seed: 11
   triggersRequireFood: 1
