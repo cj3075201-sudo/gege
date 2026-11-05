@@ -438,9 +438,20 @@ MonoBehaviour:
   walkSpeed: 1.5
   spacing: 1.6
   hitRadius: 0.85
+  blockingSeconds: 6
+  maximumCrossingWidth: 24
+  boundarySearchDistance: 256
+  boundaryStep: 0.2
+  birdClearance: 0.5
+  maximumGroundStep: 0.4
+  jumpReactionRange: 4
+  highFlightPassHeight: 2.2
+  duckJumpHeight: 1.05
+  duckJumpSeconds: 0.8
   bounceImpulse: 18.8
   bounceLift: 6.96
   recoverySeconds: 0.8
+  repeatHitDelay: 1
 --- !u!1 &2631520743083561295
 GameObject:
   m_ObjectHideFlags: 0
