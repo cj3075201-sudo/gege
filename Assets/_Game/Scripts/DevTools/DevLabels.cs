@@ -12,6 +12,7 @@ namespace DeliveryRider
             { "manhole", "맨홀" }, { "hydrant", "소화전" }, { "melon", "수박" }, { "door", "문" }, { "duck", "오리" },
             { "cat", "고양이 복서" }, { "manhole", "맨홀" }, { "hydrant", "소화전" }, { "melon", "수박" }, { "door", "문" }, { "duck", "오리" },
             { "chicken", "닭" }, { "tire", "타이어" }, { "theft", "비둘기 도둑" }, { "muscleman", "근육맨" }, { "celebrity", "연예인 인파" }, { "pigeonflock", "비둘기 떼" },
+            { "dog", "개" }, { "clone", "복제 라이더" },
         };
 
         private static readonly Dictionary<string, string> Fields = new Dictionary<string, string>
@@ -132,6 +133,13 @@ namespace DeliveryRider
             { "CatBoxerHazard.leaveSeconds", "퇴장 시간" },
             { "CatBoxerHazard.shoutSeconds", "소리 지르기 멈칫 시간" },
             // Hazards
+            { "feedbackSeconds", "타격 문구 표시 시간" },
+            { "DogHazard.turnRate", "개 회전 속도(rad/s)" }, { "DogHazard.biteRadius", "개 물기 반경" },
+            { "dashDistance", "물린 뒤 질주 거리(m)" }, { "dashSpeedMultiplier", "물린 뒤 질주 속도 배율" },
+            { "dashSteering", "질주 조향 속도(rad/s)" }, { "obstacleRadius", "벽 검사 반경" },
+            { "bounceSpeed", "질주 벽 반동 수평 속도" }, { "DogHazard.bounceLift", "질주 벽 반동 위쪽 속도" },
+            { "lateralSpacing", "복제 라이더 좌우 간격" }, { "escapeSpeed", "음식 도주 속도" },
+            { "escapePointSpacing", "음식 도주 경로 점 간격" },
             { "triggerRadius", "발동 반경" }, { "chaseSeconds", "추격 시간" }, { "attachmentSeconds", "닭 부착 시간" },
             { "extraAttachmentSeconds", "추가 닭 부착 시간" }, { "chaseSpeed", "추격 속도" }, { "riderSpeedShare", "라이더 속도 배율" },
             { "chickenSpeedScale", "닭 부착 이동속도 배율" }, { "chickenHopInterval", "닭 무작위 점프 간격" },
