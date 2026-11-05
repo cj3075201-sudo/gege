@@ -69,6 +69,7 @@ namespace DeliveryRider
             openRoads = new HazardZoneFilter(session.ZoneMap, session.IsZoneOpen);
             placementSidewalks=FindFirstObjectByType<PedestrianNetwork>();
             var staging = new GameObject("HazardStaging"); staging.SetActive(false);
+            PrepareDailyCandidates();
             PlaceDailyLayout(random, staging.transform);
             appliedTriggerScale = hazardTriggerScale;
             if (Application.isPlaying) Destroy(staging);
@@ -81,7 +82,6 @@ namespace DeliveryRider
             if (!openRoads.PointOpen(candidate.position)) return false;
             foreach (var point in settings.PlacementKeepouts)
                 if (Vector3.ProjectOnPlane(candidate.position - point, Vector3.up).sqrMagnitude < 64f) return false;
-            if(candidate.type=="celebrity"&&(placementSidewalks==null||!CelebrityCrowdHazard.FindCenter(placementSidewalks,candidate.position,out _,out _)))return false;
             if (candidate.type == "theft" && PigeonSnatchHazard.OpenEscapePoints(candidate, openRoads, PigeonSnatchHazard.MinimumEscapePoints) < PigeonSnatchHazard.MinimumEscapePoints) return false;
             var spots = candidates.Spots;
             return candidate.spot < 0 || candidate.spot >= spots.Count || openRoads.PointOpen(spots[candidate.spot].position);
@@ -110,6 +110,8 @@ namespace DeliveryRider
             var obj = Instantiate(kind.prefab, spot.position, spot.rotation, staging);
             obj.name = $"{slots.Count:00}_{kind.type}" + (spot.alley ? "_alley" : "");
             HazardSpawned?.Invoke(obj, kind.type);
+            var crowd=obj.GetComponent<CelebrityCrowdHazard>();
+            if(crowd!=null&&placementInfo.TryGetValue(spot,out var placement))crowd.PrepareCenter(placement.centerPath,placement.centerAlong);
             foreach (var hazard in obj.GetComponents<IPlacedHazard>()) hazard.Place(session, ground, spot);
             var slot = obj.AddComponent<HazardSlot>();
             slot.Configure(kind.type, kind.role, kind.unlockDay, candidates.Routes(spot.spot));

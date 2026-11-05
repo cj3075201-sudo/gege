@@ -47,8 +47,9 @@ namespace DeliveryRider
             ground = network;
             if (ground != null)
             {
-                roads = new RoadSurface[ground.Roads.Count];
-                for (int i = 0; i < roads.Length; i++) roads[i] = ground.Roads[i];
+                var networkRoads=ground.Roads;
+                roads = new RoadSurface[networkRoads.Count];
+                for (int i = 0; i < roads.Length; i++) roads[i] = networkRoads[i];
             }
             if (crow != null && ground != null) crow.position = ground.OnGround(transform.position, fallHeight);
         }

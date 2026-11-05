@@ -58,6 +58,7 @@ namespace DeliveryRider
         private HazardCandidate placedSpot;
         private bool hasPlacement;
         private float preparedWidth;
+        private bool placementPrepared;
         private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
 
         public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot)
@@ -66,7 +67,14 @@ namespace DeliveryRider
             placedGround = ground;
             placedSpot = spot;
             hasPlacement = true;
-            preparedWidth = maximumCrossingWidth;
+            placementPrepared=false;
+        }
+
+        private void PreparePlacement()
+        {
+            placementPrepared=true;
+            preparedWidth=maximumCrossingWidth;
+            var ground=placedGround;var spot=placedSpot;
             var center = transform.position;
             placementValid = TryFloor(center, out center);
             if (!placementValid) { HideBirds(); return; }
@@ -221,6 +229,11 @@ namespace DeliveryRider
             if (rider == null) return;
             phase = Phase.Ready;
             nextHitAt = 0f;
+            if(hasPlacement&&!placementPrepared)
+            {
+                if(slot!=null&&!slot.StrikeAllowed&&!slot.Selected){HideBirds();return;}
+                PreparePlacement();
+            }
             ShowWaiting();
         }
 
@@ -229,10 +242,15 @@ namespace DeliveryRider
         private void FixedUpdate()
         {
             if (session == null || session.IsPaused || session.IsSettled) return;
+            if(hasPlacement&&!placementPrepared)
+            {
+                if(slot!=null&&!slot.StrikeAllowed&&!slot.Selected)return;
+                PreparePlacement();
+            }
             if (hasPlacement && !Mathf.Approximately(preparedWidth, maximumCrossingWidth))
             {
                 float traveled = Mathf.Max(0f, head - configuredSpan);
-                Place(session, placedGround, placedSpot);
+                Place(session, placedGround, placedSpot);PreparePlacement();
                 if (phase == Phase.Crossing) head = configuredSpan + traveled;
                 if (phase == Phase.Spent) HideBirds();
             }

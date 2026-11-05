@@ -31,6 +31,8 @@ namespace DeliveryRider
         private HazardSlot slot;
         private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private int centerPath;
+        private bool centerPrepared;
+        public void PrepareCenter(int path,float along){centerPath=path;centerAlong=along;centerPrepared=path>=0;}
         [SerializeField, Min(.1f)] private float crowdSeconds=14f;
         private float crowdEndsAt;
         private float centerAlong, retryAt;
@@ -50,7 +52,7 @@ namespace DeliveryRider
             network = FindFirstObjectByType<PedestrianNetwork>();
             slot = GetComponent<HazardSlot>();
             if (session == null || network == null || network.Prefab == null ||
-                !FindCenter(network, transform.position, out centerPath, out centerAlong)) { enabled = false; return; }
+                (!centerPrepared&&!FindCenter(network, transform.position, out centerPath, out centerAlong))) { enabled = false; return; }
             for (int i = 0; i < waitingFans; i++)
                 SpawnFan(centerPath, centerAlong, WaitingSpot(transform.position, transform.rotation, i), true, i);
             Physics.SyncTransforms();

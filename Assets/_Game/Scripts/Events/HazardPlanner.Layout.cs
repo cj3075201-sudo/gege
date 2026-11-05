@@ -14,22 +14,18 @@ namespace DeliveryRider
         private readonly List<int> layoutIndexes = new List<int>();
         private static string LayoutKey(string type, bool alley) => type + (alley ? ":alley" : ":main");
 
-        private void PlaceDailyLayout(System.Random random, Transform staging, int attempt = 0)
+        private readonly Dictionary<HazardCandidate,HazardPlacement> placementInfo=new Dictionary<HazardCandidate,HazardPlacement>();
+        private void PrepareDailyCandidates()
         {
             availableCandidates.Clear(); candidatesByType.Clear();
-            foreach (var raw in candidates.Candidates)
+            placementInfo.Clear();
+            var roads=ground.Roads;
+            for(int index=0;index<candidates.Candidates.Count;index++)
             {
-                var c = raw;
-                c.alley = c.halfWidth > 0f ? c.halfWidth < 3f : c.alley;
-                if (c.type == "muscleman" || c.type == "celebrity")
-                {
-                    float nearest = float.PositiveInfinity;
-                    foreach (var road in ground.Roads)
-                    {
-                        float distance = road.DistanceToCentre(c.position) - road.HalfWidth;
-                        if (distance < nearest) { nearest = distance; c.alley = road.HalfWidth < 3f; }
-                    }
-                }
+                var c=candidates.Candidates[index];
+                var placement=candidates.HasPlacements?candidates.Placement(index):HazardCandidates.Classify(c,roads,placementSidewalks);
+                if(!placement.valid)continue;
+                c.alley=placement.alley;
                 if (GroundObject(c.type) && c.spot >= 0 && c.spot < candidates.Spots.Count)
                 {
                     var center = candidates.Spots[c.spot].position;
@@ -39,12 +35,16 @@ namespace DeliveryRider
                 }
                 if (CandidateOpen(c))
                 {
-                    availableCandidates.Add(c);
+                    availableCandidates.Add(c);placementInfo[c]=placement;
                     string key = LayoutKey(c.type,c.alley);
                     if (!candidatesByType.TryGetValue(key,out var list)) candidatesByType[key] = list = new List<HazardCandidate>();
                     list.Add(c);
                 }
             }
+        }
+
+        private void PlaceDailyLayout(System.Random random, Transform staging, int attempt = 0)
+        {
             layoutPlan.Clear();
             layoutRemaining.Clear(); layoutPlaced.Clear(); comboCenters.Clear(); PlacedCombos = 0;
             float mainOpen = 0f, mainTotal = 0f, alleyOpen = 0f, alleyTotal = 0f;

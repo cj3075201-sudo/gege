@@ -352,6 +352,25 @@ namespace DeliveryRider.Editor
             Debug.Log($"HTML_APPLY candidates={target.Candidates.Count} spots={target.Spots.Count} routes={target.RoutePaths.Count} guid={guid}; scene unchanged");
         }
 
+        public static void RebakePlacementMetadata()
+        {
+            const string path="Assets/_Game/Settings/MyeongjiHazardCandidatesExpanded.asset";
+            string guid=AssetDatabase.AssetPathToGUID(path),sourceHash=Hash(SourcePath);
+            var asset=Load(path);ValidatePrefix(asset);
+            string prefix=CandidateBlock(File.ReadAllText(path));
+            var scene=EditorSceneManager.OpenScene("Assets/_Game/Scenes/FourDistrictPrototype_Myeongji.unity",OpenSceneMode.Single);
+            var planner=UnityEngine.Object.FindFirstObjectByType<HazardPlanner>();
+            var ground=(RoadNetwork)new SerializedObject(planner).FindProperty("ground").objectReferenceValue;
+            var roads=ground.Roads;var sidewalks=UnityEngine.Object.FindFirstObjectByType<PedestrianNetwork>();
+            var metadata=asset.Candidates.Select(c=>HazardCandidates.Classify(c,roads,sidewalks)).ToArray();
+            asset.ConfigurePlacements(metadata);EditorUtility.SetDirty(asset);AssetDatabase.SaveAssetIfDirty(asset);
+            ValidatePrefix(asset);
+            if(guid!=AssetDatabase.AssetPathToGUID(path)||sourceHash!=Hash(SourcePath))throw new InvalidOperationException("GUID/source changed");
+            // CandidateBlock now also reaches the appended metadata, so compare the original candidate block prefix.
+            if(!CandidateBlock(File.ReadAllText(path)).StartsWith(prefix,StringComparison.Ordinal))throw new InvalidOperationException("Candidate records changed");
+            Debug.Log($"REVIEW_METADATA_PASS placements={metadata.Length} invalid={metadata.Count(m=>!m.valid)} guid={guid} frozen887=true spots306=true sourceSha={sourceHash}");
+        }
+
         private static void ValidateNetwork(PedestrianNetwork network)
         {
             if (network.PathCount == 0) throw new InvalidOperationException("No pedestrian paths.");

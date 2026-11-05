@@ -18,7 +18,9 @@ namespace DeliveryRider
         private readonly HashSet<RoadSurface> dirty = new HashSet<RoadSurface>();
 #endif
 
-        public IReadOnlyList<RoadSurface> Roads { get { Collect(); return roads; } }
+        private bool roadsCollected;
+        public IReadOnlyList<RoadSurface> Roads { get { if(!roadsCollected)Collect(); return roads; } }
+        private void OnTransformChildrenChanged() => roadsCollected=false;
 
         public void Configure(Collider[] groundColliders) => ground = groundColliders;
 
@@ -74,15 +76,19 @@ namespace DeliveryRider
         {
             roads.Clear();
             GetComponentsInChildren(true, roads);
+            foreach(var road in roads)if(road.Footprint.size==Vector3.zero)road.UpdateFootprint();
+            roadsCollected=true;
+        }
+
+        private void OnEnable()
+        {
+            Collect();
+#if UNITY_EDITOR
+            if (!Application.isPlaying) Spline.Changed += OnSplineChanged;
+#endif
         }
 
 #if UNITY_EDITOR
-        private void OnEnable()
-        {
-            if (Application.isPlaying) return;
-            Spline.Changed += OnSplineChanged;
-        }
-
         private void OnDisable() => Spline.Changed -= OnSplineChanged;
 
         private void OnSplineChanged(Spline spline, int knot, SplineModification modification)
