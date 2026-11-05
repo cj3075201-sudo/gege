@@ -40,7 +40,8 @@ namespace DeliveryRider
         private Vector3 focus, focusVelocity, lastTarget;
         private bool initialized;
 
-        private void Awake() { lens = GetComponent<Camera>(); baseFov = lens.fieldOfView; }
+        // The first view is the way the camera is saved in the scene, so a map can aim it past what stands behind the start.
+        private void Awake() { lens = GetComponent<Camera>(); baseFov = lens.fieldOfView; yaw = transform.eulerAngles.y; }
         private void OnEnable()
         {
             initialized = false;

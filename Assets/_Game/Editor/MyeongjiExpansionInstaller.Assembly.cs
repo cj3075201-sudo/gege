@@ -134,7 +134,8 @@ namespace DeliveryRider.Editor
                 var target = new Vector3((float)lot["x"], center.y, (float)lot["z"]);
                 clone.transform.SetPositionAndRotation(target + yaw * (source.Building.position - center), yaw * source.Building.rotation);
                 used[zone] = used.TryGetValue(zone, out int count) ? count + 1 : 1;
-                PaintWall(clone, ZoneWalls[zone][used[zone] % ZoneWalls[zone].Length]);
+                // The home keeps the colours of its model.
+                if ((string)lot["facesAnchor"] != "C_Home") PaintWall(clone, ZoneWalls[zone][used[zone] % ZoneWalls[zone].Length]);
                 // Clones share their meshes; static batching would copy every one of them into the build.
                 GameObjectUtility.SetStaticEditorFlags(clone, GameObjectUtility.GetStaticEditorFlags(clone) & ~StaticEditorFlags.BatchingStatic);
                 placed++;
@@ -337,10 +338,47 @@ namespace DeliveryRider.Editor
                 var flat = new Vector3(post.position.x, 0f, post.position.z);
                 if (roads.Any(r => r.DistanceToCentre(flat) < r.HalfWidth)) failures.Add(move.Key + " still on a road");
             }
+            CheckHome(scene, floor, clones, anchors, failures);
             barriers.SetActive(true);
             foreach (var note in notes) Debug.Log("[MapExpansion] Note: " + note);
             Debug.Log($"[MapExpansion] Expansion check: {clones.Count} buildings, centre off by at most {worst:F3} m, {overlaps} overlaps, {onRoad} on roads, {faced} anchors faced (front gap {minGap:F2}..{maxGap:F2} m), {blocked} anchors blocked, {noAccess} access lines blocked, {lampCount} lamp posts ({lampsOnRoad} on roads, {lampsInBuilding} in buildings).");
             if (failures.Count > 0) throw new InvalidOperationException("[MapExpansion] Expansion check failed: " + string.Join("; ", failures));
+        }
+
+        private static void CheckHome(Scene scene, MeshCollider floor, Dictionary<string, (Bounds bounds, JToken lot)> clones, Dictionary<string, JToken> anchors, List<string> failures)
+        {
+            var player = Root(scene, "Player");
+            var capsule = player.GetComponent<CapsuleCollider>();
+            var feet = player.transform.position;
+            if (!floor.Raycast(new Ray(new Vector3(feet.x, 30f, feet.z), Vector3.down), out var ground, 60f)) failures.Add("rider has no floor");
+            else
+            {
+                float standAbove = feet.y + capsule.center.y - capsule.height * 0.5f - ground.point.y;
+                if (standAbove < -0.01f || standAbove > 0.3f) failures.Add($"rider stands {standAbove:F2} m above the floor");
+                string surface = SurfaceName(floor, ground.triangleIndex);
+                if (!surface.Contains("Pavement")) failures.Add("rider starts on " + surface);
+            }
+            var centre = feet + capsule.center;
+            float half = Mathf.Max(0f, capsule.height * 0.5f - capsule.radius);
+            var solids = Physics.OverlapCapsule(centre + Vector3.up * half, centre + Vector3.down * half, capsule.radius, ~0, QueryTriggerInteraction.Ignore)
+                .Where(c => c != floor && !c.transform.IsChildOf(player.transform)).Select(c => c.name).ToArray();
+            if (solids.Length > 0) failures.Add("rider inside " + string.Join(",", solids));
+            var session = new SerializedObject(Root(scene, "DeliverySession").GetComponent<DeliverySession>());
+            var map = session.FindProperty("zoneMap").objectReferenceValue as ZoneMap;
+            if (map.ZoneAt(feet) != "C") failures.Add("rider starts in zone " + map.ZoneAt(feet));
+            if (!player.GetComponent<RiderSafeRecovery>().IsSafe(feet)) failures.Add("the start is not a safe recovery spot");
+            var front = clones.Where(c => (string)c.Value.lot["facesAnchor"] == "C_Home").ToArray();
+            if (front.Length != 1 || (string)front[0].Value.lot["sourceBuildingId"] != "H01") failures.Add("the home has no H01 in front of it");
+            // The first camera pose must be open all the way from the rider to the lens.
+            var camera = Root(scene, "Main Camera").GetComponent<ThirdPersonCamera>();
+            var boom = new SerializedObject(camera);
+            float reach = boom.FindProperty("distance").floatValue, height = boom.FindProperty("targetHeight").floatValue, radius = boom.FindProperty("collisionRadius").floatValue;
+            var focus = feet + Vector3.up * height;
+            var back = camera.transform.rotation * Vector3.back;
+            var blockers = Physics.SphereCastAll(focus, radius, back, reach, 1, QueryTriggerInteraction.Ignore).Where(h => !h.collider.transform.IsChildOf(player.transform)).Select(h => h.collider.name).ToArray();
+            if (blockers.Length > 0) failures.Add("first camera blocked by " + string.Join(",", blockers));
+            if (Vector3.Distance(camera.transform.position, focus + back * reach) > 0.01f) failures.Add("first camera is not on its boom");
+            Debug.Log($"[MapExpansion] Home check: rider at {feet}, first camera yaw {camera.transform.eulerAngles.y:F1}, boom {reach} m clear: {blockers.Length == 0}, H01 lot {(front.Length == 1 ? front[0].Key : "none")}.");
         }
 
         private static IEnumerable<Vector2> Corners(Bounds b)
@@ -468,6 +506,21 @@ namespace DeliveryRider.Editor
             Shot("거리_C구역", new Vector3(-30f, 2f, -142f), new Vector3(10f, 3f, -141f));
             UnityEngine.Object.DestroyImmediate(host);
             RenderSettings.fog = fog;
+            // The rider's own first view, with its fog, as the camera is saved.
+            var main = Root(scene, "Main Camera").GetComponent<Camera>();
+            foreach (var canvas in scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<Canvas>(true))) canvas.gameObject.SetActive(false);
+            var frame = new RenderTexture(1920, 1200, 24);
+            main.targetTexture = frame;
+            main.Render();
+            RenderTexture.active = frame;
+            var first = new Texture2D(1920, 1200, TextureFormat.RGB24, false);
+            first.ReadPixels(new Rect(0, 0, 1920, 1200), 0, 0);
+            first.Apply();
+            File.WriteAllBytes(folder + "집_시작화면.png", first.EncodeToPNG());
+            RenderTexture.active = null;
+            main.targetTexture = null;
+            UnityEngine.Object.DestroyImmediate(frame);
+            UnityEngine.Object.DestroyImmediate(first);
             Debug.Log("[MapExpansion] Views rendered to " + folder);
         }
     }

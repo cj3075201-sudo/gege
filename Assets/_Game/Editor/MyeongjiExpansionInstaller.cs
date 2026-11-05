@@ -25,6 +25,7 @@ namespace DeliveryRider.Editor
         private const string ZoneMapPath = "Assets/_Game/Settings/MyeongjiZoneMap.asset";
         private const float RoadSurfaceHeight = -0.14f;
         private const float AnchorTolerance = 0.02f;
+        private const float RiderHomeOffset = 0.3f;
         // New roads carry this width and up as main roads, as the original map did.
         private const float MainRoadWidth = 5f;
 
@@ -85,14 +86,32 @@ namespace DeliveryRider.Editor
                 var position = (JArray)anchor["position"];
                 var target = new Vector3((float)position[0], (float)position[1], (float)position[2]);
                 if (new Vector2(point.position.x - target.x, point.position.z - target.z).magnitude <= AnchorTolerance) { kept++; continue; }
-                if ((string)anchor["type"] == "home") throw new InvalidOperationException("The home must not move.");
                 var forward = (JArray)anchor["forward"];
                 point.SetPositionAndRotation(target, Quaternion.LookRotation(new Vector3((float)forward[0], 0f, (float)forward[2])));
                 moved++;
             }
             CheckSessionPoints(scene, anchors);
+            PlaceRiderAtHome(scene, anchors.First(a => (string)a["type"] == "home"));
             Save(scene);
             Debug.Log($"[MapExpansion] Anchors: moved {moved}, kept {kept}.");
+        }
+
+        // The rider starts just in front of the home, facing its road. The first camera looks along that road toward the
+        // neighbouring shop, as it did on the old map, because straight behind the rider stands the house.
+        private static void PlaceRiderAtHome(Scene scene, JToken home)
+        {
+            var position = (JArray)home["position"];
+            var facing = (JArray)home["forward"];
+            var forward = new Vector3((float)facing[0], 0f, (float)facing[2]).normalized;
+            var player = Root(scene, "Player").transform;
+            var at = new Vector3((float)position[0], 0f, (float)position[2]) + forward * RiderHomeOffset;
+            player.SetPositionAndRotation(new Vector3(at.x, player.position.y, at.z), Quaternion.LookRotation(forward));
+            var camera = Root(scene, "Main Camera").transform;
+            var view = Quaternion.Euler(camera.eulerAngles.x, Quaternion.LookRotation(forward).eulerAngles.y + 90f, 0f);
+            var motor = new SerializedObject(camera.GetComponent<ThirdPersonCamera>());
+            float reach = motor.FindProperty("distance").floatValue;
+            float height = motor.FindProperty("targetHeight").floatValue;
+            camera.SetPositionAndRotation(player.position + Vector3.up * height + view * Vector3.back * reach, view);
         }
 
         // The route table is indexed by these arrays, so each slot must hold the anchor of the same type and index.
