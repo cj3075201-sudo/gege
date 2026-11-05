@@ -23,6 +23,35 @@ namespace DeliveryRider
         // Set by the planner; hazards check it before starting an attack.
         public bool StrikeAllowed { get; set; } = true;
 
+        public float TriggerScale { get; private set; } = 1f;
+        private bool triggerCaptured;
+        private BoxCollider triggerBox;
+        private SphereCollider triggerSphere;
+        private Vector3 originalBoxSize;
+        private float originalSphereRadius;
+
+        // Only these root volumes detect riders. Never resize solids, visuals or a prefab source.
+        public void SetTriggerScale(float scale)
+        {
+            if (!triggerCaptured)
+            {
+                triggerCaptured = true;
+                if (GetComponent<GroundContactHazard>() != null || GetComponent<MusclemanHazard>() != null)
+                {
+                    triggerBox = GetComponent<BoxCollider>();
+                    if (triggerBox != null) originalBoxSize = triggerBox.size;
+                }
+                if (GetComponent<PigeonFlockHazard>() != null)
+                {
+                    triggerSphere = GetComponent<SphereCollider>();
+                    if (triggerSphere != null) originalSphereRadius = triggerSphere.radius;
+                }
+            }
+            TriggerScale = Mathf.Clamp(scale, 0.5f, 4f);
+            if (triggerBox != null) triggerBox.size = originalBoxSize * TriggerScale;
+            if (triggerSphere != null) triggerSphere.radius = originalSphereRadius * TriggerScale;
+        }
+
         public bool IsOnRoute(int route) => route >= 0 && Array.IndexOf(routes, route) >= 0;
 
         public void Configure(string slotType, HazardRole slotRole, int slotUnlockDay, int[] slotRoutes)

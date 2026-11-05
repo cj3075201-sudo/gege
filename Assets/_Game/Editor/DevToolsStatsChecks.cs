@@ -10,6 +10,7 @@ namespace DeliveryRider.Editor
             CheckMath();
             CheckCallValues();
             RunTuning();
+            DevToolsScaleChecks.Run();
             Debug.Log("DevToolsStatsChecks PASS: all checks.");
         }
 

@@ -23,6 +23,7 @@ namespace DeliveryRider
         [SerializeField, Min(1f)] private float escapeSeconds = 35f;
         private RiderMotor rider;
         private HazardSlot slot;
+        private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private Phase phase;
         private float elapsed;
         private Vector3 swoopFrom;
@@ -81,7 +82,7 @@ namespace DeliveryRider
             {
                 case Phase.Ready:
                     if ((slot == null || slot.StrikeAllowed) && !session.IsMapOpen && session.Stage == DeliveryStage.Carrying
-                        && !rider.IsRecovering && Vector3.Distance(rider.transform.position, perch.position) <= triggerRadius)
+                        && !rider.IsRecovering && Vector3.Distance(rider.transform.position, perch.position) <= triggerRadius * TriggerScale)
                     {
                         Enter(Phase.Warning);
                     }
@@ -106,7 +107,7 @@ namespace DeliveryRider
                     if (pigeon.Finished || !pigeon.gameObject.activeInHierarchy) { Perch(); Enter(Phase.Spent); }
                     break;
                 case Phase.Spent:
-                    if (session.Stage == DeliveryStage.Carrying && Vector3.Distance(rider.transform.position, perch.position) > triggerRadius * 2f)
+                    if (session.Stage == DeliveryStage.Carrying && Vector3.Distance(rider.transform.position, perch.position) > triggerRadius * 2f * TriggerScale)
                     {
                         Perch();
                         Enter(Phase.Ready);

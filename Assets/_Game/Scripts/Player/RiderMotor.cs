@@ -26,6 +26,9 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float punchHeight = 0.9f;
         [SerializeField] private LayerMask punchMask = ~0;
         [SerializeField, Min(0.1f)] private float jumpSpeed = 5.5f;
+        [Header("함정 날림 배율 (즉시 적용)")]
+        [SerializeField, Range(0.25f, 4f)] private float hazardHeightScale = 1f;
+        [SerializeField, Range(0.25f, 4f)] private float hazardDistanceScale = 1f;
         private readonly Collider[] punchHits = new Collider[16];
         private readonly System.Collections.Generic.List<IPunchable> punched = new System.Collections.Generic.List<IPunchable>(8);
         private float nextPunchAt;
@@ -164,6 +167,8 @@ namespace DeliveryRider
         public bool TryHazardCrash(UnityEngine.Object source, Vector3 impulse, float recoverySeconds)
         {
             if (!AcceptHazard(source)) return false;
+            // Scale the final authored launch, including any carried rider speed. Traffic and rebounds bypass this.
+            impulse = new Vector3(impulse.x * hazardDistanceScale, impulse.y * hazardHeightScale, impulse.z * hazardDistanceScale);
             ApplyContactCrash(impulse, recoverySeconds);
             HazardHit?.Invoke(source);
             return true;

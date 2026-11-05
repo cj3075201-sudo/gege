@@ -23,7 +23,7 @@ namespace DeliveryRider
         {
             "HTML 수치 패널과 같은 식입니다. 기록은 이번 판 동안 유지됩니다. 정산·일시정지는 경과시간에서 제외합니다.",
             "값은 바로 반영됩니다. 이동 속도는 인라인을 적용하기 전 기본값입니다.",
-            "개수·간격·등장 일차는 '사건 다시 배치'를 눌러야 반영됩니다. 사건 내부 값은 지금 있는 사건과 다시 배치될 사건에 모두 적용되며, 크기·배치에 쓰이는 일부 값은 다시 배치한 뒤 반영됩니다.",
+            "개수·간격·등장 일차는 '사건 다시 배치'를 눌러야 반영됩니다. 사건 내부 값은 지금 있는 사건과 다시 배치될 사건에 모두 적용되며, 트리거 크기 배율은 즉시 적용됩니다. 다른 크기·배치에 쓰이는 일부 값은 다시 배치한 뒤 반영됩니다.",
             "차량 수·보행자 수·배치 간격은 다시 배치할 때, 주행·보행 값은 바로 반영됩니다.",
             "보상·제한시간은 다음 콜부터, 하루 길이와 인라인 배율은 다음 날부터 반영됩니다.",
             "값은 바로 반영됩니다.",
@@ -324,7 +324,9 @@ namespace DeliveryRider
         {
             foreach (var entry in hazardParts) entry.Target.ClearLive();
             hazards.Respawn();
-            status = $"사건 {hazards.Slots.Count}개를 다시 배치했습니다.";
+            int requested = 0;
+            foreach (int count in hazards.RequestedCounts.Values) requested += count;
+            status = $"사건 배치 {hazards.Slots.Count} / 요청 {requested}개 (후보·간격 제한 적용).";
         }
 
         private void RespawnTraffic()
@@ -384,11 +386,12 @@ namespace DeliveryRider
             placed.Clear();
             foreach (var slot in hazards.Slots)
                 if (slot != null) placed[slot.Type] = (placed.TryGetValue(slot.Type, out int count) ? count : 0) + 1;
-            summary.Clear().Append("현재 배치:");
+            summary.Clear().Append("현재 배치/요청:");
             foreach (var kind in hazardSettings.Kinds)
             {
                 placed.TryGetValue(kind.type, out int count);
-                summary.Append("  ").Append(DevLabels.HazardType(kind.type)).Append(' ').Append(count);
+                hazards.RequestedCounts.TryGetValue(kind.type, out int requested);
+                summary.Append("  ").Append(DevLabels.HazardType(kind.type)).Append(' ').Append(count).Append('/').Append(requested);
             }
             return summary.ToString();
         }

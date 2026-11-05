@@ -26,6 +26,14 @@ namespace DeliveryRider
         [Tooltip("Upward speed = rider's launch upward speed x this + foodExtraUp.")]
         [SerializeField, Min(0f)] private float foodUpShare = 0.7f;
         [SerializeField, Min(0f)] private float foodExtraUp = 2.23f;
+        [Header("함정 배율")]
+        [Tooltip("종류별 열린 구역 개수를 계산한 뒤 곱합니다. 사건 다시 배치로 적용합니다.")]
+        [SerializeField, Range(0.25f, 5f)] private float hazardCountScale = 1f;
+        [Tooltip("인스턴스의 라이더 감지 거리와 콜라이더에 즉시 적용합니다.")]
+        [SerializeField, Range(0.5f, 4f)] private float hazardTriggerScale = 1f;
+        private float appliedTriggerScale = 1f;
+        private readonly Dictionary<string, int> requestedCounts = new Dictionary<string, int>();
+        public IReadOnlyDictionary<string, int> RequestedCounts => requestedCounts;
         private DroppedFood droppedFood;
         private HazardZoneFilter openRoads;
         private bool appliedFoodRule;
@@ -56,6 +64,7 @@ namespace DeliveryRider
         private void Spawn()
         {
             if (settings == null || candidates == null || ground == null) { Debug.LogError("Hazard planner needs spawn settings, candidates and the road network.", this); return; }
+            requestedCounts.Clear();
             var random = randomEachRun ? new System.Random() : new System.Random(seed);
             var placed = new List<(Vector3 position, string type)>();
             openRoads = new HazardZoneFilter(session.ZoneMap, session.IsZoneOpen);
@@ -71,6 +80,8 @@ namespace DeliveryRider
                     if (placementPriority != priority || kind.prefab == null || kind.unlockDay > day) continue;
                     // Settings hold whole-map counts, so an open part of the map keeps the same hazards per metre.
                     int want = HazardZoneFilter.ScaleCount(kind.Count(day), openShare), count = 0;
+                    want = HazardZoneFilter.ScaleCount(want, hazardCountScale);
+                    requestedCounts[kind.type] = (requestedCounts.TryGetValue(kind.type, out int requested) ? requested : 0) + want;
                     shuffled.Clear();
                     for (int i = 0; i < candidates.Candidates.Count; i++)
                         if (candidates.Candidates[i].type == kind.type && CandidateOpen(candidates.Candidates[i])) shuffled.Add(i);
@@ -86,7 +97,9 @@ namespace DeliveryRider
                     }
                     if (count < want) Debug.LogWarning($"Hazards: placed {count} of {want} {kind.type} (not enough spaced candidates).", this);
                 }
-            Destroy(staging);
+            appliedTriggerScale = hazardTriggerScale;
+            if (Application.isPlaying) Destroy(staging);
+            else DestroyImmediate(staging);
         }
 
         // The hazard itself and the road spot it belongs to must both be on the open side of every closed wall.
@@ -104,7 +117,12 @@ namespace DeliveryRider
         public void Respawn()
         {
             foreach (var slot in slots)
-                if (slot != null) { slot.gameObject.SetActive(false); Destroy(slot.gameObject); }
+                if (slot != null)
+                {
+                    slot.gameObject.SetActive(false);
+                    if (Application.isPlaying) Destroy(slot.gameObject);
+                    else DestroyImmediate(slot.gameObject);
+                }
             slots.Clear();
             Spawn();
             OnSessionChanged();
@@ -130,6 +148,7 @@ namespace DeliveryRider
             var slot = obj.AddComponent<HazardSlot>();
             slot.Configure(kind.type, kind.role, kind.unlockDay, candidates.Routes(spot.spot));
             slot.StrikeAllowed = CanStrike(slot);
+            slot.SetTriggerScale(hazardTriggerScale);
             obj.SetActive(true);
             obj.transform.SetParent(transform, true);
             slots.Add(slot);
@@ -164,6 +183,9 @@ namespace DeliveryRider
         private void Update()
         {
             if (appliedFoodRule != triggersRequireFood) OnSessionChanged();
+            if (appliedTriggerScale == hazardTriggerScale) return;
+            appliedTriggerScale = hazardTriggerScale;
+            foreach (var slot in slots) if (slot != null) slot.SetTriggerScale(hazardTriggerScale);
         }
 
         // Melons are the weak hits that never cost the food.
