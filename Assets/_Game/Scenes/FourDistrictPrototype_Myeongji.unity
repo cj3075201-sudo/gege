@@ -3020,7 +3020,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5815388a5927054f9ef5c25c7a4ae78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.HazardPlanner
-  activePerDay: 05000000080000000a0000000d0000000d000000
+  activePerDay: 05000000080000000a0000000d0000000f000000
   routeShare: 0.7
   routeRadius: 7
   typeGuarantee: 0.5
@@ -66859,7 +66859,7 @@ MonoBehaviour:
   zoneCheckSeconds: 0.25
   view: {fileID: 1684003829}
   session: {fileID: 421427440}
-  speed: 6
+  speed: 7
   acceleration: 28
   turnSpeed: 12
   recoveryHeight: -8

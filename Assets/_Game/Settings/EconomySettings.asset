@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d665fa8017453f54e9387c190487e0d7, type: 3}
   m_Name: EconomySettings
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.DeliveryEconomySettings
-  runSpeed: 6
+  runSpeed: 7
   limitRatio: 1.5
   limitPadding: 25
   limitRounding: 5
@@ -43,11 +43,11 @@ MonoBehaviour:
     reward: 5500
     label: "\uBA40\uB9AC"
   lateRatio: 0.6
-  startingDebt: 100000
+  startingDebt: 95000
   livingCost: 5000
   addShortfallToDebt: 0
   inlinePrice: 8000
-  inlineSaleDay: 1
+  inlineSaleDay: 2
   inlineSpeedMultiplier: 1.6
   inlineAccelerationMultiplier: 0.64
   customerNames:

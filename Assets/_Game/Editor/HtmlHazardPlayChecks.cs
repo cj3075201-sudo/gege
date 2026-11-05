@@ -78,7 +78,7 @@ namespace DeliveryRider.Editor
                 for(int call=0;call<4;call++)
                 {
                     Check(session.OpenCall(),"call opens"); var acceptance=MeasureAccept(session); Check(acceptance.ok,"call accepted");
-                    Check(planner.SelectedTriggers==new[]{5,8,10,13,13}[Mathf.Min(day-1,4)],"ACT day="+day+" selected="+planner.SelectedTriggers);
+                    Check(planner.SelectedTriggers==new[]{5,8,10,13,15}[Mathf.Min(day-1,4)],"ACT day="+day+" selected="+planner.SelectedTriggers);
                     Check(all.Where(s=>s.Role==HazardRole.Trigger).All(s=>!s.StrikeAllowed),"pre-pickup gate");
                     var selected=all.Where(s=>s.Selected&&s.Type!="celebrity").ToArray();
                     for(int a=0;a<selected.Length;a++)for(int b=a+1;b<selected.Length;b++)

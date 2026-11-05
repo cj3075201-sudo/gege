@@ -155,9 +155,9 @@ namespace DeliveryRider.Editor
             var title = UnityEngine.Object.FindFirstObjectByType<TitleUI>(FindObjectsInactive.Include);
             Assert(economy != null && title != null, "saved title and economy exist");
             Assert(new SerializedObject(title).FindProperty("economy").objectReferenceValue == economy, "saved title uses economy asset");
-            Assert(economy.StartingDebt == 100000 && economy.LivingCost == 5000 && economy.InlinePrice == 8000
-                && economy.InlineSaleDay == 1 && Mathf.Approximately(economy.InlineSpeedMultiplier, 1.6f), "saved run economy matches trial");
-            Assert(economy.LateReward(3100) == 1860 && economy.TimeLimit(200) == 75, "saved time/late values match trial");
+            Assert(economy.StartingDebt == 95000 && economy.LivingCost == 5000 && economy.InlinePrice == 8000
+                && economy.InlineSaleDay == 2 && Mathf.Approximately(economy.InlineSpeedMultiplier, 1.6f), "saved run economy matches trial");
+            Assert(economy.LateReward(3100) == 1860 && economy.TimeLimit(200) == 70, "saved time/late values match trial");
             var reward = RequiredMethod(typeof(DeliveryEconomySettings), "Reward");
             Assert((int)reward.Invoke(economy, new object[] { 200f }) == 3100 && (int)reward.Invoke(economy, new object[] { 400f }) == 4700,
                 "saved distance reward enabled");

@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b888e2674694dc4badb30ca85db042b, type: 3}
   m_Name: DaySettings
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.DeliveryDaySettings
-  durationSeconds: 600
+  durationSeconds: 480

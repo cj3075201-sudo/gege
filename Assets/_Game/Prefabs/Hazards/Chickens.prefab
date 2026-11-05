@@ -54,7 +54,7 @@ MonoBehaviour:
   - {fileID: 266839353001756334}
   - {fileID: 7091117577642646442}
   - {fileID: 6746447372287291489}
-  triggerRadius: 3
+  triggerRadius: 7
   chaseSeconds: 7
   attachmentSeconds: 2.5
   extraAttachmentSeconds: 1.5
