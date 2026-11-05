@@ -34,6 +34,7 @@ namespace DeliveryRider.Editor
         private static readonly Dictionary<int, Vector2> CorrectedLamps = new Dictionary<int, Vector2>
         {
             { 62, new Vector2(54.5f, -137.4f) },
+            { 50, new Vector2(-41.2f, -69.5f) },
         };
         // Wall colours per zone, from Codex lots report; each clone takes the next one in turn.
         private static readonly Dictionary<string, string[]> ZoneWalls = new Dictionary<string, string[]>

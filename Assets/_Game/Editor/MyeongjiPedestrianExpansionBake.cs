@@ -20,6 +20,8 @@ namespace DeliveryRider.Editor
         private const float SampleStep = 1f, RoadMargin = 0.7f, ConnectorReach = 6f, CornerReach = 15f, FeetLift = 0.02f;
         private const float LaneClearance = 0.4f, LaneRoadMargin = 0.4f, LinkClearance = 0.3f, DetourReach = 1f, DetourStep = 0.25f;
         private const float RoadEdge = 0.5f, TrafficHalfWidth = 3f, StripSearch = 3f, StripStep = 0.1f;
+        private const int OriginalPathCount = 202;
+        private const float ObstacleCheckRadius = 0.2f; // thinner than the bake's clearance, which the links already bend within
         private const float LaneHalfWidth = 1f, MinimumLaneSpan = 8f, JoinTolerance = 0.1f;
         // The original map; a path point beyond it means this bake has already run.
         private static readonly Rect OriginalMap = Rect.MinMaxRect(-11f, -111f, 126f, 10f);
@@ -91,6 +93,19 @@ namespace DeliveryRider.Editor
             Debug.Log($"[MapExpansion] Pedestrian cuts: {old.Count} paths -> {result.Count}, {cut} cut lanes, {dropped} links dropped, {newRoads.Count} new roads.");
         }
 
+        // Writes the original lanes for Tools/build_myeongji_lots.py, which keeps new buildings off them. The new lanes,
+        // baked with the buildings in place, come after these in the network.
+        public static void ExportOriginalPaths()
+        {
+            var scene = OpenScene();
+            var walkers = scene.GetRootGameObjects().Single(g => g.name == "Pedestrians").GetComponent<PedestrianNetwork>();
+            var points = new JArray();
+            for (int p = 0; p < OriginalPathCount; p++)
+                foreach (var point in walkers.Path(p).points) points.Add(new JArray(Math.Round(point.x, 2), Math.Round(point.z, 2)));
+            File.WriteAllText("Docs/MapLayout/Myeongji/pedestrian_original_paths.json", new JObject { ["points"] = points }.ToString(Newtonsoft.Json.Formatting.None));
+            Debug.Log($"[MapExpansion] Exported {points.Count} points of the first {OriginalPathCount} paths.");
+        }
+
         // Read-only audit of the saved network.
         public static void Check()
         {
@@ -104,12 +119,19 @@ namespace DeliveryRider.Editor
             var roads = LoadRoads(network, out _);
             var traffic = roads.Where(r => r.HalfWidth >= TrafficHalfWidth).ToList();
             int offFloor = 0, onTraffic = 0, samples = 0;
+            var blocked = new List<string>();
+            var barriers = roots.FirstOrDefault(g => g.name == "ZoneBarriers");
+            if (barriers != null) barriers.SetActive(false);
+            Physics.SyncTransforms();
             foreach (var path in paths)
                 foreach (var point in path.points)
                 {
                     samples++;
                     if (!Raycast(new Vector2(point.x, point.z), out _, out _)) offFloor++;
                     if (!path.connector && path.halfWidth >= LaneHalfWidth && traffic.Any(r => r.Nearest(new Vector2(point.x, point.z), out _) < r.HalfWidth - RoadEdge)) onTraffic++;
+                    int hits = Physics.OverlapCapsuleNonAlloc(point + Vector3.up * .75f, point + Vector3.up * 1.4f, ObstacleCheckRadius, Obstacles, ~0, QueryTriggerInteraction.Ignore);
+                    for (int h = 0; h < hits; h++)
+                        if (!floorColliders.Contains(Obstacles[h]) && Obstacles[h].attachedRigidbody == null) { blocked.Add($"{paths.IndexOf(path)}:{Obstacles[h].name}@{point:F1}"); break; }
                 }
             var length = new Dictionary<string, float>();
             var zones = new SerializedObject(roots.Single(g => g.name == "DeliverySession").GetComponent<DeliverySession>()).FindProperty("zoneMap").objectReferenceValue as ZoneMap;
@@ -118,9 +140,12 @@ namespace DeliveryRider.Editor
                 string zone = zones != null ? zones.ZoneAt(path.points[path.points.Length / 2]) ?? "none" : "any";
                 length[zone] = (length.TryGetValue(zone, out float value) ? value : 0f) + path.length * 0.5f;
             }
+            if (barriers != null) barriers.SetActive(true);
             string byZone = string.Join(", ", length.OrderBy(k => k.Key).Select(k => $"{k.Key} {k.Value:F0} m"));
-            Debug.Log($"[MapExpansion] Pedestrian check: {paths.Count} paths ({paths.Count(p => p.connector)} links), {samples} points, {offFloor} off the floor, {onTraffic} deep in a traffic road; sidewalks {byZone}.");
-            if (offFloor > 0 || onTraffic > 0) throw new InvalidOperationException("[MapExpansion] Pedestrian check failed.");
+            Debug.Log($"[MapExpansion] Pedestrian check: {paths.Count} paths ({paths.Count(p => p.connector)} links), {samples} points, {offFloor} off the floor, {onTraffic} deep in a traffic road, {blocked.Count} inside a solid; sidewalks {byZone}.");
+            foreach (var group in blocked.GroupBy(x => x.Substring(0, x.IndexOf('@'))))
+                Debug.Log($"[MapExpansion] Path in a solid {group.Key}: {group.Count()} points, {group.First().Substring(group.First().IndexOf('@'))} to {group.Last().Substring(group.Last().IndexOf('@'))}");
+            if (offFloor > 0 || onTraffic > 0 || blocked.Count > 0) throw new InvalidOperationException("[MapExpansion] Pedestrian check failed.");
         }
 
         private static Scene OpenScene()
