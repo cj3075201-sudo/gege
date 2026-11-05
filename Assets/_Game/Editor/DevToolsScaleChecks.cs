@@ -287,7 +287,7 @@ namespace DeliveryRider.Editor
                 duck.transform.position = player.transform.position + Vector3.right * 1.5f;
                 foreach (float scale in new[] { 1f, 2f, 0.5f })
                 {
-                    Reset(); Set(duck, "head", 0f); Set(duck, "hitThisCrossing", false);
+                    Reset(); Set(duck, "head", 0f); Set(duck, "nextHitAt", 0f);
                     duck.GetComponent<HazardSlot>().SetTriggerScale(scale);
                     Call(duck, "Advance");
                     Check(rider.IsRecovering == (scale == 2f), "duck hitRadius scales " + scale);
