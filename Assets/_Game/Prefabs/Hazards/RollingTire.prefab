@@ -46,6 +46,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c50af800ebb2a844c92006edf87fb3a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.RollingTireHazard
+  largeChance: 0.5
+  smallCount: 5
+  smallSpeed: 9
+  largeSpeed: 12
+  largeRadius: 1.5
+  smallImpulse: 7
+  smallUpwardImpulse: 6.75
+  waveSpacing: 2.6
   session: {fileID: 0}
   linkedDoor: {fileID: 0}
   wheel: {fileID: 397628295116568585}
@@ -78,12 +86,15 @@ MonoBehaviour:
   slopeAcceleration: 8
   maximumLifetime: 5
   impulse: 20
+  upwardImpulse: 13
   recoverySeconds: 1.1
-  rearmOnNextOrder: 0
-  rearmSeconds: 8
+  rearmSeconds: 10
   collisionMask:
     serializedVersion: 2
     m_Bits: 4294967039
+  triggerHalfLength: 26
+  startBehind: 18
+  rollPast: 40
 --- !u!1 &450590073268603388
 GameObject:
   m_ObjectHideFlags: 0

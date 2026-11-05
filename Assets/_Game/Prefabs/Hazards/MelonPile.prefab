@@ -1314,7 +1314,10 @@ MonoBehaviour:
   burstLift: 0
   waveSeconds: 7
   tumbleSeconds: 0.1
+  releaseInterval: {x: 0.2, y: 0.25}
+  aimSpread: 7
   hitSpeed: 7
+  hitLift: 6.75
   rearmSeconds: 10
   rearmDistance: 8
 --- !u!1 &6753727072951545744

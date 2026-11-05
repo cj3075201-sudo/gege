@@ -9,6 +9,8 @@ namespace DeliveryRider
     public sealed partial class RiderMotor
     {
         [Header("Accident movement (test values)")]
+        [SerializeField, Min(1f)] private float airGravityScale = 2.24f;
+        public float AccidentGravityScale => airGravityScale;
         [SerializeField, Min(0f)] private float airSteering = 5f;
         [SerializeField, Min(0f)] private float airInputSpeedLimit = 10f;
         [SerializeField, Range(0f, 1f)] private float wallReflection = 0.5f;
@@ -16,7 +18,7 @@ namespace DeliveryRider
         [Tooltip("Horizontal speed kept after each floor bounce.")]
         [SerializeField, Range(0f, 1f)] private float floorFriction = 0.78f;
         [SerializeField, Min(0f)] private float minimumBounceSpeed = 5f;
-        [SerializeField, Min(0)] private int maximumFloorBounces = 2;
+        [SerializeField, Min(0)] private int maximumFloorBounces = 4;
         [SerializeField, Min(0.01f)] private float contactInterval = 0.12f;
         [SerializeField, Min(0f)] private float rollDeceleration = 8f;
         [SerializeField, Min(0f)] private float getUpSpeed = 1.5f;
@@ -145,6 +147,8 @@ namespace DeliveryRider
             if (zoneHopping) { AdvanceZoneHop(); return true; }
             if (TickHazardStun()) return true;
             if (ReactionState == RiderReactionState.Sliding && !IsSlipping) SetReactionState(RiderReactionState.Normal);
+            if (ReactionState == RiderReactionState.Airborne && airGravityScale > 1f)
+                body.AddForce(Physics.gravity * (airGravityScale - 1f), ForceMode.Acceleration);
             ApplyPendingContact();
             IsReactionGrounded = ReactionState != RiderReactionState.Normal && TryReactionSupport();
             if (ReactionState != RiderReactionState.Normal) groundedForHazards = IsReactionGrounded;
@@ -172,10 +176,10 @@ namespace DeliveryRider
                 case RiderReactionState.Airborne:
                     if (physicalTumble)
                     {
-                        if (groundedForHazards) SetReactionState(RiderReactionState.Rolling);
+                        if (groundedForHazards && body.linearVelocity.y > -minimumBounceSpeed) SetReactionState(RiderReactionState.Rolling);
                         break;
                     }
-                    if (groundedForHazards && Time.time >= trafficRecoveryUntil && Time.time >= nextContactAt)
+                    if (groundedForHazards && body.linearVelocity.y > -minimumBounceSpeed && Time.time >= trafficRecoveryUntil && Time.time >= nextContactAt)
                         SetReactionState(RiderReactionState.Rolling);
                     else
                     {
@@ -235,7 +239,7 @@ namespace DeliveryRider
             if (Time.time < nextContactAt) return;
             var incoming = collisionVelocity;
             // Gravity acts after FixedUpdate, so include this step for falling contacts.
-            if (ReactionState == RiderReactionState.Airborne) incoming += Physics.gravity * Time.fixedDeltaTime;
+            if (ReactionState == RiderReactionState.Airborne) incoming += Physics.gravity * (airGravityScale * Time.fixedDeltaTime);
             for (int i = 0; i < collision.contactCount; i++)
             {
                 var normal = collision.GetContact(i).normal;

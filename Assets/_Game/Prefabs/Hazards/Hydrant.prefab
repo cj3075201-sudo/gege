@@ -416,7 +416,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.6, y: 2.2, z: 1.6}
+  m_Size: {x: 2.6, y: 2.2, z: 2.6}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &3298751730361310655
 MonoBehaviour:
@@ -436,5 +436,8 @@ MonoBehaviour:
   effect: {fileID: 1390390226027736659}
   activeSeconds: 0.8
   forwardImpulse: 7
-  upwardImpulse: 13.38
+  upwardImpulse: 30
+  riderSpeedShare: 0
   slipSeconds: 2.2
+  objectRearmSeconds: 10
+  landingRadius: 2.6

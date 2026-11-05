@@ -449,7 +449,7 @@ MonoBehaviour:
   duckJumpHeight: 1.05
   duckJumpSeconds: 0.8
   bounceImpulse: 18.8
-  bounceLift: 6.96
+  bounceLift: 15.6
   recoverySeconds: 0.8
   repeatHitDelay: 1
 --- !u!1 &2631520743083561295

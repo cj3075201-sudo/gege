@@ -781,14 +781,14 @@ MonoBehaviour:
   idleTrackSpeed: 3.8
   idleTrackDistance: 12
   jabForward: 11
-  jabUp: 2.4525
+  jabUp: 5.5
   hookSide: 15
   hookForward: 3
-  hookUp: 3.567273
+  hookUp: 8
   upperForward: 3
-  upperUp: {x: 9.81, y: 11.147727}
+  upperUp: {x: 22, y: 25}
   lossForward: 15
-  lossUp: {x: 10.701818, y: 12.039545}
+  lossUp: {x: 24, y: 27}
   recoverySeconds: 0.6
   escapeDistance: 7.5
   escapeSpeed: 3
@@ -798,7 +798,7 @@ MonoBehaviour:
   chaseSeconds: 2.5
   chaseReach: 1.5
   chaseForward: 15
-  chaseUp: 3.121364
+  chaseUp: 7
   knockoutSeconds: 1.8
   palSeconds: 70
   palSpeed: 10.5
@@ -807,6 +807,7 @@ MonoBehaviour:
   palTeleportDistance: 30
   leaveSeconds: 1.2
   shoutSeconds: 3
+  palCoverInterval: 0.5
 --- !u!1 &4006804963023504778
 GameObject:
   m_ObjectHideFlags: 0
