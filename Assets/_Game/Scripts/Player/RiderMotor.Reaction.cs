@@ -83,6 +83,7 @@ namespace DeliveryRider
 
         private void SetReactionState(RiderReactionState state)
         {
+            if (state != RiderReactionState.Rolling && state != RiderReactionState.GettingUp) hazardStunned = false;
             if (state != RiderReactionState.Normal) ClearChickenAttachments();
             trafficRecoveryActive = state == RiderReactionState.Airborne || state == RiderReactionState.Rolling || state == RiderReactionState.GettingUp;
             if (ReactionState == state) return;
@@ -142,6 +143,7 @@ namespace DeliveryRider
         {
             float dt = Time.fixedDeltaTime;
             if (zoneHopping) { AdvanceZoneHop(); return true; }
+            if (TickHazardStun()) return true;
             if (ReactionState == RiderReactionState.Sliding && !IsSlipping) SetReactionState(RiderReactionState.Normal);
             ApplyPendingContact();
             IsReactionGrounded = ReactionState != RiderReactionState.Normal && TryReactionSupport();

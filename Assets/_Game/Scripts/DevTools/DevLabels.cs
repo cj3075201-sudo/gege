@@ -8,12 +8,17 @@ namespace DeliveryRider
     {
         private static readonly Dictionary<string, string> HazardTypes = new Dictionary<string, string>
         {
+            { "falling", "낙하물(까마귀)" },
             { "manhole", "맨홀" }, { "hydrant", "소화전" }, { "melon", "수박" }, { "door", "문" }, { "duck", "오리" },
             { "chicken", "닭" }, { "tire", "타이어" }, { "theft", "비둘기 도둑" }, { "muscleman", "근육맨" }, { "celebrity", "연예인 인파" }, { "pigeonflock", "비둘기 떼" },
         };
 
         private static readonly Dictionary<string, string> Fields = new Dictionary<string, string>
         {
+            { "initialLeadSeconds", "처음 조준 예측 시간(초)" }, { "trackingLeadSeconds", "추적 조준 예측 시간(초)" },
+            { "trackingSeconds", "조준 추적 시간(초)" }, { "impactSeconds", "발동부터 낙하까지(초)" },
+            { "stunSeconds", "기절 시간(초)" }, { "fallHeight", "낙하물 시작 높이(m)" },
+            { "effectSeconds", "낙하 조각 표시 시간(초)" }, { "fragmentSpread", "낙하 조각 퍼짐 거리(m)" },
             // Rider
             { "RiderMotor.speed", "이동 속도 (인라인 전 기본값)" }, { "RiderMotor.acceleration", "가속도" }, { "RiderMotor.turnSpeed", "회전 속도" },
             { "recoveryHeight", "추락 복귀 높이" }, { "followSlopes", "경사 따라 걷기" }, { "maximumSlope", "오를 수 있는 경사(도)" },
