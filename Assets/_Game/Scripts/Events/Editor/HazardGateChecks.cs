@@ -158,7 +158,7 @@ namespace DeliveryRider.Editor
             UnityEngine.Object.DestroyImmediate(on.gameObject);
         }
 
-        // triggersRequireFood off must behave as before: only theft waits for the food.
+        // The preview decision supersedes the legacy debug override: pickup is never interactive.
         private static void FoodRule()
         {
             var planner = new GameObject("Planner").AddComponent<HazardPlanner>();
@@ -177,11 +177,11 @@ namespace DeliveryRider.Editor
             var expected = new (string type, bool carrying, bool requireFood, bool can)[]
             {
                 ("manhole", false, true, true), ("duck", false, true, false), ("duck", true, true, true), ("theft", false, true, false), ("theft", true, true, true),
-                ("manhole", false, false, true), ("duck", false, false, true), ("duck", true, false, true), ("theft", false, false, false), ("theft", true, false, true),
+                ("manhole", false, false, true), ("duck", false, false, false), ("duck", true, false, true), ("theft", false, false, false), ("theft", true, false, true),
             };
             foreach (var e in expected)
                 if (Can(e.type, e.carrying, e.requireFood) != e.can) throw new InvalidOperationException($"{e.type} carrying={e.carrying} requireFood={e.requireFood} should be {e.can}");
-            Debug.Log("HazardGateChecks ok: with triggersRequireFood off every trigger but theft ignores the food; on, all wait for it");
+            Debug.Log("HazardGateChecks ok: random triggers wait for pickup even with the legacy food-rule override; objects remain armed");
             UnityEngine.Object.DestroyImmediate(planner.gameObject);
         }
 

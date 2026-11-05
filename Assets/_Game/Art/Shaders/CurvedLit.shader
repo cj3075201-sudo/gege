@@ -106,12 +106,12 @@ Shader "DeliveryRider/Curved Lit"
             AlphaToMask[_AlphaToMask]
 
             HLSLPROGRAM
-            #pragma target 2.0
+            #pragma target 3.5
 
             // -------------------------------------
             // Shader Stages
             #pragma vertex CurvedLitPassVertex
-            #pragma fragment LitPassFragment
+            #pragma fragment HazardLitPassFragment
 
             // -------------------------------------
             // Material Keywords
@@ -177,6 +177,21 @@ Shader "DeliveryRider/Curved Lit"
             // LitPassFragment mixes its fog through this name, so the sky-coloured fog needs no copy of URP's fragment.
             #define MixFog(color, fogCoord) DayFogMix(color, fogCoord, inputData.positionWS)
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitForwardPass.hlsl"
+            #include "HazardGhost.hlsl"
+            void HazardLitPassFragment(Varyings input, out half4 outColor : SV_Target0
+            #ifdef _WRITE_RENDERING_LAYERS
+                , out uint outRenderingLayers : SV_Target1
+            #endif
+            )
+            {
+                UNITY_SETUP_INSTANCE_ID(input);
+                HazardGhostClip(input.positionCS.xy);
+                LitPassFragment(input, outColor
+                #ifdef _WRITE_RENDERING_LAYERS
+                    , outRenderingLayers
+                #endif
+                );
+            }
 
             // The instance must be set up before the bend reads the object matrix.
             Varyings CurvedLitPassVertex(Attributes input)
@@ -268,7 +283,7 @@ Shader "DeliveryRider/Curved Lit"
             // -------------------------------------
             // Shader Stages
             #pragma vertex CurvedLitGBufferPassVertex
-            #pragma fragment LitGBufferPassFragment
+            #pragma fragment HazardGBufferFragment
 
             // -------------------------------------
             // Material Keywords
@@ -327,6 +342,13 @@ Shader "DeliveryRider/Curved Lit"
             // Includes
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitGBufferPass.hlsl"
+            #include "HazardGhost.hlsl"
+            GBufferFragOutput HazardGBufferFragment(Varyings input)
+            {
+                UNITY_SETUP_INSTANCE_ID(input);
+                HazardGhostClip(input.positionCS.xy);
+                return LitGBufferPassFragment(input);
+            }
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/GBufferOutputFormat.hlsl"
             #include "CurvedWorld.hlsl"
 
@@ -354,12 +376,12 @@ Shader "DeliveryRider/Curved Lit"
             Cull[_Cull]
 
             HLSLPROGRAM
-            #pragma target 2.0
+            #pragma target 3.5
 
             // -------------------------------------
             // Shader Stages
             #pragma vertex CurvedDepthOnlyVertex
-            #pragma fragment DepthOnlyFragment
+            #pragma fragment HazardDepthOnlyFragment
 
             // -------------------------------------
             // Material Keywords
@@ -373,12 +395,20 @@ Shader "DeliveryRider/Curved Lit"
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
+            #pragma instancing_options renderinglayer
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
             // -------------------------------------
             // Includes
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
+            #include "HazardGhost.hlsl"
+            half HazardDepthOnlyFragment(Varyings input) : SV_TARGET
+            {
+                UNITY_SETUP_INSTANCE_ID(input);
+                HazardGhostClip(input.positionCS.xy);
+                return DepthOnlyFragment(input);
+            }
             #include "CurvedWorld.hlsl"
 
             // Depth must match the colour pass, or depth-based effects (SSAO, soft blending) drift apart.
@@ -406,12 +436,12 @@ Shader "DeliveryRider/Curved Lit"
             Cull[_Cull]
 
             HLSLPROGRAM
-            #pragma target 2.0
+            #pragma target 3.5
 
             // -------------------------------------
             // Shader Stages
             #pragma vertex CurvedDepthNormalsVertex
-            #pragma fragment DepthNormalsFragment
+            #pragma fragment HazardDepthNormalsFragment
 
             // -------------------------------------
             // Material Keywords
@@ -432,12 +462,28 @@ Shader "DeliveryRider/Curved Lit"
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
+            #pragma instancing_options renderinglayer
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
             // -------------------------------------
             // Includes
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitDepthNormalsPass.hlsl"
+            #include "HazardGhost.hlsl"
+            void HazardDepthNormalsFragment(Varyings input, out half4 outNormalWS : SV_Target0
+            #ifdef _WRITE_RENDERING_LAYERS
+                , out uint outRenderingLayers : SV_Target1
+            #endif
+            )
+            {
+                UNITY_SETUP_INSTANCE_ID(input);
+                HazardGhostClip(input.positionCS.xy);
+                DepthNormalsFragment(input, outNormalWS
+                #ifdef _WRITE_RENDERING_LAYERS
+                    , outRenderingLayers
+                #endif
+                );
+            }
             #include "CurvedWorld.hlsl"
 
             Varyings CurvedDepthNormalsVertex(Attributes input)

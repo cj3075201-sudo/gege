@@ -2981,7 +2981,9 @@ MonoBehaviour:
   comboCountScale: 1
   objectMinimumSpacing: 5
   comboFirst: 0.35
-  showSelectedBeforePickup: 0
+  showSelectedBeforePickup: 1
+  previewOpacity: 0.4
+  previewFadeSeconds: 0.3
   session: {fileID: 421427440}
   rider: {fileID: 424159419}
   ground: {fileID: 1954410165}

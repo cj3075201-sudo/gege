@@ -27,7 +27,9 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float objectMinimumSpacing = 5f;
         [SerializeField, Range(0f, 1f)] private float comboFirst = .35f;
         [Tooltip("Display the call's selected triggers before food pickup without allowing them to strike.")]
-        [SerializeField] private bool showSelectedBeforePickup;
+        [SerializeField] private bool showSelectedBeforePickup = true;
+        [SerializeField,Range(0f,1f)] private float previewOpacity=.4f;
+        [SerializeField,Min(0f)] private float previewFadeSeconds=.3f;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         private static readonly ProfilerMarker RollSample = new ProfilerMarker("HazardPlanner.RollCall");
         public string LastRollAllocationUnit { get; private set; }
@@ -216,8 +218,7 @@ namespace DeliveryRider
             if (!pendingSlots.Contains(slot)) pendingSlots.Add(slot);
         }
 
-        private bool DesiredVisible(HazardSlot slot) => slot.Selected && !slot.Consumed
-            && (CanStrike(slot) || showSelectedBeforePickup && session.ActiveOrder != null && session.Stage == DeliveryStage.Pickup);
+        private bool DesiredVisible(HazardSlot slot) => slot.Selected && !slot.Consumed && CanStrike(slot);
 
         private void ApplyPendingSlots()
         {
@@ -225,8 +226,30 @@ namespace DeliveryRider
             foreach (var slot in slots)
             {
                 if (slot == null || slot.Role == HazardRole.Object) continue;
+                slot.TickGhostFade();
                 bool active = DesiredVisible(slot);
-                slot.StrikeAllowed = slot.Selected && CanStrike(slot) && !slot.Consumed && !slot.NeedsCallReset;
+                slot.StrikeAllowed = active;
+                bool preview=slot.Selected&&!slot.Consumed&&showSelectedBeforePickup
+                    &&session.ActiveOrder!=null&&session.Stage==DeliveryStage.Pickup;
+                if(preview)
+                {
+                    pendingSlots.Remove(slot);slot.NeedsCallReset=false;
+                    slot.SetPreview(previewOpacity);
+                    continue;
+                }
+                if(slot.IsPreviewVisible)
+                {
+                    pendingSlots.Remove(slot);slot.NeedsCallReset=false;
+                    if(active)slot.ActivateFromPreview(previewFadeSeconds);
+                    else slot.SetRuntimeActive(false);
+                    continue;
+                }
+                if((session.ActiveOrder==null||session.Stage==DeliveryStage.Complete)&&!active&&slot.RuntimeActive)
+                {
+                    pendingSlots.Remove(slot);slot.NeedsCallReset=false;slot.SetRuntimeActive(false);
+                    continue;
+                }
+                slot.StrikeAllowed=active&&!slot.NeedsCallReset;
                 if ((slot.RuntimeActive != active || slot.NeedsCallReset) && !pendingSlots.Contains(slot)) pendingSlots.Add(slot);
             }
             if (visibilityCamera == null) visibilityCamera = Camera.main;

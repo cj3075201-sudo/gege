@@ -37,6 +37,7 @@ namespace DeliveryRider
         private float crowdEndsAt;
         private float centerAlong, retryAt;
         private Transform celebrity;
+        private TrafficPedestrian waitingStar;
         private bool appeared, waitingPrepared;
         private int actorsUsed;
         private const float PrepareRadius=25f;
@@ -49,15 +50,24 @@ namespace DeliveryRider
             ground = roads;
         }
 
-        private void Start()
+        private void Start()=>EnsurePlacement();
+        private bool EnsurePlacement()
         {
-            network = FindFirstObjectByType<PedestrianNetwork>();
-            slot = GetComponent<HazardSlot>();
-            if (session == null || network == null || network.Prefab == null ||
-                (!centerPrepared&&!FindCenter(network, transform.position, out centerPath, out centerAlong))) { enabled = false; return; }
-            // Waiting fans are prepared only when this selected slot is near the rider.
-            // Distant slots never allocate a crowd at pickup.
+            if(network==null)network=FindFirstObjectByType<PedestrianNetwork>();
+            if(slot==null)slot=GetComponent<HazardSlot>();
+            if(session==null||network==null||network.Prefab==null||ground==null)return false;
+            if(!centerPrepared)centerPrepared=FindCenter(network,transform.position,out centerPath,out centerAlong);
+            return centerPrepared;
         }
+        public void ShowWaitingPreview()
+        {
+            if(!EnsurePlacement())return;
+            ClearActors();
+            var star=SpawnActor(centerPath,centerAlong,transform.position,false,celebrityCoat,1f,1f,100);
+            star.name="Celebrity_Preview";celebrity=star.transform;waitingStar=star;
+            if(slot!=null)slot.RefreshOwnedComponents();
+        }
+        public void EndHeldVisuals()=>ClearActors();
 
         // Six equally spaced directions, each two metres from the celebrity spawn point.
         public static Vector3 WaitingSpot(Vector3 center, Quaternion rotation, int index)
@@ -88,7 +98,8 @@ namespace DeliveryRider
             Physics.SyncTransforms();
             if (!FindSpawnPoints()) { retryAt = Time.time + 1f; return; }
             appeared = true; crowdEndsAt=Time.time+crowdSeconds;
-            var star = SpawnActor(centerPath, centerAlong, transform.position, false, celebrityCoat, 1f, 1f, 100);
+            var star = waitingStar!=null&&waitingStar.gameObject.activeSelf?waitingStar:SpawnActor(centerPath, centerAlong, transform.position, false, celebrityCoat, 1f, 1f, 100);
+            waitingStar=null;
             star.name = "Celebrity";
             celebrity = star.transform;
             foreach (var actor in actors) if (actor != star&&actor.gameObject.activeSelf) actor.SetCrowdCenter(celebrity);
@@ -211,7 +222,7 @@ namespace DeliveryRider
         private void ClearActors()
         {
             foreach(var actor in actors)if(actor!=null)actor.gameObject.SetActive(false);
-            actorsUsed=0;celebrity=null;waitingPrepared=false;
+            actorsUsed=0;celebrity=null;waitingStar=null;waitingPrepared=false;
         }
     }
 }

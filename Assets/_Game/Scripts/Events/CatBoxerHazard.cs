@@ -124,6 +124,12 @@ namespace DeliveryRider
         private void OnDisable() { shout?.Disable(); Spend(); wasSelected = false; }
         private void OnDestroy() => shout?.Dispose();
 
+        public void ShowWaitingPreview()
+        {
+            if(presentation==null)return;
+            presentation.transform.position=origin;presentation.gameObject.SetActive(true);
+        }
+
         private void ResetDuel()
         {
             State = Mode.Waiting; Phase = Beat.Gap; Health = catHealth; TakenHits = 0;

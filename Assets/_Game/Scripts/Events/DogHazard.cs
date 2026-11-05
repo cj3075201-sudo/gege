@@ -59,6 +59,12 @@ namespace DeliveryRider
             dog.gameObject.SetActive(false);
         }
 
+        public void ShowWaitingPreview()
+        {
+            if(dog==null)return;
+            dog.SetLocalPositionAndRotation(home,homeRotation);dog.gameObject.SetActive(true);
+        }
+
         private void OnEnable()
         {
             if (rider == null) return;

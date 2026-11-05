@@ -15,7 +15,7 @@ namespace DeliveryRider
         [SerializeField] private bool randomEachRun = true;
         [SerializeField] private int seed = 11;
         [Tooltip("On: selected triggers strike throughout delivery, including food recovery. Off: selected triggers strike before pickup too.")]
-        [SerializeField] private bool triggersRequireFood = true;
+        [SerializeField,HideInInspector] private bool triggersRequireFood = true;
         [Header("Food knocked loose by a hazard (test values)")]
         [SerializeField, Range(0f, 1f)] private float foodDropChance = 0.18f;
         [SerializeField, Min(0.1f)] private float foodPickupRadius = 1.8f;
@@ -149,7 +149,7 @@ namespace DeliveryRider
 
         private bool CanStrike(HazardSlot slot)
         {
-            return slot.Role == HazardRole.Object || !triggersRequireFood && slot.Type != "theft" && slot.Type != "clone" || DeliveryInProgress(session);
+            return slot.Role == HazardRole.Object || DeliveryInProgress(session);
         }
 
         public static bool DeliveryInProgress(DeliverySession owner) => owner != null

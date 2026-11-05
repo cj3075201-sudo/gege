@@ -280,6 +280,7 @@ namespace DeliveryRider
             int count = Mathf.Max(2, Mathf.CeilToInt(row / gap) + 1);
             if (count == activeBirds && Mathf.Approximately(effectiveSpacing, gap)
                 && Mathf.Approximately(configuredSpan, span) && Mathf.Approximately(configuredRow, row)) return;
+            bool grew=count>birds.Length;
             if (count > birds.Length)
             {
                 int original = birds.Length;
@@ -299,6 +300,7 @@ namespace DeliveryRider
             hopped = new bool[birds.Length];
             for (int i = count; i < birds.Length; i++) birds[i].gameObject.SetActive(false);
             if (phase == Phase.Ready) ShowWaiting();
+            if(grew&&slot!=null)slot.RefreshOwnedComponents();
         }
 
         // The waiting row already spans the road. Starting it early cannot let the queue pass before arrival.

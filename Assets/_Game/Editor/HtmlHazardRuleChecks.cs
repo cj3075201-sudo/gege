@@ -101,7 +101,7 @@ namespace DeliveryRider.Editor
             Call(planner,"ApplyPendingSlots");if(slot.RuntimeActive)throw new InvalidOperationException("visible nearby slot popped in");
             rider.transform.position=Vector3.back*30f;Call(planner,"ApplyPendingSlots");if(!slot.RuntimeActive||!slot.StrikeAllowed)throw new InvalidOperationException("deferred slot never activated");
             rider.transform.position=Vector3.zero;typeof(DeliverySession).GetProperty("Stage").SetValue(session,DeliveryStage.Complete);Call(planner,"ApplyPendingSlots");
-            if(!slot.RuntimeActive||slot.StrikeAllowed)throw new InvalidOperationException("completion gate must close before deferred disappearance");
+            if(slot.RuntimeActive||slot.StrikeAllowed)throw new InvalidOperationException("completed call must hide its triggers and close the gate immediately");
             rider.transform.position=Vector3.back*30f;Call(planner,"ApplyPendingSlots");if(slot.RuntimeActive)throw new InvalidOperationException("deferred slot never hid");
             slots.Clear();UnityEngine.Object.DestroyImmediate(node);UnityEngine.Object.DestroyImmediate(cameraHost);
             HazardSlot Make(string type,HazardRole role,float distance)

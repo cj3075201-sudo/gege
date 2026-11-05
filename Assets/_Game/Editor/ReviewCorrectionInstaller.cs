@@ -26,6 +26,18 @@ namespace DeliveryRider.Editor
             EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);
             Debug.Log("REVIEW_INSTALL food uses accident gravity and HTML extra-up5");
         }
+        public static void ApplyPreviewDefaults()
+        {
+            var scene=EditorSceneManager.OpenScene(MeasureRunner.ScenePath,OpenSceneMode.Single);
+            var so=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<HazardPlanner>());
+            so.FindProperty("showSelectedBeforePickup").boolValue=true;
+            so.FindProperty("previewOpacity").floatValue=.4f;
+            so.FindProperty("previewFadeSeconds").floatValue=.3f;
+            so.ApplyModifiedPropertiesWithoutUndo();EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);
+            var shader=Shader.Find("DeliveryRider/Curved Lit");
+            if(shader==null||ShaderUtil.ShaderHasError(shader))throw new InvalidOperationException("Preview shader compile errors");
+            Debug.Log("PREVIEW_INSTALL default-on opacity.4 fade.3 shader imported");
+        }
         private static void Extend(UnityEngine.Object target,string name)
         {
             var so=new SerializedObject(target);var field=so.FindProperty(name);

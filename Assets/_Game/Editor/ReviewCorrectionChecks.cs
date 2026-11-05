@@ -45,7 +45,7 @@ namespace DeliveryRider.Editor
                 var planner=host.AddComponent<HazardPlanner>();var fields=DevValue.Discover(planner);
                 foreach(string field in new[]{"activePerDay.Array.data[4]","routeShare","combosEnabled","showSelectedBeforePickup"})Check(fields.Any(v=>v.PropertyPath==field),"F1 missing rule "+field);
                 Check((int)Get(planner,"activePerDay").GetType().GetProperty("Length").GetValue(Get(planner,"activePerDay"))==5,"ACT five days");
-                Check(!(bool)Get(planner,"showSelectedBeforePickup"),"before-pickup display defaults off");
+                Check((bool)Get(planner,"showSelectedBeforePickup"),"before-pickup preview defaults on");
             }
             finally{DevTuningSession.EndSession();UnityEngine.Object.DestroyImmediate(host);UnityEngine.Object.DestroyImmediate(settings);}
         }

@@ -67,6 +67,17 @@ namespace DeliveryRider
             Stop();
         }
 
+        public void ShowWaitingPreview()
+        {
+            for(int i=0;i<clones.Length;i++)
+            {
+                clones[i].Rest();
+                clones[i].transform.SetPositionAndRotation(path.Ground(transform.position+transform.right*((i-1)*lateralSpacing)),transform.rotation);
+                clones[i].gameObject.SetActive(true);
+            }
+            SetCallout(false,"",Vector3.zero);
+        }
+
         private void OnEnable()
         {
             if (rider == null) return;
