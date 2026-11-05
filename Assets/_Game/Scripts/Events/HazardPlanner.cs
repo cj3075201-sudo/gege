@@ -27,7 +27,7 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float foodUpShare = 0.7f;
         [SerializeField, Min(0f)] private float foodExtraUp = 2.23f;
         private DroppedFood droppedFood;
-        private bool[] openSpots;
+        private HazardZoneFilter openRoads;
         private bool appliedFoodRule;
         private readonly List<HazardSlot> slots = new List<HazardSlot>();
         private int day = 1;
@@ -58,9 +58,8 @@ namespace DeliveryRider
             if (settings == null || candidates == null || ground == null) { Debug.LogError("Hazard planner needs spawn settings, candidates and the road network.", this); return; }
             var random = randomEachRun ? new System.Random() : new System.Random(seed);
             var placed = new List<(Vector3 position, string type)>();
-            var openRoads = new HazardZoneFilter(session.ZoneMap, session.IsZoneOpen);
+            openRoads = new HazardZoneFilter(session.ZoneMap, session.IsZoneOpen);
             float openShare = openRoads.OpenRoadShare(ground.Roads);
-            MarkOpenSpots(openRoads);
             var shuffled = new List<int>();
             // Prefabs are instantiated under an inactive parent so they can be fitted before they wake.
             var staging = new GameObject("HazardStaging");
@@ -74,7 +73,7 @@ namespace DeliveryRider
                     int want = HazardZoneFilter.ScaleCount(kind.Count(day), openShare), count = 0;
                     shuffled.Clear();
                     for (int i = 0; i < candidates.Candidates.Count; i++)
-                        if (candidates.Candidates[i].type == kind.type && CandidateOpen(candidates.Candidates[i], openRoads)) shuffled.Add(i);
+                        if (candidates.Candidates[i].type == kind.type && CandidateOpen(candidates.Candidates[i])) shuffled.Add(i);
                     for (int i = shuffled.Count - 1; i > 0; i--) { int j = random.Next(i + 1); (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]); }
                     foreach (int index in shuffled)
                     {
@@ -90,24 +89,13 @@ namespace DeliveryRider
             Destroy(staging);
         }
 
-        private void MarkOpenSpots(HazardZoneFilter openRoads)
+        // The hazard itself and the road spot it belongs to must both be on the open side of every closed wall.
+        private bool CandidateOpen(HazardCandidate candidate)
         {
+            if (!openRoads.PointOpen(candidate.position)) return false;
             var spots = candidates.Spots;
-            openSpots = new bool[spots.Count];
-            var known = new bool[spots.Count];
-            foreach (var candidate in candidates.Candidates)
-            {
-                if (candidate.spot < 0 || candidate.spot >= spots.Count || known[candidate.spot]) continue;
-                known[candidate.spot] = true;
-                openSpots[candidate.spot] = openRoads.RoadOpen(spots[candidate.spot].position, candidate.halfWidth, candidate.alley);
-            }
-            for (int i = 0; i < spots.Count; i++)
-                if (!known[i]) openSpots[i] = openRoads.RoadOpen(spots[i].position, 0f, true);
+            return candidate.spot < 0 || candidate.spot >= spots.Count || openRoads.PointOpen(spots[candidate.spot].position);
         }
-
-        private bool CandidateOpen(HazardCandidate candidate, HazardZoneFilter openRoads)
-            => candidate.spot >= 0 && candidate.spot < openSpots.Length ? openSpots[candidate.spot]
-                : openRoads.RoadOpen(candidate.position, candidate.halfWidth, candidate.alley);
 
         // Developer tools: replaces today's hazards with a fresh layout from the current settings. Switching a hazard
         // off first runs its teardown (chicken control and slips end; a pigeon holding food sends the rider back to
@@ -187,30 +175,15 @@ namespace DeliveryRider
             float up = Mathf.Max(0f, launch.y) * foodUpShare + foodExtraUp;
             var start = rider.transform.position;
             var landing = start + sideways * (2f * up / Mathf.Max(0.01f, -Physics.gravity.y));
-            // Food always comes to rest where the rider can walk to it, never on a roof.
             var recovery = rider.GetComponent<RiderSafeRecovery>();
-            if (recovery != null) landing = recovery.FindSafePosition(landing, start);
-            landing = OpenLanding(landing);
+            if (recovery != null) landing = FoodRestingPoint(recovery, session.ZoneMap != null ? openRoads : null, landing, start);
             droppedFood = new GameObject("DroppedFood").AddComponent<DroppedFood>();
             droppedFood.Launch(session, rider.transform, start, ground.OnGround(landing, 0.25f), up, foodPickupRadius, StolenFoodLook());
         }
 
-        // Food must stay reachable: a landing on a closed road moves to the nearest open road spot.
-        private Vector3 OpenLanding(Vector3 point)
-        {
-            if (session.ZoneMap == null || openSpots == null) return point;
-            var spots = candidates.Spots;
-            int nearest = -1, nearestOpen = -1;
-            float nearestDistance = float.PositiveInfinity, nearestOpenDistance = float.PositiveInfinity;
-            for (int i = 0; i < spots.Count && i < openSpots.Length; i++)
-            {
-                var offset = spots[i].position - point;
-                float distance = offset.x * offset.x + offset.z * offset.z;
-                if (distance < nearestDistance) { nearestDistance = distance; nearest = i; }
-                if (openSpots[i] && distance < nearestOpenDistance) { nearestOpenDistance = distance; nearestOpen = i; }
-            }
-            return nearest < 0 || openSpots[nearest] || nearestOpen < 0 ? point : spots[nearestOpen].position;
-        }
+        // Food always comes to rest where the rider can walk to it: on a road, never on a roof or behind a closed wall.
+        public static Vector3 FoodRestingPoint(RiderSafeRecovery recovery, HazardZoneFilter roads, Vector3 landing, Vector3 fallback)
+            => roads != null && recovery.TryFindOpenRoad(landing, roads, out var open) ? open : recovery.FindSafePosition(landing, fallback, roads);
 
         // The food looks the same as the bag a thief carries; without that art the guide marker still leads to it.
         private GameObject StolenFoodLook()

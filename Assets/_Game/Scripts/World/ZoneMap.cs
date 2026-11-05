@@ -15,6 +15,7 @@ namespace DeliveryRider
         }
 
         [SerializeField] private Zone[] zones = Array.Empty<Zone>();
+        public System.Collections.Generic.IReadOnlyList<Zone> Zones => zones;
 
         public string ZoneAt(Vector3 worldPosition)
         {
