@@ -126,7 +126,7 @@ namespace DeliveryRider
             { "foodUpShare", "음식 위쪽 속도 비율" }, { "foodExtraUp", "음식 추가 위쪽 속도" }, { "floorFriction", "바닥 튕김 뒤 수평 속도 비율" },
             { "shoveForward", "앞으로 미는 속도" }, { "shoveRiderShare", "라이더 속도 유지 비율" }, { "shoveLift", "뜨는 속도" },
             { "zoneHopSpeed", "닫힌 구역 복귀 속도" }, { "zoneHopSeconds", "닫힌 구역 복귀 시간" }, { "zoneHopHeight", "복귀 호 높이" },
-            { "zoneHopHeightPerMeter", "복귀 호 m당 높이" }, { "zoneHopKeptSpeed", "복귀 뒤 유지 속도 비율" }, { "zoneCheckSeconds", "닫힌 구역 검사 간격" },
+            { "zoneHopHeightPerMeter", "복귀 호 m당 높이" }, { "zoneHopKeptSpeed", "복귀 뒤 유지 속도 비율" }, { "zoneCheckSeconds", "닫힌 구역 검사 간격" }, { "routeRetrySeconds", "경로 없을 때 다시 찾는 간격" },
             { "triggerHalfLength", "발동 거리(길 따라 앞뒤)" }, { "startBehind", "출발 거리(라이더 반대쪽)" }, { "rollPast", "지나서 더 구르는 거리" },
         };
 
