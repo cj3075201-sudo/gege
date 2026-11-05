@@ -10,6 +10,10 @@ namespace DeliveryRider
         private Transform crowdCenter;
         private Vector3 crowdHome;
         private float crowdPhase, crowdBaseMass, crowdMassMultiplier = 1f;
+        private CelebrityCrowdHazard crowdContact;
+        private float nextCrowdSlowAt = float.NegativeInfinity;
+        private float crowdPushUntil = float.NegativeInfinity;
+        public bool IsCrowdFan => crowdMember && crowdFan;
         public float BodyResistance { get; private set; } = 1f;
 
         // Only collision, tumble and get-up reactions are shared with sidewalk pedestrians.
@@ -30,6 +34,34 @@ namespace DeliveryRider
             SetCrowdWalking();
         }
 
+        public void ConfigureCrowdContact(CelebrityCrowdHazard settings) => crowdContact = settings;
+
+        // Rider sweep handles fans separately; ordinary walkers keep their existing knock/resistance rule.
+        public bool TryCrowdContact(RiderMotor rider, Vector3 velocity)
+        {
+            if (!IsCrowdFan || crowdContact == null) return false;
+            if (!CanReact || rider.IsRecovering) return true;
+            if (Time.time >= nextCrowdSlowAt)
+            {
+                nextCrowdSlowAt = Time.time + crowdContact.FanContactCooldown;
+                rider.ApplyCrowdContact(crowdContact.FanContactSpeedShare,
+                    crowdContact.RiderMinimumProgressSpeed, crowdContact.FanContactCooldown);
+            }
+            if (TryBodyKnock(velocity)) return true;
+            var direction = Vector3.ProjectOnPlane(velocity, Vector3.up).normalized;
+            if (direction.sqrMagnitude < 0.01f) return true;
+            // Yield physically while being pushed instead of driving back into the rider every step.
+            // A small sideways component opens a gap; collisions with walls remain solid.
+            var side = Vector3.Cross(Vector3.up, direction);
+            float sign = Vector3.Dot(body.position - rider.transform.position, side) >= 0f ? 1f : -1f;
+            float progress = Mathf.Max(crowdContact.RiderMinimumProgressSpeed, rider.HorizontalSpeed);
+            var desired = direction * progress + side * (sign * crowdContact.RiderMinimumProgressSpeed);
+            var current = body.linearVelocity;
+            body.linearVelocity = new Vector3(desired.x, current.y, desired.z);
+            crowdPushUntil = Time.time + crowdContact.FanContactCooldown;
+            return true;
+        }
+
         public void SetCrowdCenter(Transform center) => crowdCenter = center;
 
         private void SetCrowdWalking()
@@ -46,6 +78,7 @@ namespace DeliveryRider
         private bool UpdateCrowdGoal()
         {
             if (!crowdFan || crowdCenter == null) return true;
+            if (Time.time < crowdPushUntil) { FaceCrowdCenter(); return true; }
             var away = Vector3.ProjectOnPlane(body.position - crowdCenter.position, Vector3.up);
             float radius = away.magnitude;
             var outward = radius > 0.001f ? away / radius

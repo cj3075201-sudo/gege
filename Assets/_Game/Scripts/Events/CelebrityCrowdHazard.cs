@@ -16,6 +16,15 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float fanSpeedMultiplier = 3.75f;
         [SerializeField, Min(1f)] private float fanResistance = 2f;
         [SerializeField, Min(0.1f)] private float fanMassMultiplier = 3f;
+        [Header("팬 접촉 (즉시 적용)")]
+        [SerializeField, Min(0f)] private float fanKnockMinimumSpeed = 8.5f;
+        [SerializeField, Range(0f, 1f)] private float fanContactSpeedShare = 0.74f;
+        [SerializeField, Min(0.1f)] private float riderMinimumProgressSpeed = 1.5f;
+        [SerializeField, Min(0.05f)] private float fanContactCooldown = 0.35f;
+        public float FanKnockMinimumSpeed => fanKnockMinimumSpeed;
+        public float FanContactSpeedShare => fanContactSpeedShare;
+        public float RiderMinimumProgressSpeed => riderMinimumProgressSpeed;
+        public float FanContactCooldown => fanContactCooldown;
         private DeliverySession session;
         private PedestrianNetwork network;
         private RoadNetwork ground;
@@ -109,6 +118,7 @@ namespace DeliveryRider
             var actor = Instantiate(network.Prefab, spot, transform.rotation, transform);
             actor.InitializeCrowd(network, route, along, Random.Range(1, 100000) + seed, coat,
                 transform, spot, fan, speed, resistance, fan ? fanMassMultiplier : 1f);
+            if (fan) actor.ConfigureCrowdContact(this);
             actors.Add(actor);
             return actor;
         }

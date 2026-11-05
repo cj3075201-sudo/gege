@@ -66,6 +66,8 @@ namespace DeliveryRider
             { "HazardSpawnSettings.spacing", "사건 간 최소 거리" }, { "sameTypeSpacing", "같은 종류 최소 거리" },
             { "spawnRadius", "팬 생성 반경" }, { "waitingFans", "대기 팬 수" }, { "incomingFans", "추가 팬 수" },
             { "fanSpeedMultiplier", "팬 이동속도 배율" }, { "fanResistance", "팬 충돌 저항 배율" },
+            { "fanKnockMinimumSpeed", "팬 쓰러짐 최소 속도" }, { "fanContactSpeedShare", "팬 접촉당 라이더 속도 배율" },
+            { "riderMinimumProgressSpeed", "라이더 최소 진행 속도" }, { "fanContactCooldown", "같은 팬 재감속 대기(초)" },
             { "fanMassMultiplier", "팬 질량 배율" },
             { "obscureSeconds", "화면 가림 시간" }, { "contactCooldown", "재접촉 대기" },
             { "driftDistance", "무리 이동 폭" }, { "driftSpeed", "무리 이동 속도" },
@@ -96,7 +98,7 @@ namespace DeliveryRider
             { "openingSeconds", "열리는 시간" }, { "openingAngle", "열림 각도" }, { "holdSeconds", "열려 있는 시간" },
             { "closingSeconds", "닫히는 시간" }, { "horizontalImpulse", "수평 충격" },
             // Traffic and walkers
-            { "vehicleCount", "차량 수" }, { "minimumSpacing", "차량 간 최소 간격" }, { "playerClearance", "플레이어 주변 비움 거리" },
+            { "vehicleCount", "차량 수 (구역 지도 없을 때)" }, { "vehicleCountByDay", "일차별 차량 수" }, { "minimumSpacing", "차량 간 최소 간격" }, { "playerClearance", "플레이어 주변 비움 거리" },
             { "share", "등장 비율" }, { "cruiseSpeed", "주행 속도" }, { "TrafficCar.acceleration", "가속도" }, { "braking", "제동력" },
             { "slopeSpeed", "경사 주행 속도" }, { "followGap", "앞차 간격" }, { "obstacleClearance", "장애물 여유" },
             { "riderBrakeDelay", "라이더 앞 제동 지연" }, { "riderIgnoreChance", "라이더 무시 확률" }, { "riderForgetSeconds", "라이더 잊는 시간" },

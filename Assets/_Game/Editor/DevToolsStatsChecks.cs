@@ -11,6 +11,8 @@ namespace DeliveryRider.Editor
             CheckCallValues();
             RunTuning();
             DevToolsScaleChecks.Run();
+            CrowdResistanceChecks.Run();
+            TrafficZoneChecks.Run();
             Debug.Log("DevToolsStatsChecks PASS: all checks.");
         }
 

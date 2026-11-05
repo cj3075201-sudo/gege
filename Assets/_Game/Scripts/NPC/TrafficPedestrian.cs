@@ -349,7 +349,7 @@ namespace DeliveryRider
         public bool TryBodyKnock(Vector3 riderVelocity)
         {
             var horizontal = Vector3.ProjectOnPlane(riderVelocity, Vector3.up);
-            if (!CanReact || horizontal.magnitude < knockMinimumSpeed) return false;
+            if (!CanReact || horizontal.magnitude < (IsCrowdFan && crowdContact != null ? crowdContact.FanKnockMinimumSpeed : knockMinimumSpeed)) return false;
             Launch(horizontal * (knockSpeedShare / BodyResistance) + Vector3.up * punchLift, 0);
             return true;
         }
@@ -362,11 +362,14 @@ namespace DeliveryRider
             return true;
         }
 
+        private bool crowdChain;
+
         private void Launch(Vector3 velocity, int depth)
         {
             flying = true; hitAt = Time.time; floorAt = float.NegativeInfinity;
             returning = false;
             chainDepth = depth;
+            crowdChain = IsCrowdFan;
             ResetAvoidance();
             // Hit again while down: tumble on from the lying pose instead of popping upright.
             visualSpin = lying ? lieAngle : 0f;
@@ -388,9 +391,12 @@ namespace DeliveryRider
             if (collision.rigidbody.TryGetComponent<TrafficPedestrian>(out var other))
             {
                 if (chainDepth < chainLimit && flightSpeed >= chainMinimumSpeed && other.CanReact)
+                {
                     other.Launch((horizontal + Vector3.up * punchLift) * chainSpeedShare, chainDepth + 1);
+                    other.crowdChain |= crowdChain;
+                }
             }
-            else if (chainDepth > 0 && flightSpeed >= riderHitMinimumSpeed && collision.rigidbody.TryGetComponent<RiderMotor>(out var rider)
+            else if (!crowdChain && chainDepth > 0 && flightSpeed >= riderHitMinimumSpeed && collision.rigidbody.TryGetComponent<RiderMotor>(out var rider)
                 && Vector3.Dot(horizontal, rider.transform.position - body.position) > 0f)
                 rider.TryContactCrash(horizontal / flightSpeed * Mathf.Min(flightSpeed, 4f) + Vector3.up * 2f, 1.1f);
         }
