@@ -279,6 +279,8 @@ namespace DeliveryRider.Editor
                 CelebrityCrowdInstaller.AppendCandidates(extraSpots, extra, session, network, ground);
                 foreach (var candidate in extra)
                 {
+                    // A celebrity with no sidewalk within reach of FindCenter switches itself off at runtime: never add one.
+                    if (candidate.type == "celebrity" && !CelebrityCrowdHazard.FindCenter(network, candidate.position, out _, out _)) continue;
                     bool onNew = OnNewRoad(context, candidate.position);
                     if (!onNew && !IncludeOldRoads()) continue;
                     float same = onNew ? .01f : SamePlace;
@@ -287,6 +289,9 @@ namespace DeliveryRider.Editor
                 }
                 if (!places.Skip(data.Candidates.Count).Any(c => c.type == "muscleman") || !places.Skip(data.Candidates.Count).Any(c => c.type == "celebrity"))
                     throw new InvalidOperationException("Expanded pedestrian bake produced no new muscleman or celebrity candidates; check sidewalks/corners.");
+                // The frozen 887 stay as they are; report the ones that do nothing on this network.
+                foreach (var c in places.Where(c => c.type == "celebrity" && !CelebrityCrowdHazard.FindCenter(network, c.position, out _, out _)))
+                    Debug.Log($"HAZARD_CELEBRITY_OFF index={places.IndexOf(c)} position=({c.position.x:0.00},{c.position.z:0.00})");
                 SaveCopy(input, output, spots, places);
                 var networkJson = EditorJsonUtility.ToJson(network);
                 Report(output, "pedestrians", context, HashBytes(Encoding.UTF8.GetBytes(networkJson)));

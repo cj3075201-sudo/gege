@@ -40,6 +40,7 @@ namespace DeliveryRider.Editor
                 Case("muscleman", Muscleman);
                 Chicken();
                 FoodRule();
+                MusclemanRetry();
                 Debug.Log("HazardGateChecks PASS: all checks.");
                 EditorApplication.Exit(0);
             }
@@ -182,6 +183,27 @@ namespace DeliveryRider.Editor
                 if (Can(e.type, e.carrying, e.requireFood) != e.can) throw new InvalidOperationException($"{e.type} carrying={e.carrying} requireFood={e.requireFood} should be {e.can}");
             Debug.Log("HazardGateChecks ok: with triggersRequireFood off every trigger but theft ignores the food; on, all wait for it");
             UnityEngine.Object.DestroyImmediate(planner.gameObject);
+        }
+
+        // With no sidewalk route the search must wait, not run again on every physics step.
+        private static void MusclemanRetry()
+        {
+            var hazard = Spawn<MusclemanHazard>("Muscleman", true);
+            Set(hazard, "sidewalks", new GameObject("NoSidewalks").AddComponent<PedestrianNetwork>());
+            Set(hazard, "playerShape", rider.GetComponent<CapsuleCollider>());
+            Set(hazard, "volume", hazard.GetComponent<BoxCollider>());
+            Set(hazard, "session", session);
+            Set(hazard, "nextRouteTryAt", 0f);
+            Physics.SyncTransforms();
+            Call(hazard, "FixedUpdate");
+            float waitUntil = (float)Field(hazard, "nextRouteTryAt").GetValue(hazard);
+            if (waitUntil <= Time.time) throw new InvalidOperationException("a failed route search set no wait");
+            if (!Field(hazard, "phase").GetValue(hazard).ToString().Equals("Ready")) throw new InvalidOperationException("a failed route search left the Ready phase");
+            Set(hazard, "nextRouteTryAt", waitUntil + 100f);
+            Call(hazard, "FixedUpdate");
+            if ((float)Field(hazard, "nextRouteTryAt").GetValue(hazard) != waitUntil + 100f) throw new InvalidOperationException("the search ran during its wait");
+            Debug.Log("HazardGateChecks ok: muscleman waits between failed route searches");
+            UnityEngine.Object.DestroyImmediate(hazard.gameObject);
         }
 
         private static FieldInfo Field(object owner, string name) => owner.GetType().GetField(name, Any);

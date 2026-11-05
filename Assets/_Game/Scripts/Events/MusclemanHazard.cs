@@ -26,6 +26,9 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float shoveLift = 2.9f;
         [SerializeField, Min(0f)] private float pedestrianLift = 1f;
         [SerializeField, Min(0.1f)] private float recoverySeconds = 0.6f;
+        [Tooltip("A rider touching the trigger where no sidewalk route exists is tried again after this long, not every physics step.")]
+        [SerializeField, Min(0.02f)] private float routeRetrySeconds = 0.25f;
+        private float nextRouteTryAt;
         private DeliverySession session;
         private RiderMotor rider;
         private CapsuleCollider playerShape;
@@ -71,7 +74,8 @@ namespace DeliveryRider
             switch (phase)
             {
                 case Phase.Ready:
-                    if ((slot == null || slot.StrikeAllowed) && Touching()) BeginRush();
+                    if (Time.time >= nextRouteTryAt && (slot == null || slot.StrikeAllowed) && Touching() && !BeginRush())
+                        nextRouteTryAt = Time.time + routeRetrySeconds;
                     break;
                 case Phase.Running:
                 case Phase.Turning:
@@ -185,13 +189,13 @@ namespace DeliveryRider
             return choice;
         }
 
-        private void BeginRush()
+        private bool BeginRush()
         {
             var heading = rider.HorizontalSpeed > 0.5f ? rider.Velocity : rider.transform.forward;
-            if (!TryRoute(sidewalks, rider.transform.position, heading, spawnBehindDistance, runnerRadius, out path, out distance, minimumStraightBehind)) return;
+            if (!TryRoute(sidewalks, rider.transform.position, heading, spawnBehindDistance, runnerRadius, out path, out distance, minimumStraightBehind)) return false;
             firstPath = path;
             turnConnector = ChooseTurn(sidewalks, path);
-            if (!TryApproach(sidewalks, path, distance, spawnBehindDistance, runnerRadius, minimumStraightBehind, approach, out var spawnDistance)) return;
+            if (!TryApproach(sidewalks, path, distance, spawnBehindDistance, runnerRadius, minimumStraightBehind, approach, out var spawnDistance)) return false;
             approachIndex = 0;
             path = approach[0];
             distance = spawnDistance;
@@ -203,6 +207,7 @@ namespace DeliveryRider
             runner.SetPositionAndRotation(feet, Quaternion.LookRotation(forward));
             runner.gameObject.SetActive(true);
             phase = Phase.Running;
+            return true;
         }
 
         private void Advance()
