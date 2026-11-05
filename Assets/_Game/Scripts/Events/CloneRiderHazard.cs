@@ -10,7 +10,8 @@ namespace DeliveryRider
         private enum Phase { Ready, Approaching, Escaping, Spent }
         [SerializeField] private DeliverySession session;
         [SerializeField] private FoodThief[] clones = Array.Empty<FoodThief>();
-        [SerializeField] private TextMesh callout;
+        [SerializeField] private TMPro.TMP_Text callout;
+        [SerializeField, Min(0.1f)] private float feedbackSeconds = 0.7f;
         [Header("복제 접근 — HTML 시험값")]
         [SerializeField, Min(0.1f)] private float triggerRadius = 10f;
         [SerializeField, Min(0.1f)] private float spawnBehindDistance = 14f;
@@ -33,6 +34,8 @@ namespace DeliveryRider
         private object order;
         private float elapsed, escapeElapsed;
         private float nextAttemptAt;
+        private float feedbackUntil;
+        private Camera viewCamera;
         private Vector3 forward, routeEnd;
         private FoodThief thief;
         private Transform routeRoot;
@@ -49,6 +52,7 @@ namespace DeliveryRider
             rider = session != null && session.Player != null ? session.Player.GetComponent<RiderMotor>() : null;
             if (rider == null || clones.Length != 3 || Array.Exists(clones, c => c == null)) { enabled = false; return; }
             slot = GetComponent<HazardSlot>();
+            viewCamera = Camera.main;
             path = new PursuitHazardPath(session, ground, transform);
             routeRoot = new GameObject("CloneEscapeRoute").transform;
             routeRoot.SetParent(transform, false);
@@ -157,9 +161,10 @@ namespace DeliveryRider
             thief.Initialize(session, route, escapeSpeed, escapeSeconds);
             thief.enabled = true;
             escapeElapsed = 0f; phase = Phase.Escaping;
+            feedbackUntil = Time.time + feedbackSeconds;
             // HTML stun has no launch: reuse a physical tumble with zero additional velocity.
             rider.TryHazardCrash(this, Vector3.zero, recoverySeconds);
-            SetCallout(true, "!", thief.transform.position + Vector3.up * 2.2f);
+            SetCallout(true, "슈웅", thief.transform.position + Vector3.up * 2.2f);
             return true;
         }
 
@@ -201,7 +206,7 @@ namespace DeliveryRider
                 if (!BuildRoute(thief.transform.position)) { Stop(); return; }
                 thief.Initialize(session, route, escapeSpeed, Mathf.Max(1f, remaining));
             }
-            SetCallout(true, "!", thief.transform.position + Vector3.up * 2.2f);
+            SetCallout(true, Time.time < feedbackUntil ? "슈웅" : "!", thief.transform.position + Vector3.up * 2.2f);
         }
 
         private void Stop()
@@ -226,6 +231,8 @@ namespace DeliveryRider
         {
             if (callout == null) return;
             callout.gameObject.SetActive(visible); callout.text = text; callout.transform.position = point;
+            callout.color = new Color(1f, 0.54f, 0.16f);
+            if (viewCamera != null) callout.transform.rotation = viewCamera.transform.rotation;
         }
     }
 }

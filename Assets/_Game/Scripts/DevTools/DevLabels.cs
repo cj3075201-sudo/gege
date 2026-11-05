@@ -75,6 +75,7 @@ namespace DeliveryRider
             { "orbitSpeed", "비둘기 공전 속도" }, { "orbitRadius", "비둘기 공전 반경" },
             { "crowdAcceleration", "팬 추진 가속도" }, { "crowdStepHeight", "팬 연석 넘기 높이" },
             // Hazards
+            { "feedbackSeconds", "타격 문구 표시 시간" },
             { "DogHazard.turnRate", "개 회전 속도(rad/s)" }, { "DogHazard.biteRadius", "개 물기 반경" },
             { "dashDistance", "물린 뒤 질주 거리(m)" }, { "dashSpeedMultiplier", "물린 뒤 질주 속도 배율" },
             { "dashSteering", "질주 조향 속도(rad/s)" }, { "obstacleRadius", "벽 검사 반경" },

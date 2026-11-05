@@ -12,7 +12,8 @@ namespace DeliveryRider
         [SerializeField] private Transform dog;
         [SerializeField] private Transform[] legs = System.Array.Empty<Transform>();
         [SerializeField] private Transform tail;
-        [SerializeField] private TextMesh callout;
+        [SerializeField] private TMPro.TMP_Text callout;
+        [SerializeField, Min(0.1f)] private float feedbackSeconds = 0.7f;
         [Header("개 추격 — HTML 시험값")]
         [SerializeField, Min(0.1f)] private float triggerRadius = 14f;
         [SerializeField, Min(0.1f)] private float chaseSpeed = 8.4f;
@@ -35,6 +36,8 @@ namespace DeliveryRider
         private Phase phase;
         private object order;
         private float elapsed, travelled, dashSpeed;
+        private float feedbackUntil;
+        private Camera viewCamera;
         private Vector3 heading, previous, home;
         private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
 
@@ -47,6 +50,7 @@ namespace DeliveryRider
             if (rider == null || dog == null) { enabled = false; return; }
             playerBody = rider.GetComponent<Rigidbody>();
             slot = GetComponent<HazardSlot>();
+            viewCamera = Camera.main;
             path = new PursuitHazardPath(session, ground, transform);
             home = dog.localPosition;
             foreach (var shape in dog.GetComponentsInChildren<Collider>(true))
@@ -114,6 +118,7 @@ namespace DeliveryRider
             if (!rider.TryHazardSlip(this, heading, dashDistance / Mathf.Max(0.1f, dashSpeed) + 1f)) return;
             travelled = elapsed = 0f; previous = playerBody.position;
             phase = Phase.Dashing;
+            feedbackUntil = Time.time + feedbackSeconds;
             dog.gameObject.SetActive(false);
             SetVelocity(heading * dashSpeed);
         }
@@ -174,9 +179,12 @@ namespace DeliveryRider
                 if (legs[i] != null) legs[i].localRotation = Quaternion.Euler(phase == Phase.Chasing ? Mathf.Sin(Time.time * 18f + (i == 0 || i == 3 ? 0f : Mathf.PI)) * 50f : 0f, 0f, 0f);
             if (callout != null)
             {
-                callout.gameObject.SetActive(phase == Phase.Chasing);
-                callout.text = "!";
-                callout.transform.position = dog.position + Vector3.up * 1.8f;
+                bool bitten = phase == Phase.Dashing && Time.time < feedbackUntil;
+                callout.gameObject.SetActive(phase == Phase.Chasing || bitten);
+                callout.text = bitten ? "멍!" : "!";
+                callout.color = new Color(0.72f, 0.51f, 0.31f);
+                callout.transform.position = (bitten ? rider.transform.position : dog.position) + Vector3.up * 1.8f;
+                if (viewCamera != null) callout.transform.rotation = viewCamera.transform.rotation;
             }
         }
     }

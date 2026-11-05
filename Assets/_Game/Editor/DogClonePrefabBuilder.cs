@@ -114,6 +114,12 @@ namespace DeliveryRider.Editor
             var camera = new GameObject("PreviewCamera").AddComponent<Camera>();
             camera.transform.position = new Vector3(7f, 5f, 10f); camera.transform.LookAt(new Vector3(0f, 0.9f, 0f));
             camera.orthographic = true; camera.orthographicSize = 3.4f; camera.backgroundColor = new Color(0.76f, 0.84f, 0.9f); camera.clearFlags = CameraClearFlags.SolidColor;
+            var dogText = dog.GetComponentInChildren<TMPro.TMP_Text>(true);
+            dogText.text = "멍!"; dogText.gameObject.SetActive(true); dogText.transform.position = dog.transform.position + Vector3.up * 1.8f;
+            dogText.transform.rotation = camera.transform.rotation;
+            var cloneText = clones.GetComponentInChildren<TMPro.TMP_Text>(true);
+            cloneText.text = "슈웅"; cloneText.gameObject.SetActive(true); cloneText.transform.position = clones.transform.position + Vector3.up * 2.4f;
+            cloneText.transform.rotation = camera.transform.rotation;
             var target = new RenderTexture(1600, 900, 24);
             var pixels = new Texture2D(1600, 900, TextureFormat.RGB24, false);
             bool batching = UnityEngine.Rendering.GraphicsSettings.useScriptableRenderPipelineBatching;
@@ -147,11 +153,14 @@ namespace DeliveryRider.Editor
             UnityEngine.Object.DestroyImmediate(cube.GetComponent<Collider>());
             return cube.transform;
         }
-        private static TextMesh Callout(Transform parent)
+        private static TMPro.TMP_Text Callout(Transform parent)
         {
-            var text = Group("Callout", parent).gameObject.AddComponent<TextMesh>();
-            text.text = "!"; text.fontSize = 80; text.characterSize = 0.04f;
-            text.anchor = TextAnchor.MiddleCenter; text.color = Color.red; text.gameObject.SetActive(false);
+            var text = Group("Callout", parent).gameObject.AddComponent<TMPro.TextMeshPro>();
+            text.font = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>("Assets/_Game/Art/Fonts/PrototypeKoreanRegular.asset");
+            text.text = "!"; text.fontSize = 5f; text.enableAutoSizing = false;
+            text.rectTransform.sizeDelta = new Vector2(5f, 1f);
+            text.alignment = TMPro.TextAlignmentOptions.Center;
+            text.color = new Color(0.8f, 0.25f, 0.1f); text.gameObject.SetActive(false);
             return text;
         }
         private static void Ref(SerializedObject data, string field, UnityEngine.Object value)
