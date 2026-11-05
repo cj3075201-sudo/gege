@@ -49,7 +49,7 @@ namespace DeliveryRider.Editor
         private IEnumerator Probe()
         {
             yield return null;
-            var session=FindFirstObjectByType<DeliverySession>();var planner=FindFirstObjectByType<HazardPlanner>();var rider=session.Player.GetComponent<RiderMotor>();var body=rider.GetComponent<Rigidbody>();body.isKinematic=true;rider.SetInputBlocked(true);Set(rider,"nextZoneCheckAt",1e9f);
+            var session=FindFirstObjectByType<DeliverySession>();var planner=FindFirstObjectByType<HazardPlanner>();var rider=session.Player.GetComponent<RiderMotor>();var body=rider.GetComponent<Rigidbody>();Call(rider,"ResetReaction");rider.enabled=false;body.interpolation=RigidbodyInterpolation.None;body.isKinematic=true;rider.SetInputBlocked(true);Set(rider,"nextZoneCheckAt",1e9f);
             var recovery=rider.GetComponent<RiderSafeRecovery>();if(recovery!=null)recovery.enabled=false;
             Property(session,"Progress",new RunProgress(4,100000));Set(session,"openZones",session.Economy.ZonesForDay(4));Set(planner,"day",4);Set(planner,"randomEachRun",false);Set(planner,"seed",111);planner.Respawn();yield return null;
             Check(Mathf.Approximately((float)Get(planner,"previewOpacity"),.4f),"default opacity .4");Check(Mathf.Approximately((float)Get(planner,"previewFadeSeconds"),.3f),"default fade .3");
@@ -59,9 +59,11 @@ namespace DeliveryRider.Editor
             var chosen=all.Where(s=>s.Role==HazardRole.Trigger).GroupBy(s=>s.Type).Select(g=>g.First()).ToArray();
             foreach(var slot in chosen){slot.Selected=true;slot.NeedsCallReset=true;}
             body.position=new Vector3(1000,30,1000);session.Player.position=body.position;
+            bool tireChoice=false;
             var materials=all.SelectMany(s=>s.GetComponentsInChildren<Renderer>(true)).SelectMany(r=>r.sharedMaterials).Where(m=>m!=null).Distinct().ToDictionary(m=>m.GetInstanceID(),m=>EditorJsonUtility.ToJson(m));
             var timer=Stopwatch.StartNew();Call(planner,"ApplyPendingSlots");timer.Stop();costs.Add(new{state="coldPreview12Kinds",ms=timer.Elapsed.TotalMilliseconds});
-            Check(chosen.All(Preview),"all selected kinds visible as previews");Check(chosen.All(s=>!s.StrikeAllowed&&!s.RuntimeActive),"preview cannot strike or run controllers");
+            tireChoice=(bool)Get(chosen.First(s=>s.Type=="tire").GetComponent<RollingTireHazard>(),"waveLarge");
+            Check(chosen.All(Preview),"all selected kinds visible as previews");Check(chosen.All(s=>!s.StrikeAllowed&&!s.RuntimeActive&&!s.StartedFor(session)),"preview cannot strike, run controllers, or consume the call activation");
             foreach(var slot in chosen)
             {
                 Check(slot.GetComponentsInChildren<Collider>(true).All(c=>!c.enabled),"preview colliders off "+slot.Type);
@@ -74,14 +76,16 @@ namespace DeliveryRider.Editor
             var nodes=chosen.SelectMany(s=>s.GetComponentsInChildren<Transform>(false)).ToArray();var positions=nodes.Select(n=>n.position).ToArray();
             for(int frame=0;frame<20;frame++)yield return null;
             Check(nodes.Select((n,i)=>Vector3.Distance(n.position,positions[i])).All(d=>d<.002f),"preview remains frozen over actual frames");
+            Check(chosen.All(s=>s.GetComponentsInChildren<TMPro.TMP_Text>(false).Length==0),"idle previews hide callouts and late-created fallback font submeshes");
             foreach(float opacity in new[]{.2f,1f,.4f})
             {
                 DevValue.Find(planner,"previewOpacity","preview opacity").Write(planner,opacity);Call(planner,"ApplyPendingSlots");
                 Check(chosen.All(s=>Mathf.Approximately((float)Prop(s,"GhostOpacity"),opacity)&&!s.StrikeAllowed&&!s.RuntimeActive),"F1 opacity changes visuals only");
-                Check(chosen.SelectMany(s=>s.GetComponentsInChildren<Renderer>(false)).Where(r=>r.enabled).All(r=>r.shadowCastingMode==ShadowCastingMode.Off),"preview shadows stay off even at opacity1");
+                foreach(var slot in chosen)foreach(var renderer in slot.GetComponentsInChildren<Renderer>(false).Where(r=>r.enabled))Check(renderer.shadowCastingMode==ShadowCastingMode.Off,$"preview shadows stay off opacity={opacity} kind={slot.Type} renderer={renderer.name} mask={renderer.renderingLayerMask:x} preview={slot.IsPreviewVisible} actual={slot.GhostOpacity}");
             }
             Set(planner,"showSelectedBeforePickup",false);timer.Restart();Call(planner,"ApplyPendingSlots");timer.Stop();costs.Add(new{state="hidePreview12Kinds",ms=timer.Elapsed.TotalMilliseconds});Check(chosen.All(s=>!Preview(s)&&!s.RuntimeActive&&!s.StrikeAllowed),"F1 off returns to hidden pre-pickup behavior");
             Set(planner,"showSelectedBeforePickup",true);timer.Restart();Call(planner,"ApplyPendingSlots");timer.Stop();costs.Add(new{state="warmPreview12Kinds",ms=timer.Elapsed.TotalMilliseconds});
+            Check((bool)Get(chosen.First(s=>s.Type=="tire").GetComponent<RollingTireHazard>(),"waveLarge")==tireChoice,"same-call preview toggles retain tire size choice");
             var duck=chosen.First(s=>s.Type=="duck");var chicken=all.Where(s=>s.Type=="chicken").OrderBy(s=>(s.transform.position-duck.transform.position).sqrMagnitude).First();
             foreach(var slot in chosen){slot.Selected=slot==duck;}
             chicken.Selected=true;chicken.NeedsCallReset=true;Call(planner,"ApplyPendingSlots");

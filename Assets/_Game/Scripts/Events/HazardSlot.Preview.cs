@@ -10,6 +10,9 @@ namespace DeliveryRider
         private uint[] originalLayers=Array.Empty<uint>();
         private ShadowCastingMode[] originalShadows=Array.Empty<ShadowCastingMode>();
         private bool previewPreparing,ghostFading,lastGhostFlag;
+        private TMPro.TMP_Text[] previewLabels;
+        private bool[] labelActive;
+        private bool labelsHidden;
         private float fadeStarted,fadeDuration,fadeFrom;
         public bool IsPreviewVisible { get; private set; }
         public float GhostOpacity { get; private set; }=1f;
@@ -38,14 +41,30 @@ namespace DeliveryRider
             try
             {
                 SetRuntimeActive(true,true);
+                if(TryGetComponent<CrossingFlockHazard>(out var ducks))ducks.ShowWaitingPreview();
                 if(TryGetComponent<DogHazard>(out var dog))dog.ShowWaitingPreview();
                 if(TryGetComponent<CatBoxerHazard>(out var cat))cat.ShowWaitingPreview();
                 if(TryGetComponent<CloneRiderHazard>(out var clone))clone.ShowWaitingPreview();
                 if(TryGetComponent<CelebrityCrowdHazard>(out var crowd))crowd.ShowWaitingPreview();
-                PauseKeepingVisuals();RuntimeActive=false;IsPreviewVisible=true;
+                PauseKeepingVisuals();HidePreviewLabels();RuntimeActive=false;IsPreviewVisible=true;
                 ApplyGhostOpacity(opacity);
             }
             finally{previewPreparing=false;StrikeAllowed=false;}
+        }
+        private void HidePreviewLabels()
+        {
+            // TMP can create fallback-font submeshes on a later frame. Idle silhouettes have no callout.
+            if(labelsHidden)return;
+            if(previewLabels==null){previewLabels=GetComponentsInChildren<TMPro.TMP_Text>(true);labelActive=new bool[previewLabels.Length];}
+            for(int i=0;i<previewLabels.Length;i++)if(previewLabels[i]!=null)
+            {labelActive[i]=previewLabels[i].gameObject.activeSelf;previewLabels[i].gameObject.SetActive(false);}
+            labelsHidden=true;
+        }
+        private void RestorePreviewLabels()
+        {
+            if(!labelsHidden)return;
+            for(int i=0;i<previewLabels.Length;i++)if(previewLabels[i]!=null)previewLabels[i].gameObject.SetActive(labelActive[i]);
+            labelsHidden=false;
         }
         public void ActivateFromPreview(float seconds)
         {

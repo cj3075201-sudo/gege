@@ -38,6 +38,7 @@ namespace DeliveryRider
         public void SetRuntimeActive(bool active, bool reset = false)
         {
             if (controllers == null) RefreshOwnedComponents();
+            if(active)RestorePreviewLabels();
             if(RuntimeActive==active&&!reset&&!visualsPaused&&!IsPreviewVisible)return;
             if(!active&&visualsPaused&&TryGetComponent<CelebrityCrowdHazard>(out var crowd))crowd.EndHeldVisuals();
             IsPreviewVisible=false;ghostFading=false;ApplyGhostOpacity(1f);
