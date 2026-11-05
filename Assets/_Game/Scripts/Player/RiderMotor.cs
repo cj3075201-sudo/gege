@@ -118,6 +118,22 @@ namespace DeliveryRider
         // Inline skates scale the tuned base values at runtime; the serialized speed and acceleration stay the base.
         private float inlineSpeedScale = 1f, inlineAccelerationScale = 1f;
         private bool inputBlocked;
+        private float crowdSlowUntil = float.NegativeInfinity;
+        private float crowdSpeedLimit, crowdMinimumSpeed;
+
+        public void ApplyCrowdContact(float speedShare, float minimumSpeed, float holdSeconds)
+        {
+            if (ReactionState != RiderReactionState.Normal || session == null || !session.CanMove) return;
+            var horizontal = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
+            crowdMinimumSpeed = Mathf.Min(Speed, Mathf.Max(0.1f, minimumSpeed));
+            crowdSpeedLimit = Mathf.Clamp(horizontal.magnitude * Mathf.Clamp01(speedShare), crowdMinimumSpeed, Speed);
+            crowdSlowUntil = Time.time + Mathf.Max(Time.fixedDeltaTime, holdSeconds);
+            if (horizontal.sqrMagnitude > 0.0001f)
+            {
+                horizontal = horizontal.normalized * crowdSpeedLimit;
+                body.linearVelocity = new Vector3(horizontal.x, body.linearVelocity.y, horizontal.z);
+            }
+        }
 
         // Inline skates only raise speed (with a little inertia); time limits are unchanged.
         public void EquipInline(float speedMultiplier, float accelerationMultiplier)
@@ -377,8 +393,11 @@ namespace DeliveryRider
                 collisionVelocity = body.linearVelocity;
                 return;
             }
-            var horizontal = session.CanMove ? Vector3.MoveTowards(new Vector3(current.x, 0f, current.z), direction * Speed,
+            var horizontal = session.CanMove ? Vector3.MoveTowards(new Vector3(current.x, 0f, current.z), direction * (Time.time < crowdSlowUntil ? crowdSpeedLimit : Speed),
                 acceleration * inlineAccelerationScale * Time.fixedDeltaTime) : Vector3.zero;
+            if (Time.time < crowdSlowUntil && direction.sqrMagnitude > 0.01f
+                && Vector3.Dot(horizontal, direction.normalized) < crowdMinimumSpeed)
+                horizontal += direction.normalized * (crowdMinimumSpeed - Vector3.Dot(horizontal, direction.normalized));
             bool chickenHop = HasAttachedChickens && Time.time >= nextChickenHopAt && session.CanMove;
             if (chickenHop)
             {
@@ -421,8 +440,9 @@ namespace DeliveryRider
             for (int i = 0; i < count; i++)
             {
                 var other = bodyHits[i].rigidbody;
-                if (other != null && other != body && other.TryGetComponent<TrafficPedestrian>(out var person)
-                    && person.TryBodyKnock(velocity) && person.BodyResistance > 1f)
+                if (other == null || other == body || !other.TryGetComponent<TrafficPedestrian>(out var person)) continue;
+                if (person.TryCrowdContact(this, body.linearVelocity)) continue;
+                if (person.TryBodyKnock(velocity) && person.BodyResistance > 1f)
                 {
                     var current = body.linearVelocity;
                     body.linearVelocity = new Vector3(current.x / person.BodyResistance, current.y, current.z / person.BodyResistance);

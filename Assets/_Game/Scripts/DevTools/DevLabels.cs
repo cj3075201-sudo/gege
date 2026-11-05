@@ -66,6 +66,8 @@ namespace DeliveryRider
             { "HazardSpawnSettings.spacing", "사건 간 최소 거리" }, { "sameTypeSpacing", "같은 종류 최소 거리" },
             { "spawnRadius", "팬 생성 반경" }, { "waitingFans", "대기 팬 수" }, { "incomingFans", "추가 팬 수" },
             { "fanSpeedMultiplier", "팬 이동속도 배율" }, { "fanResistance", "팬 충돌 저항 배율" },
+            { "fanKnockMinimumSpeed", "팬 쓰러짐 최소 속도" }, { "fanContactSpeedShare", "팬 접촉당 라이더 속도 배율" },
+            { "riderMinimumProgressSpeed", "라이더 최소 진행 속도" }, { "fanContactCooldown", "같은 팬 재감속 대기(초)" },
             { "fanMassMultiplier", "팬 질량 배율" },
             { "obscureSeconds", "화면 가림 시간" }, { "contactCooldown", "재접촉 대기" },
             { "driftDistance", "무리 이동 폭" }, { "driftSpeed", "무리 이동 속도" },
