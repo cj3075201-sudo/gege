@@ -8,7 +8,7 @@
     "layout.json": "a58a1ade1de06caf1892238c6dc034dd306a10a607ce5bd0ebda80d8008c6dd5",
     "layout_expanded.json": "60308db44276ab5645178041f7fce8842d25f47c8887d7af61fb97931ea69f7d",
     "zones.json": "43b93ceb1999e1fc8b1a6b23b62a08cd57a1b61b122e268c3f5e81e32ced9fb2",
-    "anchors_expanded.json": "cfee514f1cae5c594710c0c51c5648ebbac8cfbd4a3267599ca685182054b110"
+    "anchors_expanded.json": "4ec79a97b9dd6de2cb36cd42433e2d7f133e41e77942101bc1bf32658fa45638"
   },
   "metrics": {
     "densityPer1000": 3.236850295673825,
@@ -464,13 +464,13 @@
     },
     {
       "id": "C_Expanded_019",
-      "sourceBuildingId": "B06",
-      "x": -71.7864,
-      "z": -114.1762,
-      "rotationDeg": 270,
+      "sourceBuildingId": "A05",
+      "x": -20.6321,
+      "z": -110.54,
+      "rotationDeg": 180,
       "zone": "C",
-      "width": 9.999999,
-      "depth": 6.699996,
+      "width": 7.49999952,
+      "depth": 4.50000143,
       "facesAnchor": null
     },
     {
@@ -553,13 +553,13 @@
     {
       "id": "C_Expanded_027",
       "sourceBuildingId": "H01",
-      "x": -20.6321,
-      "z": -112.04,
+      "x": -71.38,
+      "z": -112.35,
       "rotationDeg": 180,
       "zone": "C",
       "width": 6.19999933,
       "depth": 7.69999075,
-      "facesAnchor": null
+      "facesAnchor": "C_Home"
     },
     {
       "id": "C_Expanded_028",
@@ -1113,13 +1113,13 @@
     },
     {
       "id": "D_Expanded_013",
-      "sourceBuildingId": "A05",
+      "sourceBuildingId": "B06",
       "x": 165.8514,
       "z": -32.6638,
       "rotationDeg": 0,
       "zone": "D",
-      "width": 7.49999952,
-      "depth": 4.50000143,
+      "width": 9.999999,
+      "depth": 6.699996,
       "facesAnchor": null
     },
     {
@@ -2403,14 +2403,14 @@
     },
     {
       "lotId": "C_Expanded_019",
-      "road": "c_outer2",
+      "road": "c_south_w2",
       "start": [
-        -75.186398,
-        -114.1762
+        -20.6321,
+        -108.23999928500001
       ],
       "end": [
-        -82.16625902348754,
-        -115.30806935516014
+        -46,
+        -100
       ],
       "clearWidth": 2.0
     },
@@ -2507,14 +2507,14 @@
     },
     {
       "lotId": "C_Expanded_027",
-      "road": "c_south_w1",
+      "road": "c_south_w2",
       "start": [
-        -20.6321,
-        -108.140004625
+        -71.38,
+        -108.45000462499999
       ],
       "end": [
-        -20.210919040823534,
-        -101.68189658429412
+        -71.98158952260273,
+        -102.73490416027397
       ],
       "clearWidth": 2.0
     },
@@ -3173,11 +3173,11 @@
       "road": "d_top2",
       "start": [
         165.8514,
-        -34.963800715000005
+        -36.063798
       ],
       "end": [
-        165.18787661070039,
-        -41.10139206602166
+        165.3054214469314,
+        -41.11409961588448
       ],
       "clearWidth": 2.0
     },
@@ -4153,7 +4153,7 @@
     "totalBuildingCount": 221,
     "newLampCount": 109,
     "newOverlapViolations": 0,
-    "movedAnchorFrontages": "31/31",
+    "movedAnchorFrontages": "32/32",
     "zoneContainment": "169/169",
     "validSourceIds": "169/169",
     "sourceUseMin": 3,

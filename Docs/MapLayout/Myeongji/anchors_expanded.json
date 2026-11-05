@@ -1060,23 +1060,23 @@
   "type": "home",
   "index": 0,
   "zone": "C",
-  "building": "H01",
+  "shopName": "",
+  "building": null,
+  "road": "c_south_w2",
   "position": [
-   4.50000048,
+   -72.38,
    0.0,
-   -86.00001
+   -107.3
   ],
   "forward": [
-   -1.0,
+   -0.1047,
    0.0,
-   -1.19248806e-08
+   0.9945
   ],
-  "road": "extension_west",
   "roadPoint": [
-   0.0,
-   -0.140000015,
-   -86.00001
-  ],
-  "shopName": ""
+   -72.85,
+   -0.14,
+   -102.83
+  ]
  }
 ]

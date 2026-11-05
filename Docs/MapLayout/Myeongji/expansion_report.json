@@ -266,9 +266,28 @@
   }
  },
  "homeToShopsC": {
-  "C_Shop_05": 102,
-  "C_Shop_08": 90,
-  "C_Shop_09": 72
+  "C_Shop_05": 70,
+  "C_Shop_08": 18,
+  "C_Shop_09": 127
+ },
+ "home": {
+  "old": [
+   4.5,
+   -86.0
+  ],
+  "target": [
+   -64.3,
+   -118.6
+  ],
+  "actual": [
+   -72.38,
+   -107.3
+  ],
+  "off": 13.9,
+  "road": "c_south_w2",
+  "beside": "C_Shop_08",
+  "oldSpacing": 9.0,
+  "spacing": 9.0
  },
  "shops": [
   {
@@ -530,9 +549,9 @@
     "A"
    ],
    "minimum": 220,
-   "shopZonePairs": 12,
+   "shopZonePairs": 6,
    "withDoorAtMinimum": 4,
-   "fallbackToFarthest": 8,
+   "fallbackToFarthest": 2,
    "noDoor": 0
   },
   "3": {

@@ -72,6 +72,7 @@ BORDER_CLEARANCE = 6.0
 # The old map's range, as the share of a zone a shop held on it is measured in.
 OLD_RANGE = ((-10.0, 124.0), (-103.0, 0.0))
 SHOP_ROAD_WIDTH = 5  # shops stand on real streets, not narrow alleys
+HOME_BESIDE_SHOP = 'C_Shop_08'  # the home stood beside this shop on the old map: same road, same side, same spacing
 SHOP_STEP = 0.5
 SHOP_ROOM_SIDE = 4.0  # half the frontage a shop's building needs
 OLD_FRONT_REACH = 4.0  # an old building this close behind a spot is that spot's facade
@@ -311,18 +312,33 @@ def place_shops(anchors_old, roads_all, old_count, lots):
     return placed, table
 
 
-def merge_anchors(anchors_old, saved, shops, new_candidates_list):
-    """Shops from place_shops; doors as saved, unless a shop landed on one."""
+def place_home(anchors_old, roads_all, old_count, lots, shops):
+    """The home's share of its zone, kept beside the same shop at the old spacing."""
+    home = next(a for a in anchors_old if a['type'] == 'home')
+    old_shop = next(a for a in anchors_old if a['name'] == HOME_BESIDE_SHOP)
+    spacing = routes.dist((home['position'][0], home['position'][2]), (old_shop['position'][0], old_shop['position'][2]))
+    target = shop_target(home['zone'], home['position'][0], home['position'][2])
+    shop = shops[HOME_BESIDE_SHOP]
+    here = (shop['position'][0], shop['position'][2])
+    beside = [s for s in shop_spots(home['zone'], roads_all, old_count, lots, door_fronts())
+              if s['road'] == shop['road'] and s['forward'] == shop['forward'] and abs(routes.dist((s['position'][0], s['position'][2]), here) - spacing) <= SHOP_STEP]
+    spot = min(beside, key=lambda s: (routes.dist(target, (s['position'][0], s['position'][2])), s['position'][0]))
+    actual = (spot['position'][0], spot['position'][2])
+    return spot, {'old': [round(home['position'][0], 2), round(home['position'][2], 2)], 'target': [round(target[0], 1), round(target[1], 1)], 'actual': list(actual),
+                  'off': round(routes.dist(target, actual), 1), 'road': spot['road'], 'beside': HOME_BESIDE_SHOP, 'oldSpacing': round(spacing, 2), 'spacing': round(routes.dist(actual, here), 2)}
+
+
+def merge_anchors(anchors_old, saved, shops, home_spot, new_candidates_list):
+    """Shops and the home as placed; doors as saved, unless a shop landed on one."""
     saved_by_name = {a['name']: a for a in saved}
     shop_points = [(s['position'][0], s['position'][2]) for s in shops.values()]
     door_points = [(a['position'][0], a['position'][2]) for a in saved if a['type'] == 'door']
     merged, moved = [], []
     for a in anchors_old:
-        if a['type'] == 'home':
-            merged.append({k: v for k, v in a.items() if k != 'node'})
-            continue
         entry = {'name': a['name'], 'type': a['type'], 'index': a['index'], 'zone': a['zone'], 'shopName': a['shopName']}
-        if a['type'] == 'shop':
+        if a['type'] == 'home':
+            entry.update(home_spot)
+        elif a['type'] == 'shop':
             entry.update(shops[a['name']])
         else:
             door = saved_by_name[a['name']]
@@ -340,7 +356,8 @@ def merge_anchors(anchors_old, saved, shops, new_candidates_list):
 
 
 def daily_calls(pair_values_by_anchor, shops, doors):
-    """For each day: pairs of a shop and a zone it may call to, and how many have a door at the minimum distance.
+    """For each day: pairs of a shop and another open zone (its own zone only while it is the one open), and how many have
+    a door at the minimum distance.
     A pair without one falls back to the two farthest doors, so a call still comes; zones with no door would not."""
     days = {}
     for day, opened in enumerate((['C'], ['C', 'A'], ['C', 'A', 'B'], ['C', 'A', 'B', 'D']), 1):
@@ -349,7 +366,7 @@ def daily_calls(pair_values_by_anchor, shops, doors):
         for s in shops:
             if s['zone'] not in opened:
                 continue
-            for zone in (opened if len(opened) <= 2 else [z for z in opened if z != s['zone']]):
+            for zone in ([z for z in opened if z != s['zone']] or opened):
                 in_zone = [o for o in doors if o['zone'] == zone and o['node'] != s['node']]
                 pairs += 1
                 no_door += not in_zone
@@ -527,7 +544,8 @@ def main():
     misplaced = [(a['name'], a['zone'], zone_at(a['position'][0], a['position'][2])) for a in anchors_old if a['zone'] != zone_at(a['position'][0], a['position'][2])]
     saved = routes.read_json('anchors_expanded.json')
     shops_placed, shop_table = place_shops(anchors_old, all_roads, old_count, layout['lots'])
-    anchors, moved_doors = merge_anchors(anchors_old, saved, shops_placed, new_candidates(new, all_roads))
+    home_spot, home_row = place_home(anchors_old, all_roads, old_count, layout['lots'], shops_placed)
+    anchors, moved_doors = merge_anchors(anchors_old, saved, shops_placed, home_spot, new_candidates(new, all_roads))
     (d / 'anchors_expanded.json').write_text(json.dumps(anchors, ensure_ascii=False, indent=1), encoding='utf8')
     anchors = [dict(a) for a in anchors]
     nodes, graph = routes.build_graph(all_roads, anchors)
@@ -585,7 +603,7 @@ def main():
         'pairs': {k: ratios(v) for k, v in pair_values.items()},
         'days': days,
         'homeToShopsC': {s['name']: round(table[home['node']][s['node']]) for s in shops if s['zone'] == 'C'},
-        'shops': shop_table, 'movedDoors': moved_doors,
+        'home': home_row, 'shops': shop_table, 'movedDoors': moved_doors,
         'dailyCalls': daily_calls(table, shops, doors),
         'barrierCount': len(spots), 'borderLengthMeters': {k: round(v) for k, v in border_length.items()}, 'borderTotalMeters': round(total_border),
         'misplacedOldAnchors': misplaced,

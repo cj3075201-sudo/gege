@@ -33,6 +33,7 @@ SIDEWALK = 2.0
 BORDER_GAP = .25
 POST_RADIUS = .2  # Existing MapImport post collider is 0.4 x 0.4 m.
 ANCHOR_DEPTH = 8.0
+HOME_MODEL = 'H01'  # the home keeps its building, shallower than the depth other anchors need
 EPS = 1e-5
 # The hand-corrected original walkers' lanes were not baked around the new buildings; a walker keeps left or right of a
 # lane by 0.35 m and is 0.27 m wide.
@@ -530,7 +531,7 @@ def verify(data, metrics, lots, lamps, access):
     boxes = [footprint(lot) for lot in lots]
     old_boxes = [footprint(lot) for lot in data['existing']]
     roads = {r['id']: r for r in data['roads']}
-    moved = {a['name']: a for a in data['anchors'] if a.get('building') is None and a['type'] in ('shop', 'door')}
+    moved = {a['name']: a for a in data['anchors'] if a.get('building') is None}
     assigned = Counter(lot['facesAnchor'] for lot in lots if lot['facesAnchor'])
     if set(assigned) != set(moved) or any(n != 1 for n in assigned.values()):
         errors.append('Moved anchors must each have exactly one facade: ' + ', '.join(sorted(set(moved) ^ set(assigned))))
@@ -582,7 +583,8 @@ def verify(data, metrics, lots, lamps, access):
             gap = px * fx + pz * fz - lot['depth'] / 2
             lateral = abs(-px * fz + pz * fx)
             toward = fx * a['forward'][0] + fz * a['forward'][2]
-            if lot['depth'] < ANCHOR_DEPTH - EPS or not .5 <= gap <= 9.1 or lateral > lot['width'] / 2 - .49 or toward < .98 or lot['zone'] != a['zone']:
+            right_model = lot['sourceBuildingId'] == HOME_MODEL if a['type'] == 'home' else lot['depth'] >= ANCHOR_DEPTH - EPS
+            if not right_model or not .5 <= gap <= 9.1 or lateral > lot['width'] / 2 - .49 or toward < .98 or lot['zone'] != a['zone']:
                 errors.append(ident + ': anchor is not in front of an 8m-deep facade')
         path = access_by_id.get(ident)
         if path:
@@ -766,7 +768,7 @@ class AnchorUpdate:
         self.lamps = copy.deepcopy(lamps_doc['lamps'])
         self.roads = {r['id']: r for r in data['roads']}
         self.anchors = {a['name']: a for a in data['anchors']}
-        self.moved = {n: a for n, a in self.anchors.items() if a.get('building') is None and a['type'] in ('shop', 'door')}
+        self.moved = {n: a for n, a in self.anchors.items() if a.get('building') is None}
         self.log = []
 
     def faced(self):
@@ -787,7 +789,8 @@ class AnchorUpdate:
         gap = px * fx + pz * fz - lot['depth'] / 2
         lateral = abs(-px * fz + pz * fx)
         toward = fx * a['forward'][0] + fz * a['forward'][2]
-        return lot['depth'] >= ANCHOR_DEPTH - EPS and .5 <= gap <= 9.1 and lateral <= lot['width'] / 2 - .49 and toward >= .98 and lot['zone'] == a['zone']
+        right_model = lot['sourceBuildingId'] == HOME_MODEL if a['type'] == 'home' else lot['depth'] >= ANCHOR_DEPTH - EPS
+        return right_model and .5 <= gap <= 9.1 and lateral <= lot['width'] / 2 - .49 and toward >= .98 and lot['zone'] == a['zone']
 
     def release_stale_facades(self):
         for lot in self.lots:
@@ -810,7 +813,7 @@ class AnchorUpdate:
             if self.planner(without={lot['id']}).fits(moved, road, True):
                 self.replace(lot, moved, road, f"for {a['name']}")
                 return True
-        if self.swap_source_for(a, road):
+        if a['type'] != 'home' and self.swap_source_for(a, road):
             return True
         tries = []
         for lot, moved in options:
@@ -825,7 +828,8 @@ class AnchorUpdate:
         for _, _, lot, moved, neighbours in tries:
             kept = copy.deepcopy((self.lots, self.access, self.log))
             self.replace(lot, moved, road, f"for {a['name']}")
-            if all(self.rehome(next(o for o in self.lots if o['id'] == n['id']), f"to make room for {a['name']}") for n in neighbours):
+            why = f"to make room for {a['name']}"
+            if all(self.take_plot_of(lot, n, why) or self.rehome(next(o for o in self.lots if o['id'] == n['id']), why) or self.swap_into_plot_of(lot, n, why) for n in neighbours):
                 return True
             self.lots, self.access, self.log = kept
         return False
@@ -863,7 +867,8 @@ class AnchorUpdate:
         p = a['position']
         rot = heading((a['forward'][0], a['forward'][2]))
         fx, fz = FRONTS[rot]
-        free = [lot for lot in self.lots if not lot['facesAnchor'] and lot['zone'] == a['zone'] and lot['depth'] >= ANCHOR_DEPTH - EPS]
+        wanted = (lambda lot: lot['sourceBuildingId'] == HOME_MODEL) if a['type'] == 'home' else (lambda lot: lot['depth'] >= ANCHOR_DEPTH - EPS)
+        free = [lot for lot in self.lots if not lot['facesAnchor'] and lot['zone'] == a['zone'] and wanted(lot)]
         free.sort(key=lambda lot: distance((lot['x'], lot['z']), (p[0], p[2])))
         options = []
         for lot in free:
@@ -878,6 +883,41 @@ class AnchorUpdate:
         self.lots[self.lots.index(old)] = new
         self.access[new['id']] = access_for(new, road)
         self.log.append(f"{new['id']} {new['sourceBuildingId']} ({old['x']},{old['z']},{old['rotationDeg']}) -> ({new['x']},{new['z']},{new['rotationDeg']}) {why}")
+
+    def take_plot_of(self, vacated, lot, why):
+        """A displaced building goes where the facade's building used to stand, if it fits there."""
+        current = next(o for o in self.lots if o['id'] == lot['id'])
+        planner = self.planner(without={current['id']})
+        road = self.roads[self.access[vacated['id']]['road']]
+        for dx, dz in sorted(((x * .5, z * .5) for x in range(-8, 9) for z in range(-8, 9)), key=lambda v: abs(v[0]) + abs(v[1])):
+            moved = dict(current, x=round(vacated['x'] + dx, 4), z=round(vacated['z'] + dz, 4), rotationDeg=vacated['rotationDeg'])
+            if planner.fits(moved, road):
+                self.replace(current, moved, road, why)
+                return True
+        return False
+
+    def swap_into_plot_of(self, vacated, lot, why):
+        """Too big for any free plot: the displaced building takes the vacated plot under a smaller model from a free
+        building whose plot has room for its own. Every model stays in use the same number of times."""
+        current = next(o for o in self.lots if o['id'] == lot['id'])
+        road = self.roads[self.access[vacated['id']]['road']]
+        offsets = sorted(((x * .5, z * .5) for x in range(-8, 9) for z in range(-8, 9)), key=lambda v: abs(v[0]) + abs(v[1]))
+        donors = sorted((o for o in self.lots if not o['facesAnchor'] and o['id'] != current['id']), key=lambda o: o['width'] * o['depth'])
+        for donor in donors:
+            new_donor = dict(donor, sourceBuildingId=current['sourceBuildingId'], width=current['width'], depth=current['depth'])
+            planner = self.planner(without={current['id'], donor['id']})
+            donor_road = self.roads[self.access[donor['id']]['road']]
+            if not planner.fits(new_donor, donor_road):
+                continue
+            planner.add(new_donor, donor_road)
+            for dx, dz in offsets:
+                moved = dict(current, sourceBuildingId=donor['sourceBuildingId'], width=donor['width'], depth=donor['depth'],
+                             x=round(vacated['x'] + dx, 4), z=round(vacated['z'] + dz, 4), rotationDeg=vacated['rotationDeg'])
+                if planner.fits(moved, road):
+                    self.replace(current, moved, road, f"{why}, model {donor['sourceBuildingId']} from {donor['id']}")
+                    self.replace(donor, new_donor, donor_road, f"model {current['sourceBuildingId']} from {current['id']}")
+                    return True
+        return False
 
     def rehome(self, lot, why):
         """The nearest legal plot of the building's zone, on a road or deeper in the block."""
