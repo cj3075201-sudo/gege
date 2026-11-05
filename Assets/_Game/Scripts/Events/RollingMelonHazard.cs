@@ -37,6 +37,7 @@ namespace DeliveryRider
         private readonly RaycastHit[] groundHits = new RaycastHit[8];
         private RiderMotor rider;
         private HazardSlot slot;
+        private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private Phase phase;
         private float elapsed;
         private bool ready;
@@ -76,7 +77,7 @@ namespace DeliveryRider
             switch (phase)
             {
                 case Phase.Ready:
-                    float reach = Mathf.Max(approachRadius, rider.HorizontalSpeed * approachLeadSeconds);
+                    float reach = Mathf.Max(approachRadius, rider.HorizontalSpeed * approachLeadSeconds) * TriggerScale;
                     if ((slot == null || slot.StrikeAllowed) && Mathf.Abs(offset.y) < 3f && distance <= reach) BeginWave();
                     break;
                 case Phase.Rolling:

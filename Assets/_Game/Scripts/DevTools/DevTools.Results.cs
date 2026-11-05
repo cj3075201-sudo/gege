@@ -10,6 +10,7 @@ namespace DeliveryRider
         private void DrawResults()
         {
             GUILayout.Label(stats != null ? stats.Describe() : "진행 정보 없음", resultText);
+            if (hazards != null && hazardSettings != null) GUILayout.Label(PlacedSummary(), note);
             GUILayout.Space(10);
             GUILayout.Label("지금 판의 현금·빚", title);
             var progress = session != null ? session.Progress : null;

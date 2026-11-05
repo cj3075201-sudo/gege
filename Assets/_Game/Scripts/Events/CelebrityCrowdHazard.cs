@@ -20,6 +20,7 @@ namespace DeliveryRider
         private PedestrianNetwork network;
         private RoadNetwork ground;
         private HazardSlot slot;
+        private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private int centerPath;
         private float centerAlong, retryAt;
         private Transform celebrity;
@@ -56,7 +57,8 @@ namespace DeliveryRider
             if (appeared || network == null || !enabled || Time.time < retryAt || session.IsPaused || session.IsSettled || session.IsMapOpen
                 || slot != null && !slot.StrikeAllowed) return;
             var offset = session.Player.position - transform.position;
-            if (Mathf.Abs(offset.y) > 4f || Vector3.ProjectOnPlane(offset, Vector3.up).sqrMagnitude > triggerRadius * triggerRadius) return;
+            float reach = triggerRadius * TriggerScale;
+            if (Mathf.Abs(offset.y) > 4f * TriggerScale || Vector3.ProjectOnPlane(offset, Vector3.up).sqrMagnitude > reach * reach) return;
             // Resolve all 26 safe positions before spawning anything; a busy area retries instead of producing a partial wave.
             Physics.SyncTransforms();
             if (!FindSpawnPoints()) { retryAt = Time.time + 1f; return; }

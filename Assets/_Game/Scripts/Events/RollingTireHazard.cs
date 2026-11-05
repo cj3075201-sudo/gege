@@ -49,6 +49,7 @@ namespace DeliveryRider
         private bool initialized;
         private Quaternion initialRotation;
         private HazardSlot slot;
+        private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
 
         // Runtime spawn: the tire waits parked at the kerb; when started it rolls down the road toward the rider.
         public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot)
@@ -214,6 +215,21 @@ namespace DeliveryRider
                     else obstruction = Mathf.Min(obstruction, hit.distance);
                 }
             }
+            // Only the rider query grows/shrinks. Keep the original terrain radius so a large trigger does not
+            // make a tire collide with the road it is rolling on, or weaken wall/barrier handling.
+            if (TriggerScale != 1f)
+            {
+                playerDistance = float.PositiveInfinity;
+                float reach = radius * TriggerScale;
+                count = Physics.OverlapSphereNonAlloc(from, reach, overlaps, collisionMask, QueryTriggerInteraction.Ignore);
+                for (int i = 0; i < count; i++) if (overlaps[i].transform.IsChildOf(rider.transform)) playerDistance = 0f;
+                if (distance > 0f)
+                {
+                    count = Physics.SphereCastNonAlloc(from, reach, direction, sweepHits, distance, collisionMask, QueryTriggerInteraction.Ignore);
+                    for (int i = 0; i < count; i++)
+                        if (sweepHits[i].collider.transform.IsChildOf(rider.transform)) playerDistance = Mathf.Min(playerDistance, sweepHits[i].distance);
+                }
+            }
             // The food may be gone since the tire started: it keeps rolling and can still hit if the food comes back.
             if (!hitThisCycle && (slot == null || slot.StrikeAllowed) && playerDistance <= distance && playerDistance < obstruction)
             {
@@ -227,7 +243,7 @@ namespace DeliveryRider
         private bool InApproach()
         {
             Vector3 p = transform.InverseTransformPoint(rider.transform.position) - approachCenter;
-            Vector3 half = approachSize * 0.5f;
+            Vector3 half = approachSize * (0.5f * TriggerScale);
             return Mathf.Abs(p.x) <= half.x && Mathf.Abs(p.y) <= half.y && Mathf.Abs(p.z) <= half.z;
         }
         private void Enter(Phase value) { phase = value; elapsed = 0; }

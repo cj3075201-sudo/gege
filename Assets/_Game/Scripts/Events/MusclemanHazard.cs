@@ -34,6 +34,7 @@ namespace DeliveryRider
         private CapsuleCollider playerShape;
         private BoxCollider volume;
         private HazardSlot slot;
+        private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private Phase phase;
         private int path, firstPath, turnConnector;
         private float distance, rushSpeed, turningTime;
@@ -245,13 +246,31 @@ namespace DeliveryRider
             var bottom = from + Vector3.up * runnerRadius;
             var top = from + Vector3.up * (runnerHeight - runnerRadius);
             var delta = to - from;
+            if (TriggerScale != 1f)
+            {
+                float radius = runnerRadius * TriggerScale;
+                float height = Mathf.Max(runnerHeight * TriggerScale, radius * 2f);
+                if (delta.sqrMagnitude > 0.00001f)
+                {
+                    int count = Physics.CapsuleCastNonAlloc(from + Vector3.up * radius, from + Vector3.up * (height - radius),
+                        radius, delta.normalized, sweepHits, delta.magnitude, HazardPhysics.Everything, QueryTriggerInteraction.Ignore);
+                    for (int i = 0; i < count; i++)
+                        if (sweepHits[i].collider.transform.IsChildOf(rider.transform)) Shove(sweepHits[i].collider, forward);
+                }
+                int countAtEnd = Physics.OverlapCapsuleNonAlloc(to + Vector3.up * radius, to + Vector3.up * (height - radius),
+                    radius, overlaps, HazardPhysics.Everything, QueryTriggerInteraction.Ignore);
+                for (int i = 0; i < countAtEnd; i++)
+                    if (overlaps[i].transform.IsChildOf(rider.transform)) Shove(overlaps[i], forward);
+            }
             if (delta.sqrMagnitude > 0.00001f)
             {
                 int count = Physics.CapsuleCastNonAlloc(bottom, top, runnerRadius, delta.normalized, sweepHits, delta.magnitude, HazardPhysics.Everything, QueryTriggerInteraction.Ignore);
-                for (int i = 0; i < count; i++) Shove(sweepHits[i].collider, forward);
+                for (int i = 0; i < count; i++)
+                    if (TriggerScale == 1f || !sweepHits[i].collider.transform.IsChildOf(rider.transform)) Shove(sweepHits[i].collider, forward);
             }
             int overlapCount = Physics.OverlapCapsuleNonAlloc(to + Vector3.up * runnerRadius, to + Vector3.up * (runnerHeight - runnerRadius), runnerRadius, overlaps, HazardPhysics.Everything, QueryTriggerInteraction.Ignore);
-            for (int i = 0; i < overlapCount; i++) Shove(overlaps[i], forward);
+            for (int i = 0; i < overlapCount; i++)
+                if (TriggerScale == 1f || !overlaps[i].transform.IsChildOf(rider.transform)) Shove(overlaps[i], forward);
         }
 
         private void Shove(Collider target, Vector3 forward)

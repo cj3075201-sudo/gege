@@ -59,6 +59,8 @@ namespace DeliveryRider
             { "fogHeightRange", "안개 옅어지는 높이 범위(m)" }, { "fogBlue", "옅은 안개의 푸른 정도" },
             { "duskSeconds", "어스름 진행 시간(초)" }, { "duskSunElevation", "어스름 끝 해 높이(도)" },
             { "duskLightIntensity", "어스름 빛 세기" }, { "duskShadowStrength", "어스름 그림자 진하기" },
+            { "hazardHeightScale", "날림 높이 배율" }, { "hazardDistanceScale", "날림 거리 배율" },
+            { "hazardCountScale", "함정 개수 배율" }, { "hazardTriggerScale", "트리거 크기 배율" },
             // Hazard planning
             { "randomEachRun", "매번 무작위 배치" }, { "seed", "시드" },
             { "HazardSpawnSettings.spacing", "사건 간 최소 거리" }, { "sameTypeSpacing", "같은 종류 최소 거리" },

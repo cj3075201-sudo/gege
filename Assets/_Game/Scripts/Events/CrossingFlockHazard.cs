@@ -29,6 +29,7 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float recoverySeconds = 0.8f;
         private RiderMotor rider;
         private HazardSlot slot;
+        private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private Phase phase;
         private float head;
         private bool hitThisCrossing;
@@ -85,7 +86,7 @@ namespace DeliveryRider
             float length = line.magnitude;
             if (length < 0.1f) return false;
             var local = transform.InverseTransformPoint(rider.transform.position);
-            if (Mathf.Abs(local.z) > maximumLeadDistance || Mathf.Abs(local.y) > 3f || Mathf.Abs(local.x - approachCenter.x) > approachSize.x * 0.5f) return false;
+            if (Mathf.Abs(local.z) > maximumLeadDistance * TriggerScale || Mathf.Abs(local.y) > 3f * TriggerScale || Mathf.Abs(local.x - approachCenter.x) > approachSize.x * 0.5f * TriggerScale) return false;
             float closing = -Mathf.Sign(local.z) * transform.InverseTransformDirection(rider.Velocity).z;
             if (closing < 0.5f) return false;
             float lateral = Mathf.Clamp(Vector3.Dot(Vector3.ProjectOnPlane(rider.transform.position - start, Vector3.up), line / length), 0f, length);
@@ -131,7 +132,8 @@ namespace DeliveryRider
                 birds[i].position = Vector3.Lerp(start, end, along / length);
                 birds[i].rotation = Quaternion.LookRotation(end - start);
                 Vector3 offset = player - birds[i].position;
-                if (hitThisCrossing || slot != null && !slot.StrikeAllowed || Mathf.Abs(offset.y) > 1.8f || new Vector2(offset.x, offset.z).sqrMagnitude > hitRadius * hitRadius) continue;
+                float reach = hitRadius * TriggerScale;
+                if (hitThisCrossing || slot != null && !slot.StrikeAllowed || Mathf.Abs(offset.y) > 1.8f * TriggerScale || new Vector2(offset.x, offset.z).sqrMagnitude > reach * reach) continue;
                 hitThisCrossing = true;
                 var push = Vector3.ProjectOnPlane(offset, Vector3.up).normalized;
                 if (push.sqrMagnitude < 0.01f) push = -transform.forward;
@@ -143,7 +145,7 @@ namespace DeliveryRider
         private bool InApproach()
         {
             Vector3 p = transform.InverseTransformPoint(rider.transform.position) - approachCenter;
-            Vector3 half = approachSize * 0.5f;
+            Vector3 half = approachSize * (0.5f * TriggerScale);
             return Mathf.Abs(p.x) <= half.x && Mathf.Abs(p.y) <= half.y && Mathf.Abs(p.z) <= half.z;
         }
 

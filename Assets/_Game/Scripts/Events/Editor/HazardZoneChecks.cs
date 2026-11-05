@@ -293,6 +293,13 @@ namespace DeliveryRider.Editor
                 for (float x = -100f; x <= 210f; x += 5f)
                     for (float z = -160f; z <= 95f; z += 5f) sources.Add(new Vector3(x, 0f, z));
                 sources.Add(new Vector3(-84f, 0f, -44.19f));
+                // Ballistic landing locations for 1/2/4 launch scales, including well beyond the map.
+                foreach (float scale in new[] { 1f, 2f, 4f })
+                    foreach (var direction in new[] { Vector3.forward, Vector3.back, Vector3.left, Vector3.right })
+                    {
+                        float flightSeconds = 2f * (14f * scale) / Mathf.Max(0.01f, -Physics.gravity.y);
+                        sources.Add(player.transform.position + direction * (24f * scale * flightSeconds));
+                    }
 
                 var far = new Vector3(4000f, 0f, 4000f);
                 float radius = capsule.radius * 0.98f, reach = Mathf.Max(0f, capsule.height * 0.5f - capsule.radius);
@@ -429,6 +436,10 @@ namespace DeliveryRider.Editor
             typeof(DeliverySession).GetProperty("Stage").SetValue(session, DeliveryStage.Carrying);
             typeof(RiderSafeRecovery).GetMethod("Awake", any).Invoke(recovery, null);
             Call("Awake");
+            Set("hazardHeightScale", 4f);
+            Set("hazardDistanceScale", 4f);
+            Check(motor.TryHazardCrash(session, new Vector3(24f, 14f, 24f), 1f), "maximum-scale hazard launch accepted before landing checks");
+            Check(motor.ContactVelocity == new Vector3(96f, 56f, 96f), "maximum-scale launch reaches the real motor");
             var body = player.GetComponent<Rigidbody>();
             player.transform.position = closed;
             body.position = closed;

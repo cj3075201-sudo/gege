@@ -37,6 +37,7 @@ namespace DeliveryRider
         private int activatedOrder;
         private bool hitThisCycle;
         private HazardSlot slot;
+        private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private AudioClip warningSound;
         private AudioClip hitSound;
 
@@ -115,7 +116,7 @@ namespace DeliveryRider
         private bool InApproach()
         {
             Vector3 p = transform.InverseTransformPoint(rider.transform.position) - approachCenter;
-            Vector3 half = approachSize * 0.5f;
+            Vector3 half = approachSize * (0.5f * TriggerScale);
             return Mathf.Abs(p.x) <= half.x && Mathf.Abs(p.y) <= half.y && Mathf.Abs(p.z) <= half.z;
         }
 

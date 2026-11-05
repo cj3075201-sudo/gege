@@ -28,6 +28,7 @@ namespace DeliveryRider
         private CapsuleCollider playerShape;
         private RoadNetwork ground;
         private HazardSlot slot;
+        private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private Vector3[] homes, headings;
         private Quaternion[] facings;
         private float[] turnAt;
@@ -202,7 +203,8 @@ namespace DeliveryRider
         private bool Near(Vector3 point, float radius)
         {
             var offset = rider.transform.position - point;
-            return Mathf.Abs(offset.y) < 2.5f && new Vector2(offset.x, offset.z).sqrMagnitude <= radius * radius;
+            radius *= TriggerScale;
+            return Mathf.Abs(offset.y) < 2.5f * TriggerScale && new Vector2(offset.x, offset.z).sqrMagnitude <= radius * radius;
         }
 
         private void ResetBirds()
