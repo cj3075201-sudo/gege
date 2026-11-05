@@ -48,6 +48,19 @@ namespace DeliveryRider.Editor
                 onlyC.AddRoad(ref open, ref total, 200f, t => new Vector3(200f * t, 0f, 50f));
                 Check(Mathf.Abs(open / total - 0.5f) < 0.02f, $"half an alley line is open, got {open / total:0.000}");
 
+                // A pole beside a road running +x at z=50; forward along the road, straight at the closed zone at x=100.
+                var pole = new HazardCandidate { type = "theft", position = new Vector3(40f, 0f, 50f), rotation = Quaternion.LookRotation(Vector3.right), halfWidth = 3f, side = 1 };
+                Check(Vector3.Distance(PigeonSnatchHazard.EscapePoint(pole, 0), new Vector3(44f, 0f, 54f)) < 0.001f, "escape route starts on the road ahead of the pole");
+                Check(Vector3.Distance(PigeonSnatchHazard.EscapePoint(pole, 15), new Vector3(89f, 0f, 54f)) < 0.001f, "escape route is 16 points, 3 m apart");
+                Check(PigeonSnatchHazard.OpenEscapePoints(pole, onlyC, 16) == 16, "a route that stays in the open zone is kept whole");
+                pole.position = new Vector3(70f, 0f, 50f);
+                int kept = PigeonSnatchHazard.OpenEscapePoints(pole, onlyC, 16);
+                Check(kept > 0 && kept < 16 && onlyC.PointOpen(PigeonSnatchHazard.EscapePoint(pole, kept - 1)) && !onlyC.PointOpen(PigeonSnatchHazard.EscapePoint(pole, kept)), $"a route is cut right before its first closed point ({kept} points)");
+                pole.flip = true;
+                Check(PigeonSnatchHazard.OpenEscapePoints(pole, onlyC, 16) == 16, "the same pole flying the other way stays whole");
+                pole.flip = false;
+                Check(PigeonSnatchHazard.OpenEscapePoints(pole, none, 16) == 16, "no map: the route is never cut");
+
                 Check(HazardZoneFilter.ScaleCount(6, 1f) == 6, "whole map keeps the count");
                 Check(HazardZoneFilter.ScaleCount(6, 0.25f) == 2, "6 x 0.25 rounds to 2");
                 Check(HazardZoneFilter.ScaleCount(1, 0.25f) == 0, "1 x 0.25 rounds to 0");
@@ -267,6 +280,26 @@ namespace DeliveryRider.Editor
                     }
                     Debug.Log($"HazardZoneChecks ok: day {d + 1}: {topChecks} points on top of closed walls all count as closed landings");
                     Debug.Log($"HazardZoneChecks ok: day {d + 1} open {string.Concat(open)}: {sources.Count} sources, {picks} picked points, {hops} closed landings, none in or behind a wall");
+                }
+
+                // A pigeon on an open pole never leads the rider past a wall, and keeps a long enough flight.
+                var theftAsset = (HazardCandidates)new SerializedObject(roots.SelectMany(g => g.GetComponentsInChildren<HazardPlanner>(true)).Single()).FindProperty("candidates").objectReferenceValue;
+                for (int d = 0; d < days.Length; d++)
+                {
+                    var open = days[d];
+                    var filter = new HazardZoneFilter(map, z => open.Contains(z));
+                    int used = 0, dropped = 0, shortened = 0;
+                    foreach (var candidate in theftAsset.Candidates)
+                    {
+                        if (candidate.type != "theft" || !filter.PointOpen(candidate.position) || !filter.PointOpen(theftAsset.Spots[candidate.spot].position)) continue;
+                        int kept = PigeonSnatchHazard.OpenEscapePoints(candidate, filter, 16);
+                        if (kept < PigeonSnatchHazard.MinimumEscapePoints) { dropped++; continue; }
+                        used++;
+                        if (kept < 16) shortened++;
+                        for (int i = 0; i < kept; i++)
+                            if (!open.Contains(map.ZoneAt(PigeonSnatchHazard.EscapePoint(candidate, i)))) throw new InvalidOperationException($"day {d + 1}: pigeon route from {candidate.position} enters a closed zone at point {i}");
+                    }
+                    Debug.Log($"HazardZoneChecks ok: day {d + 1}: pigeon places {used} used ({shortened} with a shortened flight), {dropped} dropped as too short");
                 }
 
                 // Startup cost of the planner's zone work on the real candidates, per day. Instantiating hazards is not included.

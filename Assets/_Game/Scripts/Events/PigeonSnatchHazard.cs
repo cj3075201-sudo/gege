@@ -7,6 +7,9 @@ namespace DeliveryRider
     public sealed class PigeonSnatchHazard : MonoBehaviour, IPlacedHazard
     {
         private enum Phase { Ready, Warning, Swoop, Flying, Spent }
+        // Shorter than this (16 m, about 3 s at flySpeed) the rider has no real chase, so the place is not used.
+        public const int MinimumEscapePoints = 5;
+        private const float EscapeStart = 4f, EscapeSpacing = 3f;
         [SerializeField] private DeliverySession session;
         [SerializeField] private FoodThief pigeon;
         [SerializeField] private Transform perch;
@@ -28,13 +31,28 @@ namespace DeliveryRider
         public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot)
         {
             session = owner;
-            var right = transform.right;
-            perch.rotation = Quaternion.LookRotation(-right * spot.side);
+            perch.rotation = Quaternion.LookRotation(-transform.right * spot.side);
             if (pigeon != null) pigeon.transform.SetPositionAndRotation(perch.position, perch.rotation);
-            var center = transform.position - right * spot.side * (spot.halfWidth + 1f);
-            var direction = spot.flip ? -transform.forward : transform.forward;
+            // The flight ends before the first closed point: the rider could never follow it past the wall.
+            int open = OpenEscapePoints(spot, new HazardZoneFilter(owner.ZoneMap, owner.IsZoneOpen), escapeRoute.Length);
+            System.Array.Resize(ref escapeRoute, Mathf.Max(1, open));
             for (int i = 0; i < escapeRoute.Length; i++)
-                escapeRoute[i].position = ground.OnGround(center + direction * (4f + i * 3f), 1.5f);
+                escapeRoute[i].position = ground.OnGround(EscapePoint(spot, i), 1.5f);
+        }
+
+        public static Vector3 EscapePoint(HazardCandidate spot, int index)
+        {
+            var center = spot.position - spot.rotation * Vector3.right * (spot.side * (spot.halfWidth + 1f));
+            var direction = spot.rotation * (spot.flip ? Vector3.back : Vector3.forward);
+            return center + direction * (EscapeStart + index * EscapeSpacing);
+        }
+
+        // How many route points come before the first closed one, looking at no more than the given count.
+        public static int OpenEscapePoints(HazardCandidate spot, HazardZoneFilter roads, int count)
+        {
+            for (int i = 0; i < count; i++)
+                if (!roads.PointOpen(EscapePoint(spot, i))) return i;
+            return count;
         }
 
         private void Awake()

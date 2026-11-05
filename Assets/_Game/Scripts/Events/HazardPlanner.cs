@@ -93,6 +93,7 @@ namespace DeliveryRider
         private bool CandidateOpen(HazardCandidate candidate)
         {
             if (!openRoads.PointOpen(candidate.position)) return false;
+            if (candidate.type == "theft" && PigeonSnatchHazard.OpenEscapePoints(candidate, openRoads, PigeonSnatchHazard.MinimumEscapePoints) < PigeonSnatchHazard.MinimumEscapePoints) return false;
             var spots = candidates.Spots;
             return candidate.spot < 0 || candidate.spot >= spots.Count || openRoads.PointOpen(spots[candidate.spot].position);
         }
