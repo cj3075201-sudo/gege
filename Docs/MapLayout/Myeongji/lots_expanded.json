@@ -5,10 +5,10 @@
   "sourceBuildingId": "Original layout.json lot[0]; clone that exact building, scale 1",
   "rotationConvention": "0=-Z, 90=+X, 180=+Z, 270=-X; absolute layout heading; rotate clone by target minus original heading",
   "inputSha256": {
-    "layout.json": "bc0acb14dd3a67b934cb49056b2b4238d829af48129e48e9e80f90dac5277938",
-    "layout_expanded.json": "a90c7f9e765e6c167a32e91b92e23aabdedbe8bccdea4bdf4fa48bc1cb280890",
-    "zones.json": "82c074fedc61f8d1e387c24febc6c9e4172899d46fc01c70a17da113a2cf66f1",
-    "anchors_expanded.json": "47d8654569c1dacaff4b78aeb41886c867ce4116da472424bb526fea837e8d28"
+    "layout.json": "a58a1ade1de06caf1892238c6dc034dd306a10a607ce5bd0ebda80d8008c6dd5",
+    "layout_expanded.json": "60308db44276ab5645178041f7fce8842d25f47c8887d7af61fb97931ea69f7d",
+    "zones.json": "43b93ceb1999e1fc8b1a6b23b62a08cd57a1b61b122e268c3f5e81e32ced9fb2",
+    "anchors_expanded.json": "cfee514f1cae5c594710c0c51c5648ebbac8cfbd4a3267599ca685182054b110"
   },
   "metrics": {
     "densityPer1000": 3.236850295673825,
@@ -28,21 +28,21 @@
     "measuredGap": 1.9228,
     "gap": 1.92,
     "anchorMinGap": 0.8,
-    "measuredLampNearest": 16.9863,
+    "measuredLampNearest": 17.1269,
     "lampNearestMin": 12.4502,
     "lampNearestMax": 24.2949
   },
   "lots": [
     {
       "id": "D_Expanded_001",
-      "sourceBuildingId": "A01",
+      "sourceBuildingId": "F02",
       "x": 182.3,
       "z": -64.0,
       "rotationDeg": 90,
       "zone": "D",
-      "width": 14.6925755,
-      "depth": 7.999997,
-      "facesAnchor": "D_Shop_10"
+      "width": 8.142343,
+      "depth": 6.672752,
+      "facesAnchor": null
     },
     {
       "id": "B_Expanded_001",
@@ -53,7 +53,7 @@
       "zone": "B",
       "width": 4.10000944,
       "depth": 7.99999857,
-      "facesAnchor": "B_Shop_03"
+      "facesAnchor": null
     },
     {
       "id": "B_Expanded_002",
@@ -86,7 +86,7 @@
       "zone": "A",
       "width": 7.636727,
       "depth": 8.999999,
-      "facesAnchor": "A_Shop_01"
+      "facesAnchor": null
     },
     {
       "id": "A_Expanded_003",
@@ -130,7 +130,7 @@
       "zone": "A",
       "width": 8.813468,
       "depth": 8.200011,
-      "facesAnchor": "A_Shop_06"
+      "facesAnchor": null
     },
     {
       "id": "A_Expanded_006",
@@ -167,25 +167,25 @@
     },
     {
       "id": "C_Expanded_003",
-      "sourceBuildingId": "E08",
+      "sourceBuildingId": "F02",
       "x": -67.77,
       "z": -131.38,
       "rotationDeg": 0,
       "zone": "C",
-      "width": 10.999999,
-      "depth": 8.699988,
-      "facesAnchor": "C_Shop_05"
+      "width": 8.142343,
+      "depth": 6.672752,
+      "facesAnchor": null
     },
     {
       "id": "B_Expanded_003",
-      "sourceBuildingId": "B13",
+      "sourceBuildingId": "F02",
       "x": 86.0,
       "z": 70.3,
       "rotationDeg": 180,
       "zone": "B",
-      "width": 4.10000944,
-      "depth": 7.99999857,
-      "facesAnchor": "B_Shop_07"
+      "width": 8.142343,
+      "depth": 6.672752,
+      "facesAnchor": null
     },
     {
       "id": "C_Expanded_004",
@@ -223,13 +223,13 @@
     {
       "id": "D_Expanded_004",
       "sourceBuildingId": "B13",
-      "x": 181.5,
+      "x": 167.05,
       "z": -131.3,
       "rotationDeg": 0,
       "zone": "D",
       "width": 4.10000944,
       "depth": 7.99999857,
-      "facesAnchor": "D_Shop_11"
+      "facesAnchor": "D_Shop_12"
     },
     {
       "id": "D_Expanded_005",
@@ -288,14 +288,14 @@
     },
     {
       "id": "C_Expanded_007",
-      "sourceBuildingId": "E06",
+      "sourceBuildingId": "B06",
       "x": -31.64,
       "z": -90.73,
       "rotationDeg": 0,
       "zone": "C",
-      "width": 10,
-      "depth": 9,
-      "facesAnchor": "C_Shop_08"
+      "width": 9.999999,
+      "depth": 6.699996,
+      "facesAnchor": null
     },
     {
       "id": "D_Expanded_006",
@@ -398,14 +398,14 @@
     },
     {
       "id": "C_Expanded_013",
-      "sourceBuildingId": "B08",
-      "x": -56.8579,
-      "z": -111.4794,
+      "sourceBuildingId": "E04",
+      "x": -61.43,
+      "z": -111.66,
       "rotationDeg": 180,
       "zone": "C",
-      "width": 11.999999,
-      "depth": 6.69999456,
-      "facesAnchor": null
+      "width": 10.999999,
+      "depth": 8.200007,
+      "facesAnchor": "C_Shop_08"
     },
     {
       "id": "C_Expanded_014",
@@ -475,14 +475,14 @@
     },
     {
       "id": "C_Expanded_020",
-      "sourceBuildingId": "E11",
-      "x": 12.2854,
-      "z": -132.0546,
+      "sourceBuildingId": "E01",
+      "x": 10.14,
+      "z": -131.45,
       "rotationDeg": 0,
       "zone": "C",
-      "width": 9.999999,
-      "depth": 5.699997,
-      "facesAnchor": null
+      "width": 10.1999931,
+      "depth": 8.2,
+      "facesAnchor": "C_Shop_09"
     },
     {
       "id": "C_Expanded_021",
@@ -508,19 +508,19 @@
     },
     {
       "id": "C_Expanded_023",
-      "sourceBuildingId": "F02",
-      "x": -36.8436,
-      "z": -62.0,
+      "sourceBuildingId": "B13",
+      "x": -36.8,
+      "z": -65.0,
       "rotationDeg": 270,
       "zone": "C",
-      "width": 8.142343,
-      "depth": 6.672752,
-      "facesAnchor": null
+      "width": 4.10000944,
+      "depth": 7.99999857,
+      "facesAnchor": "C_Shop_05"
     },
     {
       "id": "C_Expanded_024",
       "sourceBuildingId": "E12",
-      "x": -10.0,
+      "x": -10.25,
       "z": -73.59,
       "rotationDeg": 180,
       "zone": "C",
@@ -609,7 +609,7 @@
       "id": "C_Expanded_032",
       "sourceBuildingId": "F01",
       "x": 36.0,
-      "z": -110.6953,
+      "z": -111.1953,
       "rotationDeg": 0,
       "zone": "C",
       "width": 9.999999,
@@ -620,7 +620,7 @@
       "id": "C_Expanded_033",
       "sourceBuildingId": "G06",
       "x": 24.0,
-      "z": -110.9142,
+      "z": -111.1642,
       "rotationDeg": 0,
       "zone": "C",
       "width": 9.999998,
@@ -730,7 +730,7 @@
       "id": "B_Expanded_016",
       "sourceBuildingId": "A05",
       "x": 82.07,
-      "z": 10.0,
+      "z": 10.5,
       "rotationDeg": 270,
       "zone": "B",
       "width": 7.49999952,
@@ -752,7 +752,7 @@
       "id": "B_Expanded_018",
       "sourceBuildingId": "G04",
       "x": 107.8714,
-      "z": 9.1825,
+      "z": 9.6825,
       "rotationDeg": 90,
       "zone": "B",
       "width": 5.89998627,
@@ -774,7 +774,7 @@
       "id": "B_Expanded_020",
       "sourceBuildingId": "B01",
       "x": 52.0,
-      "z": 9.6685,
+      "z": 10.4185,
       "rotationDeg": 180,
       "zone": "B",
       "width": 14.3999987,
@@ -893,14 +893,14 @@
     },
     {
       "id": "B_Expanded_031",
-      "sourceBuildingId": "F02",
-      "x": 47.3692,
-      "z": 68.9779,
+      "sourceBuildingId": "A01",
+      "x": 50.66,
+      "z": 69.22,
       "rotationDeg": 180,
       "zone": "B",
-      "width": 8.142343,
-      "depth": 6.672752,
-      "facesAnchor": null
+      "width": 14.6925755,
+      "depth": 7.999997,
+      "facesAnchor": "B_Shop_03"
     },
     {
       "id": "B_Expanded_032",
@@ -926,14 +926,14 @@
     },
     {
       "id": "B_Expanded_034",
-      "sourceBuildingId": "E11",
-      "x": 112.83,
-      "z": 70.0,
-      "rotationDeg": 90,
+      "sourceBuildingId": "E03",
+      "x": 111.5,
+      "z": 70.2,
+      "rotationDeg": 180,
       "zone": "B",
-      "width": 9.999999,
-      "depth": 5.699997,
-      "facesAnchor": null
+      "width": 8.199996,
+      "depth": 8.200011,
+      "facesAnchor": "B_Shop_04"
     },
     {
       "id": "B_Expanded_035",
@@ -1004,9 +1004,9 @@
     {
       "id": "B_Expanded_041",
       "sourceBuildingId": "B18",
-      "x": 65.48,
-      "z": 10.0,
-      "rotationDeg": 90,
+      "x": 92.0,
+      "z": 10.02,
+      "rotationDeg": 0,
       "zone": "B",
       "width": 7.900191,
       "depth": 5.39999342,
@@ -1202,9 +1202,9 @@
     {
       "id": "D_Expanded_021",
       "sourceBuildingId": "B01",
-      "x": 168.1136,
-      "z": -111.4993,
-      "rotationDeg": 180,
+      "x": 176.5373,
+      "z": -81.8497,
+      "rotationDeg": 0,
       "zone": "D",
       "width": 14.3999987,
       "depth": 7.0230484,
@@ -1245,13 +1245,13 @@
     },
     {
       "id": "D_Expanded_025",
-      "sourceBuildingId": "E04",
-      "x": 127.1715,
+      "sourceBuildingId": "B08",
+      "x": 127.9215,
       "z": -79.366,
       "rotationDeg": 0,
       "zone": "D",
-      "width": 10.999999,
-      "depth": 8.200007,
+      "width": 11.999999,
+      "depth": 6.69999456,
       "facesAnchor": null
     },
     {
@@ -1268,13 +1268,13 @@
     {
       "id": "D_Expanded_027",
       "sourceBuildingId": "E06",
-      "x": 181.18,
-      "z": -82.0,
-      "rotationDeg": 90,
+      "x": 172.57,
+      "z": -111.8,
+      "rotationDeg": 180,
       "zone": "D",
       "width": 10,
       "depth": 9,
-      "facesAnchor": null
+      "facesAnchor": "D_Shop_11"
     },
     {
       "id": "D_Expanded_028",
@@ -1311,13 +1311,13 @@
     },
     {
       "id": "D_Expanded_031",
-      "sourceBuildingId": "E01",
+      "sourceBuildingId": "E11",
       "x": 164.92,
       "z": -22.0,
       "rotationDeg": 270,
       "zone": "D",
-      "width": 10.1999931,
-      "depth": 8.2,
+      "width": 9.999999,
+      "depth": 5.699997,
       "facesAnchor": null
     },
     {
@@ -1355,14 +1355,14 @@
     },
     {
       "id": "D_Expanded_035",
-      "sourceBuildingId": "B06",
-      "x": 127.2167,
-      "z": -64.6389,
+      "sourceBuildingId": "E06",
+      "x": 126.88,
+      "z": -52.95,
       "rotationDeg": 180,
       "zone": "D",
-      "width": 9.999999,
-      "depth": 6.699996,
-      "facesAnchor": null
+      "width": 10,
+      "depth": 9,
+      "facesAnchor": "D_Shop_10"
     },
     {
       "id": "D_Expanded_036",
@@ -1378,8 +1378,8 @@
     {
       "id": "D_Expanded_037",
       "sourceBuildingId": "B15",
-      "x": 165.6309,
-      "z": -123.2863,
+      "x": 133.02,
+      "z": -90.0,
       "rotationDeg": 270,
       "zone": "D",
       "width": 10.699995,
@@ -1421,13 +1421,13 @@
     },
     {
       "id": "A_Expanded_008",
-      "sourceBuildingId": "E03",
+      "sourceBuildingId": "E11",
       "x": -30.7854,
       "z": 23.7267,
       "rotationDeg": 180,
       "zone": "A",
-      "width": 8.199996,
-      "depth": 8.200011,
+      "width": 9.999999,
+      "depth": 5.699997,
       "facesAnchor": null
     },
     {
@@ -1498,19 +1498,19 @@
     },
     {
       "id": "A_Expanded_015",
-      "sourceBuildingId": "F02",
-      "x": -53.1564,
-      "z": 21.81,
+      "sourceBuildingId": "E08",
+      "x": -53.55,
+      "z": 20.81,
       "rotationDeg": 90,
       "zone": "A",
-      "width": 8.142343,
-      "depth": 6.672752,
-      "facesAnchor": null
+      "width": 10.999999,
+      "depth": 8.699988,
+      "facesAnchor": "A_Shop_02"
     },
     {
       "id": "A_Expanded_016",
       "sourceBuildingId": "F01",
-      "x": -52.0,
+      "x": -58.0,
       "z": -42.6953,
       "rotationDeg": 0,
       "zone": "A",
@@ -1599,7 +1599,7 @@
       "id": "A_Expanded_024",
       "sourceBuildingId": "F06",
       "x": 17.8666,
-      "z": 10.0,
+      "z": 10.5,
       "rotationDeg": 90,
       "zone": "A",
       "width": 7.14842463,
@@ -1653,9 +1653,9 @@
     {
       "id": "A_Expanded_029",
       "sourceBuildingId": "G02",
-      "x": -38.77,
+      "x": -56.73,
       "z": -34.0,
-      "rotationDeg": 90,
+      "rotationDeg": 270,
       "zone": "A",
       "width": 7.20000362,
       "depth": 5.89999247,
@@ -1752,13 +1752,13 @@
     {
       "id": "A_Expanded_038",
       "sourceBuildingId": "A01",
-      "x": -58.0,
-      "z": -29.26,
-      "rotationDeg": 0,
+      "x": -47.0,
+      "z": -34.6537,
+      "rotationDeg": 90,
       "zone": "A",
       "width": 14.6925755,
       "depth": 7.999997,
-      "facesAnchor": null
+      "facesAnchor": "A_Shop_06"
     },
     {
       "id": "A_Expanded_039",
@@ -1796,13 +1796,13 @@
     {
       "id": "A_Expanded_042",
       "sourceBuildingId": "F03",
-      "x": -15.0828,
-      "z": 57.4191,
-      "rotationDeg": 90,
+      "x": -23.3184,
+      "z": 67.0,
+      "rotationDeg": 180,
       "zone": "A",
       "width": 7.636727,
       "depth": 8.999999,
-      "facesAnchor": null
+      "facesAnchor": "A_Shop_01"
     },
     {
       "id": "A_Expanded_043",
@@ -1818,9 +1818,9 @@
     {
       "id": "A_Expanded_044",
       "sourceBuildingId": "F06",
-      "x": -24.0,
-      "z": 68.3666,
-      "rotationDeg": 180,
+      "x": -17.1929,
+      "z": 56.9971,
+      "rotationDeg": 90,
       "zone": "A",
       "width": 7.14842463,
       "depth": 6.62673044,
@@ -1884,9 +1884,9 @@
     {
       "id": "C_Expanded_039",
       "sourceBuildingId": "B05",
-      "x": 61,
-      "z": -86,
-      "rotationDeg": 0,
+      "x": -67.2808,
+      "z": -123.5762,
+      "rotationDeg": 270,
       "zone": "C",
       "width": 4.769417,
       "depth": 6.100007,
@@ -1898,7 +1898,7 @@
       "lotId": "D_Expanded_001",
       "road": "d_outer",
       "start": [
-        186.3499985,
+        185.68637600000002,
         -64.0
       ],
       "end": [
@@ -2055,11 +2055,11 @@
       "road": "c_s1",
       "start": [
         -67.77,
-        -135.779994
+        -134.766376
       ],
       "end": [
-        -68.07223788397789,
-        -141.52251379558012
+        -68.12543882872927,
+        -141.51971374585636
       ],
       "clearWidth": 2.0
     },
@@ -2068,7 +2068,7 @@
       "road": "b_top2",
       "start": [
         86.0,
-        74.349999285
+        73.686376
       ],
       "end": [
         86.0,
@@ -2119,11 +2119,11 @@
       "lotId": "D_Expanded_004",
       "road": "d_s2",
       "start": [
-        181.5,
+        167.05,
         -135.34999928500002
       ],
       "end": [
-        181.5,
+        167.05,
         -141.0
       ],
       "clearWidth": 2.0
@@ -2198,11 +2198,11 @@
       "road": "c_south_w1",
       "start": [
         -31.64,
-        -95.28
+        -94.129998
       ],
       "end": [
-        -32.0073411764706,
-        -100.91256470588235
+        -32.082023659294116,
+        -100.90769410917648
       ],
       "clearWidth": 2.0
     },
@@ -2327,12 +2327,12 @@
       "lotId": "C_Expanded_013",
       "road": "c_south_w2",
       "start": [
-        -56.8579,
-        -108.07940272
+        -61.43,
+        -107.5099965
       ],
       "end": [
-        -57.580052611945206,
-        -101.21895290652054
+        -62.04276675890411,
+        -101.68871229041096
       ],
       "clearWidth": 2.0
     },
@@ -2418,12 +2418,12 @@
       "lotId": "C_Expanded_020",
       "road": "c_s3",
       "start": [
-        12.2854,
-        -134.9545985
+        10.14,
+        -135.6
       ],
       "end": [
-        12.084679758048779,
-        -141.37764624243903
+        9.961521951219513,
+        -141.31129756097562
       ],
       "clearWidth": 2.0
     },
@@ -2457,12 +2457,12 @@
       "lotId": "C_Expanded_023",
       "road": "c_mid1",
       "start": [
-        -40.229976,
-        -62.0
+        -40.849999284999996,
+        -65.0
       ],
       "end": [
         -46.0,
-        -62.0
+        -65.0
       ],
       "clearWidth": 2.0
     },
@@ -2470,11 +2470,11 @@
       "lotId": "C_Expanded_024",
       "road": "c_back_w",
       "start": [
-        -10.0,
+        -10.25,
         -70.690001765
       ],
       "end": [
-        -10.0,
+        -10.25,
         -52.0
       ],
       "clearWidth": 2.0
@@ -2575,7 +2575,7 @@
       "road": "c_alley2",
       "start": [
         36.0,
-        -113.23004574000001
+        -113.73004574000001
       ],
       "end": [
         36.0,
@@ -2588,7 +2588,7 @@
       "road": "c_alley2",
       "start": [
         24.0,
-        -113.229961135
+        -113.479961135
       ],
       "end": [
         24.0,
@@ -2718,11 +2718,11 @@
       "road": "b_mid1",
       "start": [
         79.769999285,
-        10.0
+        10.5
       ],
       "end": [
         74.0,
-        10.0
+        10.5
       ],
       "clearWidth": 2.0
     },
@@ -2744,11 +2744,11 @@
       "road": "b_east1",
       "start": [
         110.52139036999999,
-        9.1825
+        9.6825
       ],
       "end": [
-        117.12928501689655,
-        8.281423457241377
+        117.196222136572,
+        8.772295668194724
       ],
       "clearWidth": 2.0
     },
@@ -2770,7 +2770,7 @@
       "road": "b_alley2",
       "start": [
         52.0,
-        13.230024199999999
+        13.980024199999999
       ],
       "end": [
         52.0,
@@ -2912,12 +2912,12 @@
       "lotId": "B_Expanded_031",
       "road": "b_top1",
       "start": [
-        47.3692,
-        72.364276
+        50.66,
+        73.2699985
       ],
       "end": [
-        47.117253494049905,
-        78.78891190172745
+        50.43846443262956,
+        78.91915546794625
       ],
       "clearWidth": 2.0
     },
@@ -2949,14 +2949,14 @@
     },
     {
       "lotId": "B_Expanded_034",
-      "road": "b_east2",
+      "road": "b_top2",
       "start": [
-        115.7299985,
-        70.0
+        111.5,
+        74.35000550000001
       ],
       "end": [
-        122.0,
-        70.0
+        111.5,
+        80.0
       ],
       "clearWidth": 2.0
     },
@@ -3040,14 +3040,14 @@
     },
     {
       "lotId": "B_Expanded_041",
-      "road": "b_mid1",
+      "road": "main",
       "start": [
-        68.22999671000001,
-        10.0
+        92.0,
+        7.27000329
       ],
       "end": [
-        74.0,
-        10.0
+        92.0,
+        0.0
       ],
       "clearWidth": 2.0
     },
@@ -3276,12 +3276,12 @@
       "lotId": "D_Expanded_021",
       "road": "d_bot2",
       "start": [
-        168.1136,
-        -107.93777580000001
+        176.5373,
+        -85.41122419999999
       ],
       "end": [
-        168.66735233222062,
-        -101.10816370261249
+        175.22148736298982,
+        -101.63958005645864
       ],
       "clearWidth": 2.0
     },
@@ -3328,12 +3328,12 @@
       "lotId": "D_Expanded_025",
       "road": "d_bot1",
       "start": [
-        127.1715,
-        -83.5160035
+        127.9215,
+        -82.76599728
       ],
       "end": [
-        128.63717935375087,
-        -102.08127531417756
+        129.44137805236062,
+        -102.01778594323468
       ],
       "clearWidth": 2.0
     },
@@ -3352,14 +3352,14 @@
     },
     {
       "lotId": "D_Expanded_027",
-      "road": "d_outer",
+      "road": "d_bot2",
       "start": [
-        185.73000000000002,
-        -82.0
+        172.57,
+        -107.25
       ],
       "end": [
-        192.0,
-        -82.0
+        173.03924528301886,
+        -101.46264150943396
       ],
       "clearWidth": 2.0
     },
@@ -3406,7 +3406,7 @@
       "lotId": "D_Expanded_031",
       "road": "d_mid1",
       "start": [
-        160.76999999999998,
+        162.02000149999998,
         -22.0
       ],
       "end": [
@@ -3458,12 +3458,12 @@
       "lotId": "D_Expanded_035",
       "road": "d_top1",
       "start": [
-        127.2167,
-        -61.23890200000001
+        126.88,
+        -48.400000000000006
       ],
       "end": [
-        125.31000116164384,
-        -43.12526303561644
+        126.31364383561643,
+        -43.01961643835617
       ],
       "clearWidth": 2.0
     },
@@ -3482,14 +3482,14 @@
     },
     {
       "lotId": "D_Expanded_037",
-      "road": "d_mid3",
+      "road": "east_infill_outer",
       "start": [
-        162.880901145,
-        -123.2863
+        130.270001145,
+        -90.0
       ],
       "end": [
-        156.7367710120148,
-        -123.7358704975355
+        117.0,
+        -90.0
       ],
       "clearWidth": 2.0
     },
@@ -3537,11 +3537,11 @@
       "road": "a_cross2",
       "start": [
         -30.7854,
-        27.8767055
+        26.6266985
       ],
       "end": [
-        -31.464134312359548,
-        35.00341577977528
+        -31.582112501123593,
+        34.99217976179775
       ],
       "clearWidth": 2.0
     },
@@ -3627,12 +3627,12 @@
       "lotId": "A_Expanded_015",
       "road": "a_mid_s",
       "start": [
-        -49.770024,
-        21.81
+        -49.150006,
+        20.81
       ],
       "end": [
         -44.0,
-        21.810000000000002
+        20.81
       ],
       "clearWidth": 2.0
     },
@@ -3640,11 +3640,11 @@
       "lotId": "A_Expanded_016",
       "road": "c_back_w",
       "start": [
-        -52.0,
+        -58.0,
         -45.23004574
       ],
       "end": [
-        -52.0,
+        -58.0,
         -52.0
       ],
       "clearWidth": 2.0
@@ -3745,11 +3745,11 @@
       "road": "a_conn_n",
       "start": [
         21.229965219999997,
-        10.0
+        10.5
       ],
       "end": [
         27.0,
-        10.0
+        10.5
       ],
       "clearWidth": 2.0
     },
@@ -3807,13 +3807,13 @@
     },
     {
       "lotId": "A_Expanded_029",
-      "road": "a_south",
+      "road": "a_outer",
       "start": [
-        -35.770003765000006,
+        -59.729996234999994,
         -34.0
       ],
       "end": [
-        -30.0,
+        -84.0,
         -34.0
       ],
       "clearWidth": 2.0
@@ -3924,14 +3924,14 @@
     },
     {
       "lotId": "A_Expanded_038",
-      "road": "c_back_w",
+      "road": "a_south",
       "start": [
-        -58.0,
-        -33.3099985
+        -42.9500015,
+        -34.6537
       ],
       "end": [
-        -58.0,
-        -52.0
+        -30.0,
+        -34.6537
       ],
       "clearWidth": 2.0
     },
@@ -3976,14 +3976,14 @@
     },
     {
       "lotId": "A_Expanded_042",
-      "road": "a_west_n2",
+      "road": "a_top",
       "start": [
-        -10.5328005,
-        57.4191
+        -23.3184,
+        71.5499995
       ],
       "end": [
-        -4.139550019230769,
-        58.69775009615384
+        -23.31839999999999,
+        78.0
       ],
       "clearWidth": 2.0
     },
@@ -4002,14 +4002,14 @@
     },
     {
       "lotId": "A_Expanded_044",
-      "road": "a_top",
+      "road": "a_west_n2",
       "start": [
-        -24.0,
-        71.72996522000001
+        -13.829534780000001,
+        56.9971
       ],
       "end": [
-        -24.0,
-        78.0
+        -4.185193645384616,
+        58.925968226923075
       ],
       "clearWidth": 2.0
     },
@@ -4080,14 +4080,14 @@
     },
     {
       "lotId": "C_Expanded_039",
-      "road": "extension_south",
+      "road": "c_outer2",
       "start": [
-        61.0,
-        -89.1000035
+        -70.3808035,
+        -123.5762
       ],
       "end": [
-        61.0,
-        -103.0
+        -80.55785944911032,
+        -125.22653339715302
       ],
       "clearWidth": 2.0
     }
@@ -4153,7 +4153,7 @@
     "totalBuildingCount": 221,
     "newLampCount": 109,
     "newOverlapViolations": 0,
-    "movedAnchorFrontages": "28/28",
+    "movedAnchorFrontages": "31/31",
     "zoneContainment": "169/169",
     "validSourceIds": "169/169",
     "sourceUseMin": 3,

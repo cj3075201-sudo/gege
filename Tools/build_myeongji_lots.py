@@ -3,6 +3,10 @@
 python -B Tools/build_myeongji_lots.py --self-test
 python -B Tools/build_myeongji_lots.py --picture PATH --report-json PATH
 python -B Tools/build_myeongji_lots.py --check-only
+python -B Tools/build_myeongji_lots.py --update-anchors
+
+--update-anchors follows moved shops and doors while keeping every other saved building and lamp where it is. A full
+run with no option re-plans all of them.
 
 Outputs are ADDITIONAL objects only: retain the original 52 buildings/34 lamps.
 sourceBuildingId is the original lot ID, not its shared style string. width/depth
@@ -30,11 +34,20 @@ BORDER_GAP = .25
 POST_RADIUS = .2  # Existing MapImport post collider is 0.4 x 0.4 m.
 ANCHOR_DEPTH = 8.0
 EPS = 1e-5
+# The hand-corrected original walkers' lanes were not baked around the new buildings; a walker keeps left or right of a
+# lane by 0.35 m and is 0.27 m wide.
+LANE_CLEARANCE = .75
+LANE_CELL = 4
 FRONTS = {0: (0, -1), 90: (1, 0), 180: (0, 1), 270: (-1, 0)}
 
 
 def read_json(path):
     return json.loads(Path(path).read_text(encoding='utf-8-sig'))
+
+
+def file_hash(path):
+    """Line endings differ between checkouts; the data does not."""
+    return hashlib.sha256(Path(path).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
 
 
 def distance(a, b):
@@ -191,8 +204,22 @@ def load_inputs():
                        max(r['a'][0], r['b'][0]) + reach, max(r['a'][1], r['b'][1]) + reach)
         roads.append(r)
     existing = [lot_from_row(row, zones) for row in original['lots']]
+    lanes = {}
+    lane_file = DATA / 'pedestrian_original_paths.json'
+    if lane_file.exists():
+        for point in read_json(lane_file)['points']:
+            lanes.setdefault((point[0] // LANE_CELL, point[1] // LANE_CELL), []).append(tuple(point))
     return dict(layout=layout, original=original, sources=sources, zones=zones, anchors=anchors, roads=roads,
-                existing=existing, posts=posts_from_prefab())
+                existing=existing, posts=posts_from_prefab(), lanes=lanes)
+
+
+def blocks_lane(box, data):
+    x0, z0, x1, z1 = box
+    for cx in range(int((x0 - LANE_CLEARANCE) // LANE_CELL), int((x1 + LANE_CLEARANCE) // LANE_CELL) + 1):
+        for cz in range(int((z0 - LANE_CLEARANCE) // LANE_CELL), int((z1 + LANE_CLEARANCE) // LANE_CELL) + 1):
+            if any(point_box_distance(point, box) < LANE_CLEARANCE - EPS for point in data['lanes'].get((cx, cz), ())):
+                return True
+    return False
 
 
 def measure(data):
@@ -242,7 +269,7 @@ class Planner:
 
     def fits(self, lot, road, anchored=False):
         box = footprint(lot)
-        if not box_in_zone(box, self.polygons[lot['zone']]):
+        if not box_in_zone(box, self.polygons[lot['zone']]) or blocks_lane(box, self.data):
             return False
         for r in self.data['roads']:
             if overlap(box, r['bounds']) and segment_box_distance(r['a'], r['b'], box) < r['width'] / 2 + SIDEWALK - EPS:
@@ -280,8 +307,6 @@ class Planner:
     def place_anchors(self):
         roads = {r['id']: r for r in self.data['roads']}
         moved = [a for a in self.data['anchors'] if a.get('building') is None and a['type'] in ('shop', 'door')]
-        if len(moved) != 28:
-            raise ValueError('Expected 28 moved shops/doors')
         # Narrow/corner plots first; deeper facades are necessary for the 8m reservation.
         def options(a):
             r, p = roads[a['road']], a['position']
@@ -441,7 +466,7 @@ class Planner:
                 print('placed', len(self.lots), dict(self.zone_counts), flush=True)
 
 
-def place_lamps(data, metrics, lots, access):
+def lamp_sites(data, lots, access):
     roads = data['roads']
     boxes = [footprint(lot) for lot in data['existing'] + lots]
     old_points = [(p['x'], p['z']) for p in data['posts']]
@@ -476,6 +501,12 @@ def place_lamps(data, metrics, lots, access):
                     continue
                 candidates.append(dict(x=round(p[0], 4), z=round(p[1], 4), road=r['id'],
                                        rotationDeg=round(math.degrees(math.atan2(-side * nx, side * nz)) % 360, 4)))
+    return candidates
+
+
+def place_lamps(data, metrics, lots, access):
+    candidates = lamp_sites(data, lots, access)
+    old_points = [(p['x'], p['z']) for p in data['posts']]
     result = []
     while len(result) < metrics['lampTarget']:
         if not candidates:
@@ -502,7 +533,7 @@ def verify(data, metrics, lots, lamps, access):
     moved = {a['name']: a for a in data['anchors'] if a.get('building') is None and a['type'] in ('shop', 'door')}
     assigned = Counter(lot['facesAnchor'] for lot in lots if lot['facesAnchor'])
     if set(assigned) != set(moved) or any(n != 1 for n in assigned.values()):
-        errors.append('28 moved anchors must each have exactly one facade')
+        errors.append('Moved anchors must each have exactly one facade: ' + ', '.join(sorted(set(moved) ^ set(assigned))))
     if len({lot['id'] for lot in lots}) != len(lots):
         errors.append('Duplicate building IDs')
     if Counter(lot['zone'] for lot in lots) != Counter(metrics['targets']):
@@ -528,8 +559,12 @@ def verify(data, metrics, lots, lamps, access):
                 errors.append(ident + ': road/2m sidewalk overlap ' + r['id'])
         if any(overlap(box, b) for b in old_boxes + boxes[:i]):
             errors.append(ident + ': building overlap')
+        if blocks_lane(box, data):
+            errors.append(ident + ': on an original walking lane')
+        # A building before an anchor may stand as close as the old map's tightest pair, on either side of the gap.
         required_gap = metrics['anchorMinGap'] if lot['facesAnchor'] else metrics['gap']
-        if any(box_distance(box, b) < required_gap - EPS for b in old_boxes + boxes[:i]):
+        if any(box_distance(box, b) < required_gap - EPS for b in old_boxes) or any(
+                box_distance(box, boxes[j]) < (metrics['anchorMinGap'] if lots[j]['facesAnchor'] else required_gap) - EPS for j in range(i)):
             errors.append(ident + ': measured building gap violated')
         for other in data['existing'] + lots[:i]:
             if lot['sourceBuildingId'] == other['sourceBuildingId'] and box_distance(box, footprint(other)) < 12:
@@ -717,6 +752,256 @@ def picture(path, data, metrics, lots, lamps, validation):
     im.save(path)
 
 
+def input_hashes():
+    return {name: file_hash(DATA / name) for name in ('layout.json', 'layout_expanded.json', 'zones.json', 'anchors_expanded.json')}
+
+
+class AnchorUpdate:
+    """Moves the fewest saved buildings and lamps needed for the current anchors."""
+
+    def __init__(self, data, metrics, lots_doc, lamps_doc):
+        self.data, self.metrics = data, metrics
+        self.lots = copy.deepcopy(lots_doc['lots'])
+        self.access = {a['lotId']: a for a in copy.deepcopy(lots_doc['accessPaths'])}
+        self.lamps = copy.deepcopy(lamps_doc['lamps'])
+        self.roads = {r['id']: r for r in data['roads']}
+        self.anchors = {a['name']: a for a in data['anchors']}
+        self.moved = {n: a for n, a in self.anchors.items() if a.get('building') is None and a['type'] in ('shop', 'door')}
+        self.log = []
+
+    def faced(self):
+        return {lot['facesAnchor'] for lot in self.lots if lot['facesAnchor']}
+
+    def planner(self, without=()):
+        planner = Planner(self.data, self.metrics)
+        planner.lots = [lot for lot in self.lots if lot['id'] not in without]
+        planner.boxes = [footprint(lot) for lot in planner.lots]
+        planner.access = [self.access[lot['id']] for lot in planner.lots]
+        return planner
+
+    @staticmethod
+    def stands_before(lot, a):
+        """The same frontage rule verify() enforces."""
+        fx, fz = FRONTS[lot['rotationDeg']]
+        px, pz = a['position'][0] - lot['x'], a['position'][2] - lot['z']
+        gap = px * fx + pz * fz - lot['depth'] / 2
+        lateral = abs(-px * fz + pz * fx)
+        toward = fx * a['forward'][0] + fz * a['forward'][2]
+        return lot['depth'] >= ANCHOR_DEPTH - EPS and .5 <= gap <= 9.1 and lateral <= lot['width'] / 2 - .49 and toward >= .98 and lot['zone'] == a['zone']
+
+    def release_stale_facades(self):
+        for lot in self.lots:
+            name = lot['facesAnchor']
+            if name and (name not in self.moved or not self.stands_before(lot, self.moved[name])):
+                self.log.append(f"{lot['id']} no longer fronts {name}")
+                lot['facesAnchor'] = None
+
+    def place_facade(self, a):
+        """Prefers a building already there, then the nearest deep building that fits, then one that fits once up to two
+        free neighbours step aside to the nearest legal plots."""
+        road = self.roads[a['road']]
+        for lot in self.lots:
+            if not lot['facesAnchor'] and self.stands_before(lot, a):
+                lot['facesAnchor'] = a['name']
+                self.log.append(f"{lot['id']} already stands before {a['name']}")
+                return True
+        options = self.facade_options(a)
+        for lot, moved in options:
+            if self.planner(without={lot['id']}).fits(moved, road, True):
+                self.replace(lot, moved, road, f"for {a['name']}")
+                return True
+        if self.swap_source_for(a, road):
+            return True
+        tries = []
+        for lot, moved in options:
+            box = footprint(moved)
+            neighbours = [o for o in self.lots if o['id'] != lot['id'] and box_distance(box, footprint(o)) < self.metrics['anchorMinGap'] - EPS]
+            if not 0 < len(neighbours) <= 2 or any(o['facesAnchor'] for o in neighbours):
+                continue
+            without = {lot['id']} | {o['id'] for o in neighbours}
+            if self.planner(without=without).fits(moved, road, True):
+                tries.append((len(neighbours), distance((lot['x'], lot['z']), (moved['x'], moved['z'])), lot, moved, neighbours))
+        tries.sort(key=lambda t: t[:2])
+        for _, _, lot, moved, neighbours in tries:
+            kept = copy.deepcopy((self.lots, self.access, self.log))
+            self.replace(lot, moved, road, f"for {a['name']}")
+            if all(self.rehome(next(o for o in self.lots if o['id'] == n['id']), f"to make room for {a['name']}") for n in neighbours):
+                return True
+            self.lots, self.access, self.log = kept
+        return False
+
+    def swap_source_for(self, a, road):
+        """The zone has no free deep building here: a nearby free one takes a deep model from a free building of another
+        zone, which takes its model in exchange. Every model stays in use the same number of times."""
+        p = a['position']
+        rot = heading((a['forward'][0], a['forward'][2]))
+        fx, fz = FRONTS[rot]
+        local = sorted((l for l in self.lots if not l['facesAnchor'] and l['zone'] == a['zone']), key=lambda l: distance((l['x'], l['z']), (p[0], p[2])))
+        donors = [l for l in self.lots if not l['facesAnchor'] and l['zone'] != a['zone'] and l['depth'] >= ANCHOR_DEPTH - EPS]
+        for near in local:
+            for donor in donors:
+                for gap in (.6, .9, 1.2, 1.6, 2.0, 2.5, 3.5, 4.5, 6.0):
+                    for lateral in (0, -.5, .5, -1, 1, -2, 2):
+                        if abs(lateral) > donor['width'] / 2 - .5:
+                            continue
+                        new_near = dict(near, sourceBuildingId=donor['sourceBuildingId'], width=donor['width'], depth=donor['depth'], rotationDeg=rot, facesAnchor=a['name'],
+                                        x=round(p[0] - fx * (donor['depth'] / 2 + gap) - fz * lateral, 4), z=round(p[2] - fz * (donor['depth'] / 2 + gap) + fx * lateral, 4))
+                        new_donor = dict(donor, sourceBuildingId=near['sourceBuildingId'], width=near['width'], depth=near['depth'])
+                        planner = self.planner(without={near['id'], donor['id']})
+                        if not planner.fits(new_near, road, True):
+                            continue
+                        donor_road = self.roads[self.access[donor['id']]['road']]
+                        planner.add(new_near, road)
+                        if not planner.fits(new_donor, donor_road):
+                            continue
+                        self.replace(near, new_near, road, f"for {a['name']}, model {donor['sourceBuildingId']} from {donor['id']}")
+                        self.replace(donor, new_donor, donor_road, f"model {near['sourceBuildingId']} from {near['id']}")
+                        return True
+        return False
+
+    def facade_options(self, a):
+        p = a['position']
+        rot = heading((a['forward'][0], a['forward'][2]))
+        fx, fz = FRONTS[rot]
+        free = [lot for lot in self.lots if not lot['facesAnchor'] and lot['zone'] == a['zone'] and lot['depth'] >= ANCHOR_DEPTH - EPS]
+        free.sort(key=lambda lot: distance((lot['x'], lot['z']), (p[0], p[2])))
+        options = []
+        for lot in free:
+            for gap in (.6, .9, 1.2, 1.6, 2.0, 2.5, 3.5, 4.5, 6.0, 7.5, 9.0):
+                for lateral in (0, -.5, .5, -1, 1, -2, 2, -(lot['width'] / 2 - .5), lot['width'] / 2 - .5):
+                    if abs(lateral) <= lot['width'] / 2 - .5:
+                        options.append((lot, dict(lot, x=round(p[0] - fx * (lot['depth'] / 2 + gap) - fz * lateral, 4), z=round(p[2] - fz * (lot['depth'] / 2 + gap) + fx * lateral, 4),
+                                                  rotationDeg=rot, facesAnchor=a['name'])))
+        return options
+
+    def replace(self, old, new, road, why):
+        self.lots[self.lots.index(old)] = new
+        self.access[new['id']] = access_for(new, road)
+        self.log.append(f"{new['id']} {new['sourceBuildingId']} ({old['x']},{old['z']},{old['rotationDeg']}) -> ({new['x']},{new['z']},{new['rotationDeg']}) {why}")
+
+    def rehome(self, lot, why):
+        """The nearest legal plot of the building's zone, on a road or deeper in the block."""
+        planner = self.planner(without={lot['id']})
+        best = None
+        for road in self.data['roads']:
+            for along in range(6, int(road['length']) - 5, 2):
+                q = (road['a'][0] + road['unit'][0] * along, road['a'][1] + road['unit'][1] * along)
+                for side in (-1, 1):
+                    nx, nz = -road['unit'][1] * side, road['unit'][0] * side
+                    if max(abs(nx), abs(nz)) < .98:
+                        continue
+                    rot = heading((-nx, -nz))
+                    for deeper in range(0, 22, 2):
+                        offset = road['width'] / 2 + self.metrics['setback'] + .02 + deeper + lot['depth'] / 2
+                        moved = dict(lot, x=round(q[0] + nx * offset, 4), z=round(q[1] + nz * offset, 4), rotationDeg=rot)
+                        far = distance((lot['x'], lot['z']), (moved['x'], moved['z']))
+                        if (best is None or far < best[0]) and planner.fits(moved, road):
+                            best = (far, moved, road)
+        if best is None:
+            return False
+        self.replace(lot, best[1], best[2], why)
+        return True
+
+    def clear_anchor_paths(self):
+        for a in self.data['anchors']:
+            start, end = (a['position'][0], a['position'][2]), (a['roadPoint'][0], a['roadPoint'][2])
+            for lot in list(self.lots):
+                if segment_box_distance(start, end, footprint(lot)) < SIDEWALK / 2 - EPS and not self.rehome(lot, f"off the way to {a['name']}"):
+                    raise RuntimeError(f"Could not move {lot['id']} off {a['name']}")
+
+    def clear_lanes(self):
+        """Buildings standing on an original walking lane step off it the shortest way, or find another plot."""
+        for lot in list(self.lots):
+            if not blocks_lane(footprint(lot), self.data):
+                continue
+            planner = self.planner(without={lot['id']})
+            road = self.roads[self.access[lot['id']]['road']]
+            anchored = bool(lot['facesAnchor'])
+            steps = sorted(((step * dx, step * dz) for step in (.25, .5, .75, 1, 1.5, 2, 2.5, 3, 4, 5) for dx, dz in FRONTS.values()), key=lambda v: abs(v[0]) + abs(v[1]))
+            for dx, dz in steps:
+                moved = dict(lot, x=round(lot['x'] + dx, 4), z=round(lot['z'] + dz, 4))
+                if planner.fits(moved, road, anchored) and (not anchored or self.stands_before(moved, self.anchors[lot['facesAnchor']])):
+                    self.replace(lot, moved, road, 'off a walking lane')
+                    break
+            else:
+                if anchored or not self.rehome(lot, 'off a walking lane'):
+                    raise RuntimeError('Cannot clear the lane under ' + lot['id'])
+
+    def settle(self):
+        """Buildings left too close to a neighbour, or with their way to the road cut, by what moved."""
+        for lot in [l for l in self.lots if l['facesAnchor']]:
+            path = self.access[lot['id']]
+            for other in list(self.lots):
+                if other['id'] != lot['id'] and segment_box_distance(path['start'], path['end'], footprint(other)) < SIDEWALK / 2 - EPS:
+                    if other['facesAnchor'] or not self.rehome(other, f"off the way to {lot['id']}"):
+                        raise RuntimeError(f"{other['id']} blocks {lot['id']}")
+        for lot in list(self.lots):
+            if lot['facesAnchor']:
+                continue
+            current = next(l for l in self.lots if l['id'] == lot['id'])
+            box = footprint(current)
+            others = [footprint(l) for l in self.lots if l['id'] != lot['id']] + [footprint(l) for l in self.data['existing']]
+            close = any(box_distance(box, footprint(l)) < self.metrics['gap'] - EPS for l in self.lots if l['id'] != lot['id'] and not l['facesAnchor'])
+            old_close = any(box_distance(box, footprint(l)) < self.metrics['gap'] - EPS for l in self.data['existing'])
+            facade_close = any(box_distance(box, footprint(l)) < self.metrics['anchorMinGap'] - EPS for l in self.lots if l['facesAnchor'])
+            path = self.access[lot['id']]
+            cut = any(segment_box_distance(path['start'], path['end'], other) < SIDEWALK / 2 - EPS for other in others)
+            if (close or old_close or facade_close or cut) and not self.rehome(current, 'left too close by the moves'):
+                raise RuntimeError('No plot left for ' + lot['id'])
+
+    def fix_lamps(self):
+        """Saved lamps stay put unless a building or an anchor line now takes their spot."""
+        lots = self.lots
+        boxes = [footprint(lot) for lot in self.data['existing'] + lots]
+        access = list(self.access.values())
+        anchor_lines = [((a['position'][0], a['position'][2]), (a['roadPoint'][0], a['roadPoint'][2])) for a in self.data['anchors']]
+        def blocked(p):
+            return (any(point_box_distance(p, b) < POST_RADIUS + .15 for b in boxes)
+                    or any(point_segment_distance(p, a, b) < SIDEWALK / 2 + POST_RADIUS + .2 for a, b in anchor_lines)
+                    or any(point_segment_distance(p, a['start'], a['end']) < SIDEWALK / 2 + POST_RADIUS + .2 for a in access))
+        posts = [(q['x'], q['z']) for q in self.data['posts']]
+        for i, lamp in enumerate(self.lamps):
+            here = lamp['x'], lamp['z']
+            others = posts + [(l['x'], l['z']) for j, l in enumerate(self.lamps) if j != i]
+            if not blocked(here) and min(distance(here, q) for q in others) >= 5 - EPS:
+                continue
+            spots = [c for c in lamp_sites(self.data, lots, list(self.access.values())) if min(distance((c['x'], c['z']), q) for q in others) >= 5]
+            if not spots:
+                raise RuntimeError('No legal lamp site near ' + str(here))
+            spot = min(spots, key=lambda c: distance((c['x'], c['z']), here))
+            self.log.append(f"lamp {i + 1} {here} -> ({spot['x']},{spot['z']})")
+            self.lamps[i] = spot
+
+    def run(self):
+        self.release_stale_facades()
+        self.clear_anchor_paths()
+        for name, a in self.moved.items():
+            if name in self.faced():
+                continue
+            if not self.place_facade(a):
+                raise RuntimeError('No facade fits before ' + name)
+        self.clear_lanes()
+        self.settle()
+        self.fix_lamps()
+        return self.lots, [self.access[lot['id']] for lot in self.lots], self.lamps
+
+
+def update_anchors(data):
+    lots_doc, lamps_doc = read_json(DATA / 'lots_expanded.json'), read_json(DATA / 'furniture_expanded.json')
+    metrics = measure(data)
+    metrics['targets'] = lots_doc['metrics']['targets']
+    update = AnchorUpdate(data, metrics, lots_doc, lamps_doc)
+    lots, access, lamps = update.run()
+    validation = verify(data, metrics, lots, lamps, access)
+    before = {lot['id']: lot for lot in lots_doc['lots']}
+    changed = [lot['id'] for lot in lots if {k: lot[k] for k in ('x', 'z', 'rotationDeg')} != {k: before[lot['id']][k] for k in ('x', 'z', 'rotationDeg')}]
+    print('\n'.join(update.log), flush=True)
+    print(f"Buildings moved: {len(changed)} of {len(lots)}; lamps moved: {sum(a != b for a, b in zip(lamps, lamps_doc['lamps']))} of {len(lamps)}", flush=True)
+    lots_doc.update(inputSha256=input_hashes(), metrics=metrics, lots=lots, accessPaths=access, validation=validation)
+    lamps_doc['lamps'] = lamps
+    return lots_doc, lamps_doc
+
+
 def build(data):
     metrics = measure(data)
     print('measurements', json.dumps(metrics), flush=True)
@@ -727,8 +1012,7 @@ def build(data):
     lamps = place_lamps(data, metrics, planner.lots, planner.access)
     validation = verify(data, metrics, planner.lots, lamps, planner.access)
     usage = {s: planner.usage[s] for s in sorted(data['sources'])}
-    hashes = {name: hashlib.sha256((DATA / name).read_bytes()).hexdigest() for name in
-              ('layout.json', 'layout_expanded.json', 'zones.json', 'anchors_expanded.json')}
+    hashes = input_hashes()
     lots_doc = dict(schemaVersion=1, coordinates='Unity world X/Z, metres', mode='additional-only',
                     sourceBuildingId='Original layout.json lot[0]; clone that exact building, scale 1',
                     rotationConvention='0=-Z, 90=+X, 180=+Z, 270=-X; absolute layout heading; rotate clone by target minus original heading',
@@ -788,8 +1072,9 @@ class OutputTests(unittest.TestCase):
     def test_full_saved_contract(self):
         result = self.check_output()
         self.assertTrue(result['passed'])
-        self.assertEqual((result['newBuildingCount'], result['newLampCount'], result['movedAnchorFrontages']), (169, 109, '28/28'))
-        self.assertEqual(self.metrics['targets'], dict(A=45, B=45, C=39, D=40))
+        faced = sum(1 for lot in self.lots_doc['lots'] if lot['facesAnchor'])
+        self.assertEqual((result['newBuildingCount'], result['newLampCount'], result['movedAnchorFrontages']), (169, 109, f'{faced}/{faced}'))
+        self.assertEqual(Counter(lot['zone'] for lot in self.lots_doc['lots']), Counter(dict(A=45, B=45, C=39, D=40)))
         self.assertEqual((result['sourceUseMin'], result['sourceUseMax']), (3, 4))
 
     def test_duplicate_building_is_rejected(self):
@@ -801,7 +1086,7 @@ class OutputTests(unittest.TestCase):
     def test_bad_source_and_missing_frontage_are_rejected(self):
         for field, value in [('sourceBuildingId', 'missing'), ('facesAnchor', None), ('zone', 'missing')]:
             lots = copy.deepcopy(self.lots_doc['lots'])
-            lots[0][field] = value
+            next(lot for lot in lots if lot['facesAnchor'])[field] = value
             with self.subTest(field=field), self.assertRaises(ValueError):
                 self.check_output(lots=lots)
 
@@ -817,6 +1102,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--self-test', action='store_true')
     parser.add_argument('--check-only', action='store_true', help='Validate saved JSONs without regenerating')
+    parser.add_argument('--update-anchors', action='store_true', help='Move only what the current anchors need')
     parser.add_argument('--picture', type=Path)
     parser.add_argument('--report-json', type=Path)
     args = parser.parse_args()
@@ -831,14 +1117,14 @@ def main():
         metrics = measure(data)
         validation = verify(data, metrics, lots_doc['lots'], lamps_doc['lamps'], lots_doc['accessPaths'])
         for name, digest in lots_doc['inputSha256'].items():
-            if hashlib.sha256((DATA / name).read_bytes()).hexdigest() != digest:
+            if file_hash(DATA / name) != digest:
                 raise ValueError('Input changed since bake: ' + name)
         if lots_doc['metrics'] != metrics or lots_doc['validation'] != validation:
             raise ValueError('Saved measurement/validation metadata differs from fresh checks')
         if lots_doc['sourceUsage'] != dict(Counter(l['sourceBuildingId'] for l in lots_doc['lots'])):
             raise ValueError('Saved source use counts differ from actual output')
     else:
-        lots_doc, lamps_doc = build(data)
+        lots_doc, lamps_doc = update_anchors(data) if args.update_anchors else build(data)
         validation = lots_doc['validation']
         for name, doc in [('lots_expanded.json', lots_doc), ('furniture_expanded.json', lamps_doc)]:
             (DATA / name).write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

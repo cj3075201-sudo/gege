@@ -3,8 +3,11 @@
 Writes layout_expanded.json, zones.json, anchors_expanded.json and expansion_report.json next to the original data,
 which it only reads. Then run: build_myeongji_routes.py --expanded
 --picture PATH also renders the review picture. Every coordinate is world x, z in metres.
+
+Shops keep their share of the zone they had on the old map (shop_target), on the nearest fitting road. Doors stay
+where anchors_expanded.json has them unless a shop lands on one.
 """
-import argparse, copy, json, math, random, sys
+import argparse, json, math, sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 sys.dont_write_bytecode = True
@@ -66,13 +69,15 @@ SIDEWALK = 2.0
 CANDIDATE_STEP, DOOR_OFFSET = 8.0, 1.5
 BUILDING_ROOM = 8.0  # plot depth a future building needs behind a new anchor
 BORDER_CLEARANCE = 6.0
-MIN_KEPT_PER_ZONE = 4
-MIN_KEPT_SHOPS = 1
-HOME_SHOP_REACH = 60.0  # the first pickup of day 1 stays close to home
-NEW_SHOP_ROAD_WIDTH = 5  # new shops stand on real streets, not narrow alleys
-NAMED_SHOPS = {'A_Shop_01', 'A_Shop_02', 'B_Shop_03', 'B_Shop_04', 'C_Shop_05'}
+# The old map's range, as the share of a zone a shop held on it is measured in.
+OLD_RANGE = ((-10.0, 124.0), (-103.0, 0.0))
+SHOP_ROAD_WIDTH = 5  # shops stand on real streets, not narrow alleys
+SHOP_STEP = 0.5
+SHOP_ROOM_SIDE = 4.0  # half the frontage a shop's building needs
+OLD_FRONT_REACH = 4.0  # an old building this close behind a spot is that spot's facade
+DOOR_SHOP_GAP = 6.0  # a door this close to a shop would share its front
+DAILY_MINIMUM = {1: 120, 2: 220, 3: 300, 4: 300}
 THRESHOLDS = (120, 220, 300)
-SEARCH_STEPS, SEED = 60000, 14102026
 
 
 def zone_at(x, z):
@@ -205,76 +210,152 @@ def new_candidates(roads_new, roads_all):
     return out
 
 
-def search(zone_pool, shops_old, doors_old, cost, samples, home_cost, road_width):
-    """Annealing over which candidate serves each shop and door slot of a zone."""
-    rng = random.Random(SEED)
-    pool = {z: [i for i, c in enumerate(zone_pool) if c['zone'] == z] for z in OPEN_ORDER}
-    shop_pool = {z: [i for i in pool[z] if zone_pool[i]['type'] == 'shop' or (zone_pool[i]['type'] == 'new' and road_width[zone_pool[i]['road']] >= NEW_SHOP_ROAD_WIDTH)] for z in pool}
-    door_pool = {z: [i for i in pool[z] if zone_pool[i]['type'] in ('new', 'door')] for z in pool}
-    state = {}
-    for z in OPEN_ORDER:
-        state[z] = {'shop': [zone_pool.index(a) for a in shops_old[z]], 'door': [zone_pool.index(a) for a in doors_old[z]]}
+def shop_target(zone, x, z):
+    """The same share of the zone's full range that the spot held of the zone's part of the old map."""
+    xs, zs = [q[0] for q in ZONES[zone]], [q[1] for q in ZONES[zone]]
+    (full_x0, full_x1), (full_z0, full_z1) = (min(xs), max(xs)), (min(zs), max(zs))
+    old_x0, old_x1 = max(OLD_RANGE[0][0], full_x0), min(OLD_RANGE[0][1], full_x1)
+    old_z0, old_z1 = max(OLD_RANGE[1][0], full_z0), min(OLD_RANGE[1][1], full_z1)
+    u, v = (x - old_x0) / (old_x1 - old_x0), (z - old_z0) / (old_z1 - old_z0)
+    return full_x0 + u * (full_x1 - full_x0), full_z0 + v * (full_z1 - full_z0)
 
-    def score(s):
-        total = {t: [0, 0] for t in ('c120', 'ca220', 'x300', 'same')}
-        penalty = 0.0
-        for z in OPEN_ORDER:
-            chosen = s[z]['shop'] + s[z]['door']
-            kept = sum(zone_pool[i]['type'] != 'new' for i in chosen)
-            penalty += max(0, MIN_KEPT_PER_ZONE - kept) * 2
-            kept_shops = [i for i in s[z]['shop'] if zone_pool[i]['type'] != 'new']
-            penalty += max(0, MIN_KEPT_SHOPS - len(kept_shops)) * 2
-            penalty -= .05 * sum(zone_pool[i].get('name') in NAMED_SHOPS for i in kept_shops)
-            if z == 'C':
-                penalty += max(0, min(home_cost[i] for i in s[z]['shop']) - HOME_SHOP_REACH) / 10
-            if len(set(chosen)) != len(chosen):
-                penalty += 5
-            for a, b in zip(s[z]['shop'], s[z]['shop'][1:] + s[z]['shop'][:1]):
-                penalty += max(0, 70 - cost[a][b]) / 25
-            for i, a in enumerate(s[z]['door']):
-                for b in s[z]['door'][i + 1:]:
-                    penalty += max(0, 35 - cost[a][b]) / 25
-                for b in s[z]['shop']:
-                    penalty += max(0, 25 - cost[a][b]) / 25
-            # Slots must cover the zone: distance from any road point to its nearest door and shop.
-            door_reach = sum(min(routes.dist(p, (zone_pool[d]['position'][0], zone_pool[d]['position'][2])) for d in s[z]['door']) for p in samples[z]) / len(samples[z])
-            shop_reach = sum(min(routes.dist(p, (zone_pool[d]['position'][0], zone_pool[d]['position'][2])) for d in s[z]['shop']) for p in samples[z]) / len(samples[z])
-            penalty += door_reach / 40 + shop_reach / 80
-        for m in OPEN_ORDER:
-            for n in OPEN_ORDER:
-                for a in s[m]['shop']:
-                    for b in s[n]['door']:
-                        d = cost[a][b]
-                        if m == n:
-                            if m == 'C':
-                                total['c120'][0] += d >= 120
-                                total['c120'][1] += 1
-                        else:
-                            total['x300'][0] += d >= 300
-                            total['x300'][1] += 1
-                            if {m, n} == {'C', 'A'}:
-                                total['ca220'][0] += d >= 220
-                                total['ca220'][1] += 1
-        ratio = {k: v[0] / v[1] for k, v in total.items() if v[1]}
-        return 2 * ratio['c120'] + 2 * ratio['ca220'] + 4 * ratio['x300'] - penalty
 
-    current = score(state)
-    best, best_state = current, copy.deepcopy(state)
-    for step in range(SEARCH_STEPS):
-        temperature = max(.002, .08 * (1 - step / SEARCH_STEPS))
-        z = rng.choice(OPEN_ORDER)
-        kind = rng.choice(('shop', 'door', 'door'))
-        slot = rng.randrange(len(state[z][kind]))
-        old = state[z][kind][slot]
-        state[z][kind][slot] = rng.choice(shop_pool[z] if kind == 'shop' else door_pool[z])
-        value = score(state)
-        if value >= current or rng.random() < math.exp((value - current) / temperature):
-            current = value
-            if value > best:
-                best, best_state = value, copy.deepcopy(state)
+def old_lot_rect(lot):
+    ident, _, x, z, w, d, _, angle = lot
+    if angle % 180:
+        w, d = d, w
+    return ident, angle, x - w / 2, z - d / 2, x + w / 2, z + d / 2
+
+
+def rect_distance(p, rect):
+    return math.hypot(max(rect[2] - p[0], 0, p[0] - rect[4]), max(rect[3] - p[1], 0, p[1] - rect[5]))
+
+
+def old_facade(p, forward, lots):
+    """The old building whose front this spot stands before, if any."""
+    for lot in lots:
+        rect = old_lot_rect(lot)
+        front = (math.sin(math.radians(rect[1])), -math.cos(math.radians(rect[1])))
+        if front[0] * forward[0] + front[1] * forward[1] < .98:
+            continue
+        along_front = rect[2] + .5 <= p[0] <= rect[4] - .5 if abs(front[1]) > .5 else rect[3] + .5 <= p[1] <= rect[5] - .5
+        if along_front and rect_distance(p, rect) <= OLD_FRONT_REACH:
+            return rect[0]
+    return None
+
+
+def door_fronts():
+    """Outlines of the saved buildings that doors stand before. Doors stay, so shops work around these."""
+    path = routes.directory / 'lots_expanded.json'
+    if not path.exists():
+        return []
+    fronts = []
+    for lot in routes.read_json('lots_expanded.json')['lots']:
+        if (lot.get('facesAnchor') or '').find('_Door_') < 0:
+            continue
+        w, d = (lot['depth'], lot['width']) if lot['rotationDeg'] % 180 else (lot['width'], lot['depth'])
+        fronts.append((lot['id'], 0, lot['x'] - w / 2, lot['z'] - d / 2, lot['x'] + w / 2, lot['z'] + d / 2))
+    return fronts
+
+
+def shop_spots(zone, roads_all, old_count, lots, fronts):
+    """Every legal shop spot of a zone. A spot before an old building needs no border clearance, as old spots never had
+    it; any other needs room behind it for a new building, clear of the buildings doors already use."""
+    edges = border_edges()
+    for index, r in enumerate(roads_all):
+        if r['width'] < SHOP_ROAD_WIDTH:
+            continue
+        a, b = r['a'], r['b']
+        length = routes.dist(a, b)
+        ux, uz = (b[0] - a[0]) / length, (b[1] - a[1]) / length
+        nx, nz = -uz, ux
+        offset = r['width'] / 2 + DOOR_OFFSET
+        for step in range(1, int(length / SHOP_STEP)):
+            along = step * SHOP_STEP
+            q = (a[0] + ux * along, a[1] + uz * along)
+            for side in (-1, 1):
+                p = (q[0] + nx * side * offset, q[1] + nz * side * offset)
+                if zone_at(*p) != zone or any(s is not r and segment_distance(p, tuple(s['a']), tuple(s['b'])) < s['width'] / 2 + 5 for s in roads_all):
+                    continue
+                if any(rect_distance(p, old_lot_rect(lot)) < .5 for lot in lots):
+                    continue
+                forward = (-nx * side, -nz * side)
+                behind = (p[0] + nx * side * (SIDEWALK + BUILDING_ROOM), p[1] + nz * side * (SIDEWALK + BUILDING_ROOM))
+                facade = old_facade(p, forward, lots) if index < old_count else None
+                if facade is None:
+                    if index < old_count or zone_at(*behind) != zone:
+                        continue
+                    if any(s is not r and segment_distance(behind, tuple(s['a']), tuple(s['b'])) < s['width'] / 2 + 1 for s in roads_all):
+                        continue
+                    if any(rect_distance(behind, old_lot_rect(lot)) < 2 for lot in lots):
+                        continue
+                    if any(rect_distance((p[0] + nx * side * t, p[1] + nz * side * t), rect) < SHOP_ROOM_SIDE for rect in fronts for t in range(1, int(BUILDING_ROOM) + 3)):
+                        continue
+                    if any(segment_distance(p, m, n) < BORDER_CLEARANCE for _, _, m, n in edges):
+                        continue
+                yield dict(building=facade, road=r['id'], position=[round(p[0], 2), 0.0, round(p[1], 2)],
+                           forward=[round(forward[0], 4), 0.0, round(forward[1], 4)], roadPoint=[round(q[0], 2), -0.14, round(q[1], 2)])
+
+
+def place_shops(anchors_old, roads_all, old_count, lots):
+    placed, table, fronts = {}, [], door_fronts()
+    for a in anchors_old:
+        if a['type'] != 'shop':
+            continue
+        target = shop_target(a['zone'], a['position'][0], a['position'][2])
+        spot = min(shop_spots(a['zone'], roads_all, old_count, lots, fronts), key=lambda s: (routes.dist(target, (s['position'][0], s['position'][2])), s['road']))
+        placed[a['name']] = spot
+        table.append({'name': a['name'], 'shopName': a['shopName'], 'zone': a['zone'], 'old': [round(a['position'][0], 2), round(a['position'][2], 2)],
+                      'target': [round(target[0], 1), round(target[1], 1)], 'actual': [spot['position'][0], spot['position'][2]],
+                      'off': round(routes.dist(target, (spot['position'][0], spot['position'][2])), 1), 'road': spot['road'], 'building': spot['building']})
+    return placed, table
+
+
+def merge_anchors(anchors_old, saved, shops, new_candidates_list):
+    """Shops from place_shops; doors as saved, unless a shop landed on one."""
+    saved_by_name = {a['name']: a for a in saved}
+    shop_points = [(s['position'][0], s['position'][2]) for s in shops.values()]
+    door_points = [(a['position'][0], a['position'][2]) for a in saved if a['type'] == 'door']
+    merged, moved = [], []
+    for a in anchors_old:
+        if a['type'] == 'home':
+            merged.append({k: v for k, v in a.items() if k != 'node'})
+            continue
+        entry = {'name': a['name'], 'type': a['type'], 'index': a['index'], 'zone': a['zone'], 'shopName': a['shopName']}
+        if a['type'] == 'shop':
+            entry.update(shops[a['name']])
         else:
-            state[z][kind][slot] = old
-    return best_state, best
+            door = saved_by_name[a['name']]
+            here = (door['position'][0], door['position'][2])
+            if min(routes.dist(here, p) for p in shop_points) < DOOR_SHOP_GAP:
+                others = shop_points + [p for p in door_points if p != here]
+                free = [c for c in new_candidates_list if c['zone'] == a['zone'] and min(routes.dist((c['position'][0], c['position'][2]), p) for p in others) >= DOOR_SHOP_GAP]
+                pick = min(free, key=lambda c: routes.dist(here, (c['position'][0], c['position'][2])))
+                moved.append({'name': a['name'], 'from': list(here), 'to': [pick['position'][0], pick['position'][2]]})
+                door = dict(door, building=None, position=pick['position'], forward=pick['forward'], road=pick['road'], roadPoint=pick['roadPoint'])
+                door_points[door_points.index(here)] = (pick['position'][0], pick['position'][2])
+            entry.update({k: door[k] for k in ('building', 'position', 'forward', 'road', 'roadPoint')})
+        merged.append(entry)
+    return merged, moved
+
+
+def daily_calls(pair_values_by_anchor, shops, doors):
+    """For each day: pairs of a shop and a zone it may call to, and how many have a door at the minimum distance.
+    A pair without one falls back to the two farthest doors, so a call still comes; zones with no door would not."""
+    days = {}
+    for day, opened in enumerate((['C'], ['C', 'A'], ['C', 'A', 'B'], ['C', 'A', 'B', 'D']), 1):
+        minimum = DAILY_MINIMUM[day]
+        pairs = met = no_door = 0
+        for s in shops:
+            if s['zone'] not in opened:
+                continue
+            for zone in (opened if len(opened) <= 2 else [z for z in opened if z != s['zone']]):
+                in_zone = [o for o in doors if o['zone'] == zone and o['node'] != s['node']]
+                pairs += 1
+                no_door += not in_zone
+                met += any(pair_values_by_anchor[s['node']][o['node']] >= minimum for o in in_zone)
+        days[day] = {'open': opened, 'minimum': minimum, 'shopZonePairs': pairs, 'withDoorAtMinimum': met, 'fallbackToFarthest': pairs - met, 'noDoor': no_door}
+    return days
 
 
 def ratios(values):
@@ -414,7 +495,6 @@ def picture(path, layout, anchors, zones_json, report):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--picture')
-    parser.add_argument('--keep-anchors', action='store_true', help='reuse anchors_expanded.json instead of searching again')
     args = parser.parse_args()
     d = routes.directory
     layout = routes.read_json('layout.json')
@@ -445,58 +525,10 @@ def main():
     (d / 'zones.json').write_text(json.dumps(zones_json, ensure_ascii=False, indent=1), encoding='utf8')
     # Existing anchors must sit in their own zone polygon, or they cannot stay.
     misplaced = [(a['name'], a['zone'], zone_at(a['position'][0], a['position'][2])) for a in anchors_old if a['zone'] != zone_at(a['position'][0], a['position'][2])]
-    if args.keep_anchors:
-        anchors = routes.read_json('anchors_expanded.json')
-    else:
-        old_clean = [a for a in anchors_old if a['type'] != 'home' and (a['name'], a['zone'], zone_at(a['position'][0], a['position'][2])) not in misplaced]
-        cands = new_candidates(new, all_roads)
-        pool = old_clean + cands
-        home = next(a for a in anchors_old if a['type'] == 'home')
-        graph_anchors = pool + [home]
-        for i, c in enumerate(pool):
-            c.setdefault('name', f'cand_{i}')
-        nodes, graph = routes.build_graph(all_roads, graph_anchors)
-        print('candidates', len(cands), 'nodes', len(nodes), flush=True)
-        costs = {a['node']: routes.distances(graph, a['node']) for a in pool}
-        cost = [[costs[a['node']][b['node']] for b in pool] for a in pool]
-        samples = {z: [] for z in OPEN_ORDER}
-        for r in all_roads:
-            length = routes.dist(r['a'], r['b'])
-            for s in range(0, int(length), 10):
-                p = (r['a'][0] + (r['b'][0] - r['a'][0]) * s / length, r['a'][1] + (r['b'][1] - r['a'][1]) * s / length)
-                z = zone_at(*p)
-                if z:
-                    samples[z].append(p)
-        by_zone = lambda kind: {z: [a for a in old_clean if a['type'] == kind and a['zone'] == z] for z in OPEN_ORDER}
-        # A slot whose old anchor had to go still needs a start.
-        start_shops, start_doors = by_zone('shop'), by_zone('door')
-        for z in OPEN_ORDER:
-            spare = [c for c in cands if c['zone'] == z]
-            while len(start_shops[z]) < 3:
-                start_shops[z].append(spare.pop(0))
-            while len(start_doors[z]) < 8:
-                start_doors[z].append(spare.pop(0))
-        home_cost = [costs[a['node']][home['node']] for a in pool]
-        road_width = {r['id']: r['width'] for r in all_roads}
-        best_state, value = search(pool, start_shops, start_doors, cost, samples, home_cost, road_width)
-        print('search score', round(value, 3), flush=True)
-        anchors = []
-        # A kept anchor stays in its own slot, so its shop name still belongs to its building.
-        waiting = {(z, kind): [pool[i] for i in best_state[z][kind]] for z in OPEN_ORDER for kind in ('shop', 'door')}
-        own = {c['name']: c for group in waiting.values() for c in group if c['type'] != 'new'}
-        for key in waiting:
-            waiting[key] = [c for c in waiting[key] if c['type'] == 'new']
-        for a in anchors_old:
-            if a['type'] == 'home':
-                anchors.append({k: v for k, v in a.items() if k != 'node'})
-                continue
-            z = a['zone']
-            picked = own[a['name']] if a['name'] in own else waiting[(z, a['type'])].pop(0)
-            entry = {'name': a['name'], 'type': a['type'], 'index': a['index'], 'zone': z, 'building': picked.get('building'),
-                     'position': picked['position'], 'forward': picked['forward'], 'road': picked['road'], 'roadPoint': picked['roadPoint'], 'shopName': a['shopName']}
-            anchors.append(entry)
-        # Keep the original list order (shops, doors, home by type and index).
-        (d / 'anchors_expanded.json').write_text(json.dumps(anchors, ensure_ascii=False, indent=1), encoding='utf8')
+    saved = routes.read_json('anchors_expanded.json')
+    shops_placed, shop_table = place_shops(anchors_old, all_roads, old_count, layout['lots'])
+    anchors, moved_doors = merge_anchors(anchors_old, saved, shops_placed, new_candidates(new, all_roads))
+    (d / 'anchors_expanded.json').write_text(json.dumps(anchors, ensure_ascii=False, indent=1), encoding='utf8')
     anchors = [dict(a) for a in anchors]
     nodes, graph = routes.build_graph(all_roads, anchors)
     connected = len(routes.distances(graph, 0)) == len(nodes)
@@ -552,7 +584,9 @@ def main():
         'distance': {'same': ratios(same), 'neighbor': ratios(neighbor), 'far': ratios(far), 'all_other': ratios(other)},
         'pairs': {k: ratios(v) for k, v in pair_values.items()},
         'days': days,
-        'homeToShopsC': [round(table[home['node']][s['node']]) for s in shops if s['zone'] == 'C'],
+        'homeToShopsC': {s['name']: round(table[home['node']][s['node']]) for s in shops if s['zone'] == 'C'},
+        'shops': shop_table, 'movedDoors': moved_doors,
+        'dailyCalls': daily_calls(table, shops, doors),
         'barrierCount': len(spots), 'borderLengthMeters': {k: round(v) for k, v in border_length.items()}, 'borderTotalMeters': round(total_border),
         'misplacedOldAnchors': misplaced,
         'closestTrafficJunctions': {'meters': round(spacing[0], 1), 'a': [round(v, 1) for v in spacing[1]], 'b': [round(v, 1) for v in spacing[2]], 'count': junctions},
@@ -560,7 +594,7 @@ def main():
     (d / 'expansion_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding='utf8')
     if args.picture:
         picture(args.picture, expanded, anchors, zones_json, report)
-    print(json.dumps({k: report[k] for k in ('connected', 'totalArea', 'newRoadCount', 'newRoadLength', 'barrierCount', 'borderTotalMeters', 'misplacedOldAnchors', 'closestTrafficJunctions', 'homeToShopsC')}, ensure_ascii=False))
+    print(json.dumps({k: report[k] for k in ('connected', 'totalArea', 'barrierCount', 'homeToShopsC', 'movedDoors', 'dailyCalls')}, ensure_ascii=False))
 
 
 if __name__ == '__main__':
