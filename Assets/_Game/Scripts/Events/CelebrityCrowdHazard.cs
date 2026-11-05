@@ -68,7 +68,7 @@ namespace DeliveryRider
 
         private void Update()
         {
-            if(network!=null&&!appeared&&!waitingPrepared&&!session.IsSettled&&!session.IsPaused
+            if(network!=null&&ground!=null&&(slot==null||slot.Selected)&&!appeared&&!waitingPrepared&&!session.IsSettled&&!session.IsPaused
                 &&Vector3.ProjectOnPlane(session.Player.position-transform.position,Vector3.up).sqrMagnitude<=PrepareRadius*PrepareRadius)
             {
                 for(int i=0;i<waitingFans;i++)SpawnFan(centerPath,centerAlong,WaitingSpot(transform.position,transform.rotation,i),true,i);
