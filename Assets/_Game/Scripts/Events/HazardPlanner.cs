@@ -100,7 +100,7 @@ namespace DeliveryRider
                     else DestroyImmediate(slot.gameObject);
                 }
             slots.Clear();
-            rolledOrder = null;
+            rolledOrder = null;callRandom=null;
             Spawn();
             OnSessionChanged();
         }
