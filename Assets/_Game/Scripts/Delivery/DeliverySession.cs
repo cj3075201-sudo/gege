@@ -169,9 +169,14 @@ namespace DeliveryRider
             return true;
         }
 
+        private bool stopping;
+        private void OnEnable() => stopping = false;
+        private void OnDisable() => stopping = true;
+
         public void RequireReplacement(Transform thief)
         {
-            if (!IsRecoveringFood || recoveryTarget != thief) return;
+            // Scene teardown can destroy the bag before the dropped food or thief calls back.
+            if (stopping || !gameObject.scene.isLoaded || foodBag == null || !IsRecoveringFood || recoveryTarget != thief) return;
             recoveryTarget = null;
             awaitingThief = false;
             Notify();
