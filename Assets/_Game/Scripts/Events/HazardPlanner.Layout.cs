@@ -59,8 +59,8 @@ namespace DeliveryRider
             {
                 if (kind.prefab == null || kind.unlockDay > day) continue;
                 int total = kind.Count(day);
-                int alley = kind.role == HazardRole.Trigger && kind.mainPoolSize >= 0 ? kind.alleyPoolSize : Mathf.RoundToInt(total * kind.objectAlleyShare);
-                int main = kind.role == HazardRole.Trigger && kind.mainPoolSize >= 0 ? kind.mainPoolSize : total - alley;
+                int alley = kind.role == HazardRole.Trigger ? kind.AlleyCount(day) : Mathf.RoundToInt(total * kind.objectAlleyShare);
+                int main = kind.role == HazardRole.Trigger ? kind.MainCount(day) : total - alley;
                 main = HazardZoneFilter.ScaleCount(HazardZoneFilter.ScaleCount(main, mainShare), hazardCountScale);
                 alley = HazardZoneFilter.ScaleCount(HazardZoneFilter.ScaleCount(alley, alleyShare), hazardCountScale);
                 layoutRemaining[LayoutKey(kind.type, false)] = main;

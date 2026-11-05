@@ -369,24 +369,30 @@ MonoBehaviour:
     mainPoolSize: -1
     alleyPoolSize: 0
     objectAlleyShare: 0
+    mainCountPerDay: 0500000005000000050000000500000005000000
+    alleyCountPerDay: 0000000000000000000000000000000000000000
   - type: manhole
     prefab: {fileID: 6472710267201087100, guid: f596076374953f645ae82da9c8aef1d5, type: 3}
     role: 0
     unlockDay: 1
-    countPerDay: 28000000360000004600000054000000
+    countPerDay: 2800000036000000460000005400000054000000
     poolSize: 10
     mainPoolSize: -1
     alleyPoolSize: 0
     objectAlleyShare: 0.5471698
+    mainCountPerDay: 
+    alleyCountPerDay: 
   - type: hydrant
     prefab: {fileID: 5070404547343383542, guid: 7d4ef1a04abf7c843beb66a684257e83, type: 3}
     role: 0
     unlockDay: 1
-    countPerDay: 26000000260000002600000026000000
+    countPerDay: 2600000026000000260000002600000026000000
     poolSize: 10
     mainPoolSize: -1
     alleyPoolSize: 0
     objectAlleyShare: 0
+    mainCountPerDay: 
+    alleyCountPerDay: 
   - type: melon
     prefab: {fileID: 6530980163086158173, guid: f76f44a5a22529a44bd073b5059e96e2, type: 3}
     role: 1
@@ -396,15 +402,19 @@ MonoBehaviour:
     mainPoolSize: 15
     alleyPoolSize: 0
     objectAlleyShare: 0
+    mainCountPerDay: 0f0000000f0000000f0000000f0000000f000000
+    alleyCountPerDay: 0000000000000000000000000000000000000000
   - type: door
     prefab: {fileID: 2258765552048652787, guid: d9aa1405f52194043a5a9a9cb9a9c575, type: 3}
     role: 0
     unlockDay: 1
-    countPerDay: 00000000000000000000000000000000
+    countPerDay: 0000000000000000000000000000000000000000
     poolSize: 10
     mainPoolSize: -1
     alleyPoolSize: 0
     objectAlleyShare: 0
+    mainCountPerDay: 
+    alleyCountPerDay: 
   - type: duck
     prefab: {fileID: 2613456982075538471, guid: 8c84d1a05a662454f881b318ef2c31fb, type: 3}
     role: 1
@@ -414,6 +424,8 @@ MonoBehaviour:
     mainPoolSize: 22
     alleyPoolSize: 0
     objectAlleyShare: 0
+    mainCountPerDay: 1600000016000000160000001600000016000000
+    alleyCountPerDay: 0000000000000000000000000000000000000000
   - type: chicken
     prefab: {fileID: 1457955222934212062, guid: 1824a012844aee449927e112dda09ccd, type: 3}
     role: 1
@@ -423,6 +435,8 @@ MonoBehaviour:
     mainPoolSize: 31
     alleyPoolSize: 5
     objectAlleyShare: 0
+    mainCountPerDay: 1f0000001f0000001f0000001f0000001f000000
+    alleyCountPerDay: 0500000005000000050000000500000005000000
   - type: tire
     prefab: {fileID: 187407185860632136, guid: 28a9fcec772ac8948bed51bf36545ddc, type: 3}
     role: 1
@@ -432,6 +446,8 @@ MonoBehaviour:
     mainPoolSize: 27
     alleyPoolSize: 0
     objectAlleyShare: 0
+    mainCountPerDay: 1b0000001b0000001b0000001b0000001b000000
+    alleyCountPerDay: 0000000000000000000000000000000000000000
   - type: theft
     prefab: {fileID: 5341357968200033377, guid: c25a8024297b4e64fb874d7dbf50beaf, type: 3}
     role: 1
@@ -441,6 +457,8 @@ MonoBehaviour:
     mainPoolSize: 12
     alleyPoolSize: 0
     objectAlleyShare: 0
+    mainCountPerDay: 0c0000000c0000000c0000000c0000000c000000
+    alleyCountPerDay: 0000000000000000000000000000000000000000
   - type: muscleman
     prefab: {fileID: 7860594623088957268, guid: 9015fd045a43cb34f92ac4ee68005237, type: 3}
     role: 1
@@ -450,6 +468,8 @@ MonoBehaviour:
     mainPoolSize: 10
     alleyPoolSize: 17
     objectAlleyShare: 0
+    mainCountPerDay: 0a0000000a0000000a0000000a0000000a000000
+    alleyCountPerDay: 1100000011000000110000001100000011000000
   - type: pigeonflock
     prefab: {fileID: 3615365105597982156, guid: 25b3eca937e83684896c0efb18a72047, type: 3}
     role: 1
@@ -459,6 +479,8 @@ MonoBehaviour:
     mainPoolSize: 7
     alleyPoolSize: 0
     objectAlleyShare: 0
+    mainCountPerDay: 0700000007000000070000000700000007000000
+    alleyCountPerDay: 0000000000000000000000000000000000000000
   - type: falling
     prefab: {fileID: 3387710401019531394, guid: 613aa786a8535044a9401dab814dd7ee, type: 3}
     role: 1
@@ -468,6 +490,8 @@ MonoBehaviour:
     mainPoolSize: 17
     alleyPoolSize: 23
     objectAlleyShare: 0
+    mainCountPerDay: 1100000011000000110000001100000011000000
+    alleyCountPerDay: 1700000017000000170000001700000017000000
   - type: cat
     prefab: {fileID: 3427698856218832095, guid: f57ace7bfdc15f24ba2c8a413c8ebf4d, type: 3}
     role: 1
@@ -477,6 +501,8 @@ MonoBehaviour:
     mainPoolSize: 25
     alleyPoolSize: 6
     objectAlleyShare: 0
+    mainCountPerDay: 1900000019000000190000001900000019000000
+    alleyCountPerDay: 0600000006000000060000000600000006000000
   - type: dog
     prefab: {fileID: 6091937976889780831, guid: 11137c949a3a8ec46ae16a5174f3e28f, type: 3}
     role: 1
@@ -486,6 +512,8 @@ MonoBehaviour:
     mainPoolSize: 13
     alleyPoolSize: 16
     objectAlleyShare: 0
+    mainCountPerDay: 0d0000000d0000000d0000000d0000000d000000
+    alleyCountPerDay: 1000000010000000100000001000000010000000
   - type: clone
     prefab: {fileID: 2438978742905171858, guid: b610bc90a5efc6f42a28ba1e7b5041a5, type: 3}
     role: 1
@@ -495,5 +523,7 @@ MonoBehaviour:
     mainPoolSize: 7
     alleyPoolSize: 0
     objectAlleyShare: 0
+    mainCountPerDay: 0700000007000000070000000700000007000000
+    alleyCountPerDay: 0000000000000000000000000000000000000000
   spacing: 9
   sameTypeSpacing: 9

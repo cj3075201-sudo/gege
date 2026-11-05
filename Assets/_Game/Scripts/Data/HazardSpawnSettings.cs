@@ -23,8 +23,19 @@ namespace DeliveryRider
             public int alleyPoolSize;
             [Range(0f, 1f)] public float objectAlleyShare;
 
-            public int Count(int day) => role == HazardRole.Trigger ? poolSize
-                : countPerDay.Length == 0 ? 0 : countPerDay[Mathf.Clamp(day - 1, 0, countPerDay.Length - 1)];
+            [Tooltip("Whole-map main-road slots for days 1 to 5; day 5 repeats thereafter.")]
+            public int[] mainCountPerDay = Array.Empty<int>();
+            [Tooltip("Whole-map car-free-road slots for days 1 to 5; day 5 repeats thereafter.")]
+            public int[] alleyCountPerDay = Array.Empty<int>();
+
+            private static int DayCount(int[] counts, int day, int fallback) => counts == null || counts.Length == 0
+                ? fallback : Mathf.Max(0, counts[Mathf.Clamp(day - 1, 0, Mathf.Min(4, counts.Length - 1))]);
+            public int MainCount(int day) => DayCount(mainCountPerDay, day,
+                mainPoolSize >= 0 ? mainPoolSize : poolSize - Mathf.RoundToInt(poolSize * objectAlleyShare));
+            public int AlleyCount(int day) => DayCount(alleyCountPerDay, day,
+                mainPoolSize >= 0 ? alleyPoolSize : Mathf.RoundToInt(poolSize * objectAlleyShare));
+            public int Count(int day) => role == HazardRole.Trigger ? MainCount(day) + AlleyCount(day)
+                : DayCount(countPerDay, day, 0);
         }
 
         [Serializable]

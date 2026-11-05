@@ -2967,7 +2967,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5815388a5927054f9ef5c25c7a4ae78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.HazardPlanner
-  activePerDay: 05000000080000000a0000000d000000
+  activePerDay: 05000000080000000a0000000d0000000d000000
   routeShare: 0.7
   routeRadius: 7
   typeGuarantee: 0.5
@@ -2981,6 +2981,7 @@ MonoBehaviour:
   comboCountScale: 1
   objectMinimumSpacing: 5
   comboFirst: 0.35
+  showSelectedBeforePickup: 0
   session: {fileID: 421427440}
   rider: {fileID: 424159419}
   ground: {fileID: 1954410165}
@@ -35261,7 +35262,7 @@ MonoBehaviour:
     - {r: 0.93, g: 0.93, b: 0.9, a: 1}
     - {r: 0.6, g: 0.62, b: 0.64, a: 1}
   vehicleCount: 50
-  vehicleCountByDay: 1e00000028000000320000003c000000
+  vehicleCountByDay: 1e00000028000000320000003c0000003c000000
   minimumSpacing: 14
   playerClearance: 10
   randomEachRun: 1

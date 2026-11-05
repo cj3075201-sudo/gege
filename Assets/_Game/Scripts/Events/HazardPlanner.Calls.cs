@@ -8,7 +8,7 @@ namespace DeliveryRider
     public sealed partial class HazardPlanner
     {
         [Header("HTML 콜별 추첨")]
-        [SerializeField] private int[] activePerDay = { 5, 8, 10, 13 };
+        [SerializeField] private int[] activePerDay = { 5, 8, 10, 13, 13 };
         [SerializeField, Range(0f, 1f)] private float routeShare = .7f;
         [SerializeField, Min(0f)] private float routeRadius = 7f;
         [SerializeField, Range(0f, 1f)] private float typeGuarantee = .5f;
@@ -24,6 +24,8 @@ namespace DeliveryRider
         [SerializeField, Range(0f, 3f)] private float comboCountScale = 1f;
         [SerializeField, Min(0f)] private float objectMinimumSpacing = 5f;
         [SerializeField, Range(0f, 1f)] private float comboFirst = .35f;
+        [Tooltip("Display the call's selected triggers before food pickup without allowing them to strike.")]
+        [SerializeField] private bool showSelectedBeforePickup;
         private static readonly ProfilerMarker RollSample = new ProfilerMarker("HazardPlanner.RollCall");
         public string LastRollAllocationUnit { get; private set; }
         private string allowedSteal;
@@ -83,7 +85,7 @@ namespace DeliveryRider
             callPool.Sort((a, b) => rollKeys[a].CompareTo(rollKeys[b]));
             foreach (var slot in callPool) if (NearRoute(slot)) nearPool.Add(slot);
             var types = new HashSet<string>(); foreach (var slot in callPool) types.Add(slot.Type);
-            int want = activePerDay.Length == 0 ? 0 : activePerDay[Mathf.Clamp(day - 1, 0, activePerDay.Length - 1)];
+            int want = activePerDay.Length == 0 ? 0 : activePerDay[Mathf.Clamp(day - 1, 0, Mathf.Min(4, activePerDay.Length - 1))];
             want = Mathf.Min(want, callPool.Count);
             int cap = types.Count >= 4 ? Mathf.Max(2, Mathf.CeilToInt(want * .25f)) : want;
             string steal = callRandom.NextDouble() < stealChance ? (callRandom.Next(2) == 0 ? "theft" : "clone") : "";
@@ -204,14 +206,17 @@ namespace DeliveryRider
             if (!pendingSlots.Contains(slot)) pendingSlots.Add(slot);
         }
 
+        private bool DesiredVisible(HazardSlot slot) => slot.Selected && !slot.Consumed
+            && (CanStrike(slot) || showSelectedBeforePickup && session.ActiveOrder != null && session.Stage == DeliveryStage.Pickup);
+
         private void ApplyPendingSlots()
         {
             // Delivery stage changes affect visibility as well as the shared gate. Active is never used as authority.
             foreach (var slot in slots)
             {
                 if (slot == null || slot.Role == HazardRole.Object) continue;
-                bool active = slot.Selected && CanStrike(slot) && !slot.Consumed;
-                slot.StrikeAllowed = active && !slot.NeedsCallReset;
+                bool active = DesiredVisible(slot);
+                slot.StrikeAllowed = slot.Selected && CanStrike(slot) && !slot.Consumed && !slot.NeedsCallReset;
                 if ((slot.RuntimeActive != active || slot.NeedsCallReset) && !pendingSlots.Contains(slot)) pendingSlots.Add(slot);
             }
             if (visibilityCamera == null) visibilityCamera = Camera.main;
@@ -219,7 +224,7 @@ namespace DeliveryRider
             {
                 var slot = pendingSlots[i];
                 if (slot == null) { pendingSlots.RemoveAt(i); continue; }
-                bool active = slot.Selected && CanStrike(slot) && !slot.Consumed;
+                bool active = DesiredVisible(slot);
                 if (slot.RuntimeActive == active && !slot.NeedsCallReset) { pendingSlots.RemoveAt(i); continue; }
                 if (rider != null && (slot.transform.position - rider.transform.position).sqrMagnitude < visibilityHoldRadius * visibilityHoldRadius)
                 {
@@ -227,7 +232,7 @@ namespace DeliveryRider
                     if (visibilityCamera == null || viewport.z > 0f && viewport.x >= -.1f && viewport.x <= 1.1f && viewport.y >= -.1f && viewport.y <= 1.1f)
                     { if(!active||slot.NeedsCallReset)slot.PauseKeepingVisuals(); continue; }
                 }
-                slot.StrikeAllowed = active;
+                slot.StrikeAllowed = slot.Selected && CanStrike(slot) && !slot.Consumed;
                 slot.SetRuntimeActive(active,slot.NeedsCallReset);
                 slot.NeedsCallReset = false;
                 pendingSlots.RemoveAt(i);
