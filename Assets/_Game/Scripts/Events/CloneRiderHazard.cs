@@ -82,7 +82,7 @@ namespace DeliveryRider
         {
             if (rider == null) return;
             order = session.ActiveOrder;
-            phase = Phase.Ready;
+            phase = slot!=null&&slot.StartedFor(session)?Phase.Spent:Phase.Ready;
         }
 
         private void OnDisable() => Stop();
@@ -131,6 +131,7 @@ namespace DeliveryRider
                 body.position = spawnPositions[i]; body.rotation = Quaternion.LookRotation(forward);
                 removed[i] = false;
             }
+            slot?.MarkStarted(session);
             elapsed = 0f; phase = Phase.Approaching;
             SetCallout(true, "!!!", rider.transform.position + Vector3.up * 2.5f);
         }

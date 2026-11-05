@@ -18,7 +18,9 @@ namespace DeliveryRider
         private bool[] waveHits;
         private Vector3 originalWheelScale;
         private float originalRadius;
-        private bool waveLarge = true;
+        private bool waveLarge = true, wavePrepared;
+        private object preparedOrder;
+        private float preparedLargeChance;
         public bool KeepsFoodOnCurrentHit => !waveLarge;
         private int currentWheel;
         private float CurrentWheelHeight => Mathf.Max(WheelHeight, radius + .1f);
@@ -36,7 +38,10 @@ namespace DeliveryRider
         }
         private void PrepareWave()
         {
-            waveLarge = Random.value < largeChance;
+            if(!wavePrepared||!ReferenceEquals(preparedOrder,session.ActiveOrder)||!Mathf.Approximately(preparedLargeChance,largeChance))
+            {
+                waveLarge=Random.value<largeChance;preparedOrder=session.ActiveOrder;preparedLargeChance=largeChance;wavePrepared=true;
+            }
             radius = waveLarge ? Mathf.Max(originalRadius,largeRadius) : originalRadius;
             wheel.localScale = originalWheelScale * (radius/Mathf.Max(.01f,originalRadius));
             for(int i=0;i<waveHits.Length;i++) waveHits[i]=false;

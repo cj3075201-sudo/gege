@@ -66,7 +66,7 @@ namespace DeliveryRider
             runner.gameObject.SetActive(false);
         }
 
-        private void OnEnable() { phase = Phase.Ready; nextRouteTryAt = 0f; ResetHtmlChase(); }
+        private void OnEnable() { if(slot!=null&&slot.StartedFor(session)){Finish();return;} phase = Phase.Ready; nextRouteTryAt = 0f; ResetHtmlChase(); }
         private void OnDisable() => Finish();
 
         private void Update()
@@ -89,7 +89,7 @@ namespace DeliveryRider
                         && Vector3.ProjectOnPlane(rider.transform.position - transform.position, Vector3.up).sqrMagnitude <= detectionRadius * detectionRadius * TriggerScale * TriggerScale)
                     {
                         if (windSeconds.y <= 0f) { if (!BeginRush()) nextRouteTryAt = Time.time + routeRetrySeconds; }
-                        else { phase = Phase.Winding; windElapsed = 0f; }
+                        else { slot?.MarkStarted(session);phase = Phase.Winding; windElapsed = 0f; }
                     }
                     break;
                 case Phase.Winding:
@@ -98,7 +98,7 @@ namespace DeliveryRider
                     if (windElapsed >= windSeconds.y || windElapsed >= windSeconds.x
                         && Vector3.ProjectOnPlane(rider.transform.position - transform.position, Vector3.up).magnitude >= spawnBehindDistance)
                     {
-                        if (!BeginRush()) { phase = Phase.Ready; nextRouteTryAt = Time.time + routeRetrySeconds; }
+                        if (!BeginRush()) { if(slot!=null&&slot.StartedFor(session))Finish();else { phase = Phase.Ready; nextRouteTryAt = Time.time + routeRetrySeconds; } }
                     }
                     break;
                 case Phase.Running:
@@ -106,7 +106,7 @@ namespace DeliveryRider
                     Advance();
                     break;
                 case Phase.Spent:
-                    if (!Touching()) phase = Phase.Ready;
+                    if ((slot==null||slot.Role!=HazardRole.Trigger)&&!Touching()) phase = Phase.Ready;
                     break;
             }
         }
@@ -230,6 +230,7 @@ namespace DeliveryRider
             sidewalks.Sample(path, distance, out var feet, out var forward);
             runner.SetPositionAndRotation(feet, Quaternion.LookRotation(forward));
             runner.gameObject.SetActive(true);
+            slot?.MarkStarted(session);
             phase = Phase.Running;
             return true;
         }

@@ -64,7 +64,7 @@ namespace DeliveryRider
             Perch();
         }
 
-        private void OnEnable() { if (rider != null) { Perch(); phase = Phase.Ready; } }
+        private void OnEnable() { if (rider != null) { Perch(); phase = slot!=null&&slot.StartedFor(session)?Phase.Spent:Phase.Ready; } }
         private void OnDisable()
         {
             SetLamp(false);
@@ -90,6 +90,7 @@ namespace DeliveryRider
                     if ((slot == null || slot.StrikeAllowed) && !session.IsMapOpen && session.Stage == DeliveryStage.Carrying
                         && !rider.IsRecovering && Vector3.Distance(rider.transform.position, perch.position) <= triggerRadius * TriggerScale)
                     {
+                        slot?.MarkStarted(session);
                         Enter(Phase.Warning);
                     }
                     break;
@@ -113,7 +114,7 @@ namespace DeliveryRider
                     if (pigeon.Finished || !pigeon.gameObject.activeInHierarchy) { Perch(); Enter(Phase.Spent); }
                     break;
                 case Phase.Spent:
-                    if (session.Stage == DeliveryStage.Carrying && Vector3.Distance(rider.transform.position, perch.position) > triggerRadius * 2f * TriggerScale)
+                    if ((slot==null||slot.Role!=HazardRole.Trigger)&&session.Stage == DeliveryStage.Carrying && Vector3.Distance(rider.transform.position, perch.position) > triggerRadius * 2f * TriggerScale)
                     {
                         Perch();
                         Enter(Phase.Ready);

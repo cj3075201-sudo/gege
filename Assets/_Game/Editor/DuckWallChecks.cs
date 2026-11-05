@@ -49,16 +49,19 @@ namespace DeliveryRider.Editor
             AddRoad(network, "Source", new Vector3(0, 0, -40), new Vector3(0, 0, 40), 8f);
             var parallel = AddRoad(network, "Neighbour", new Vector3(8, 0, -30), new Vector3(8, 0, 30), 4f);
             hazard.Place(null, network, spot);
+            hazard.ShowWaitingPreview();
             start = Get<Vector3>(hazard, "localStart"); end = Get<Vector3>(hazard, "localEnd");
             Check(start.x >= 4f && start.x <= 5.51f && end.x <= -11.99f,
                 "crossing stops before a neighbouring street while covering its own carriageway");
             UnityEngine.Object.DestroyImmediate(parallel.gameObject);
             AddRoad(network, "JunctionArm", new Vector3(4, 0, 0), new Vector3(45, 0, 0), 4f);
             hazard.Place(null, network, spot);
+            hazard.ShowWaitingPreview();
             Check(Get<Vector3>(hazard, "localStart").x <= 4.51f && Get<Vector3>(hazard, "localEnd").x <= -11.99f,
                 "flock cannot follow the length of a junction arm");
             Set(hazard, "maximumCrossingWidth", 16f);
             hazard.Place(null, network, spot);
+            hazard.ShowWaitingPreview();
             Check(Get<Vector3>(hazard, "localEnd").x >= -8.01f, "F1 width changes recalculate endpoints and count");
             Debug.Log("DUCK_WIDTH_PASS");
         }
@@ -98,6 +101,7 @@ namespace DeliveryRider.Editor
             Set(hazard, "maximumCrossingWidth", 32f); // Keep the original wall/kerb regression inside the explicit width budget.
             Physics.SyncTransforms();
             hazard.Place(null, network, new HazardCandidate { halfWidth = 5f, side = 1 });
+            hazard.ShowWaitingPreview();
             Vector3 start = Get<Vector3>(hazard, "localStart"), end = Get<Vector3>(hazard, "localEnd");
             Check(start.x > 14f && start.x < 15f && end.x < -14f && end.x > -15f, "crossing reaches both building walls beyond sidewalks");
             float span = Vector3.Distance(start, end);
@@ -115,6 +119,7 @@ namespace DeliveryRider.Editor
             barrier.transform.localScale = new Vector3(1f, 4f, 10f);
             Physics.SyncTransforms();
             hazard.Place(null, network, new HazardCandidate { halfWidth = 5f, side = 1 });
+            hazard.ShowWaitingPreview();
             Check(Vector3.Distance(start, Get<Vector3>(hazard, "localStart")) < .01f, "layer 8 never shortens crossing");
             var slot = hazard.gameObject.AddComponent<HazardSlot>();
             Set(hazard, "slot", slot);
@@ -180,6 +185,7 @@ namespace DeliveryRider.Editor
             var obj = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Prefab), candidate.position, candidate.rotation, staging.transform);
             var hazard = obj.GetComponent<CrossingFlockHazard>();
             hazard.Place(session, network, candidate);
+            hazard.ShowWaitingPreview();
             return hazard;
         }
 

@@ -92,6 +92,12 @@ namespace DeliveryRider
             if (placementValid) ShowWaiting(); else HideBirds();
         }
 
+        public void ShowWaitingPreview()
+        {
+            if(hasPlacement&&(!placementPrepared||!Mathf.Approximately(preparedWidth,maximumCrossingWidth)))PreparePlacement();
+            ShowWaiting();
+        }
+
         // Check supported feet, then the full duck volume. A kerb is support, not a wall.
         private Vector3 FindBoundary(Vector3 center, Vector3 direction, float limit)
         {
@@ -227,6 +233,7 @@ namespace DeliveryRider
         private void OnEnable()
         {
             if (rider == null) return;
+            if(slot!=null&&slot.StartedFor(session)){phase=Phase.Spent;HideBirds();return;}
             phase = Phase.Ready;
             nextHitAt = 0f;
             if(hasPlacement&&!placementPrepared)
@@ -266,7 +273,7 @@ namespace DeliveryRider
                     Advance();
                     break;
                 case Phase.Spent:
-                    if (!InApproach()) { phase = Phase.Ready; ShowWaiting(); }
+                    // The queue clears once per accepted call; leaving its range never starts it over.
                     break;
             }
         }
@@ -317,6 +324,8 @@ namespace DeliveryRider
 
         private void Begin()
         {
+            if(slot!=null&&slot.StartedFor(session))return;
+            slot?.MarkStarted(session);
             EnsureFlock();
             head = configuredSpan;
             nextHitAt = 0f;

@@ -70,20 +70,21 @@ namespace DeliveryRider
             return Quaternion.LookRotation(heading.sqrMagnitude > 0.0001f ? heading : Vector3.forward, Vector3.up);
         }
 
-        private void OnEnable() { contactConsumed=false; nextContactAt=0f; }
+        private void OnEnable() { contactConsumed=slot!=null&&slot.StartedFor(session); nextContactAt=0f; }
 
         private bool IsPlayer(Collider other) => session != null && other.attachedRigidbody != null
             && other.attachedRigidbody.transform == session.Player;
 
         private void OnTriggerEnter(Collider other) => TryContact(other);
         private void OnTriggerStay(Collider other) => TryContact(other);
-        private void OnTriggerExit(Collider other) { if (IsPlayer(other)) contactConsumed = false; }
+        private void OnTriggerExit(Collider other) { if (IsPlayer(other)&&(slot==null||!slot.StartedFor(session))) contactConsumed = false; }
 
         private void TryContact(Collider other)
         {
             if (!enabled || !IsPlayer(other) || contactConsumed || Time.time < nextContactAt
                 || session.IsPaused || session.IsMapOpen || session.IsSettled || slot != null && !slot.StrikeAllowed) return;
             // Consume this encounter even when another flock already obscures the screen: no duration stacking.
+            slot?.MarkStarted(session);
             contactConsumed = true;
             nextContactAt = Time.time + contactCooldown;
             session.TryObscureWithPigeons(obscureSeconds);

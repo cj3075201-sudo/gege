@@ -101,6 +101,15 @@ namespace DeliveryRider
             bodiesPaused=false;
         }
 
+        private bool started;
+        private object startedOrder;
+        public bool StartedFor(DeliverySession owner) => Role==HazardRole.Trigger&&owner!=null&&started&&ReferenceEquals(startedOrder,owner.ActiveOrder);
+        public void MarkStarted(DeliverySession owner)
+        {
+            if(Role!=HazardRole.Trigger||owner==null)return;
+            started=true;startedOrder=owner.ActiveOrder;
+        }
+
         public HazardPlanner Planner { get; set; }
         public HazardCandidate Candidate { get; set; }
         public int Combo { get; set; } = -1;

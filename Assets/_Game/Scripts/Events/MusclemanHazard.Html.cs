@@ -40,7 +40,7 @@ namespace DeliveryRider
                 case Phase.Ready:
                     if(Time.time<nextRouteTryAt||distance>detectionRadius*TriggerScale
                         ||Vector3.Dot(delta,forward)<=.3f||HtmlFootHeight>=1.5f)return;
-                    phase=Phase.Winding;windElapsed=0f;htmlHeading=delta.normalized;return;
+                    slot?.MarkStarted(session);phase=Phase.Winding;windElapsed=0f;htmlHeading=delta.normalized;return;
                 case Phase.Winding:
                     windElapsed+=dt;if(delta.sqrMagnitude>.01f)htmlHeading=delta.normalized;
                     runner.rotation=Quaternion.LookRotation(htmlHeading);

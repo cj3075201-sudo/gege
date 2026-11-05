@@ -146,9 +146,16 @@ namespace DeliveryRider.Editor
                         {
                             Check(cat.State == CatBoxerHazard.Mode.Spent && !view.gameObject.activeSelf && !cat.ReceivePunch(Vector3.back), "reroll off tears down and rejects punch"); slot.StrikeAllowed = true; Next();
                         }
-                        else if (step == 2 && Bout())
+                        else if (step == 2 && since > .15f)
                         {
-                            Check(cat.Health == 3 && cat.TakenHits == 0, "reroll on starts clean"); catRoot.SetActive(false); Check(!view.gameObject.activeSelf, "disable clears visuals"); Pass();
+                            Check(cat.State == CatBoxerHazard.Mode.Spent && !view.gameObject.activeSelf && !cat.ReceivePunch(Vector3.back), "same-call gate re-enable stays spent");
+                            var previous=session.ActiveOrder;
+                            Property(session,"ActiveOrder",new DeliveryOrderOffer(18,previous.PickupPoint,previous.Recipient,previous.DestinationPoint,"test","test","test",3000,1800,300f,40f,"test","C","C",0,0));
+                            Next();
+                        }
+                        else if (step == 3 && Bout())
+                        {
+                            Check(cat.Health == 3 && cat.TakenHits == 0, "new call starts clean"); catRoot.SetActive(false); Check(!view.gameObject.activeSelf, "disable clears visuals"); Pass();
                         }
                         break;
                     case 9:

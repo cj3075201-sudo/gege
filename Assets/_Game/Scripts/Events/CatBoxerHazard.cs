@@ -120,7 +120,7 @@ namespace DeliveryRider
             ResetDuel();
         }
 
-        private void OnEnable() { if (rider != null) { ResetDuel(); shout?.Enable(); } }
+        private void OnEnable() { if (rider != null) { if(slot!=null&&slot.StartedFor(session)){Spend();return;} ResetDuel(); shout?.Enable(); } }
         private void OnDisable() { shout?.Disable(); Spend(); wasSelected = false; }
         private void OnDestroy() => shout?.Dispose();
 
@@ -144,7 +144,7 @@ namespace DeliveryRider
             if (session == null || rider == null) return;
             bool dayOpen = session.Progress == null || session.Progress.Day >= unlockDay;
             bool selected = Selected && FoodReady && dayOpen && Open(origin);
-            if (order != session.ActiveOrder || selected && !wasSelected) { ResetDuel(); order = session.ActiveOrder; }
+            if (order != session.ActiveOrder || selected && !wasSelected) { if(slot!=null&&slot.StartedFor(session))Spend();else ResetDuel(); order = session.ActiveOrder; }
             wasSelected = selected;
             if (!selected || !FoodReady || !dayOpen || session.IsSettled || !Open(origin) || !Open(Position))
             { Spend(); return; }
@@ -192,7 +192,7 @@ namespace DeliveryRider
                 var waiting = origin + laneRight * lateral;
                 if (Open(waiting)) presentation.transform.position = waiting;
                 if (Flat(rider.transform.position - Position).magnitude < triggerRadius * Scale && height < startHeight && !rider.IsRecovering)
-                { Enter(Mode.Bout); Phase = Beat.Gap; remaining = Pick(firstGapSeconds); }
+                { slot?.MarkStarted(session);Enter(Mode.Bout); Phase = Beat.Gap; remaining = Pick(firstGapSeconds); }
                 return;
             }
             if (stagger > 0f) { stagger -= dt; return; }

@@ -73,7 +73,7 @@ namespace DeliveryRider
             rider.SafePositionRestored += Stop;
             rider.HazardHit += OnHazardHit;
             order = session.ActiveOrder;
-            phase = Phase.Ready;
+            phase = slot!=null&&slot.StartedFor(session)?Phase.Spent:Phase.Ready;
         }
 
         private void OnDisable()
@@ -104,6 +104,7 @@ namespace DeliveryRider
                 {
                     heading = Vector3.ProjectOnPlane(rider.transform.position - dog.position, Vector3.up).normalized;
                     if (heading.sqrMagnitude < 0.01f) heading = transform.forward;
+                    slot?.MarkStarted(session);
                     elapsed = 0f; phase = Phase.Chasing;
                 }
             }

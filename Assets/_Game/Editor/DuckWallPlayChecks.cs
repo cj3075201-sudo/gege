@@ -192,17 +192,14 @@ namespace DeliveryRider.Editor
                 }
                 if (Mode == "repeat")
                 {
-                    if(hits>0&&!motor.IsRecovering)
+                    if(hits==1&&!motor.IsRecovering&&crossing&&!repeatReturning)
                     {
-                        if(repeatSide==0f)repeatSide=body.position.z>=0f?1f:-1f;
-                        if(!repeatReturning)
-                        {
-                            if(Mathf.Abs(body.position.z)<12f)Keys(repeatSide>0f?Key.W:Key.S);else Keys();
-                            if(!crossing&&Mathf.Abs(body.position.z)>9f)repeatReturning=true;
-                        }
-                        else Keys(body.position.z>0f?Key.S:Key.W);
+                        // Return within the SAME still-moving queue; the separate single-use probe checks leaving/re-entering after it ends.
+                        var birds=Get<Transform[]>(ducks,"birds");var bird=birds.Where(b=>b.gameObject.activeSelf).OrderBy(b=>Mathf.Abs(b.position.x)).First();
+                        var point=bird.position;point.y=.02f;body.position=point;motor.transform.position=point;body.linearVelocity=Vector3.zero;
+                        Physics.SyncTransforms();repeatReturning=true;Keys();
                     }
-                    if (hits >= 2) { Check(secondHitAt > 1f, "rider returns after recovery and is hit twice"); Pass(); return; }
+                    if(hits>=2){Check(secondHitAt>1f,"same queue delivers two real contacts at least one second apart");Check(slot.StartedFor(probeSession),"repeat contacts share one call activation");Pass();return;}
                 }
                 if (Mode == "high-flight")
                 {

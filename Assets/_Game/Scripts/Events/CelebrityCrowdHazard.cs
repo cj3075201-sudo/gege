@@ -11,7 +11,7 @@ namespace DeliveryRider
         [SerializeField] private Material glowMaterial;
         [SerializeField, Min(0.1f)] private float triggerRadius = 10f;
         [SerializeField, Min(0.1f)] private float spawnRadius = 15f;
-        [SerializeField, Min(1)] private int waitingFans = 6;
+        [SerializeField, Min(0)] private int waitingFans = 6;
         [SerializeField, Min(1)] private int incomingFans = 26;
         [SerializeField, Min(0.1f)] private float fanSpeedMultiplier = 3.75f;
         [SerializeField, Min(1f)] private float fanResistance = 2f;
@@ -97,6 +97,7 @@ namespace DeliveryRider
             // Resolve all 26 safe positions before spawning anything; a busy area retries instead of producing a partial wave.
             Physics.SyncTransforms();
             if (!FindSpawnPoints()) { retryAt = Time.time + 1f; return; }
+            slot?.MarkStarted(session);
             appeared = true; crowdEndsAt=Time.time+crowdSeconds;
             var star = waitingStar!=null&&waitingStar.gameObject.activeSelf?waitingStar:SpawnActor(centerPath, centerAlong, transform.position, false, celebrityCoat, 1f, 1f, 100);
             waitingStar=null;
@@ -214,7 +215,7 @@ namespace DeliveryRider
         private void OnEnable()
         {
             ClearActors();
-            appeared=false;retryAt=0f;waitingPrepared=false;
+            appeared=slot!=null&&slot.StartedFor(session);retryAt=0f;waitingPrepared=false;
         }
 
         private void OnDisable()=>ClearActors();

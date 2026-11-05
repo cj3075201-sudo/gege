@@ -64,7 +64,7 @@ namespace DeliveryRider
             observedOrder = session.ActiveOrder;
         }
 
-        private void OnEnable() { phase = used ? Phase.Spent : Phase.Ready; HideEffects(); }
+        private void OnEnable() { phase = used||slot!=null&&slot.StartedFor(session) ? Phase.Spent : Phase.Ready; HideEffects(); }
         private void OnDisable()
         {
             // Disabling mid-warning consumes this call, so re-enabling cannot create a late invisible hit.
@@ -100,6 +100,7 @@ namespace DeliveryRider
                         && new Vector2(offset.x, offset.z).sqrMagnitude < radius * radius
                         && OpenSegment(transform.position, rider.transform.position))
                     {
+                        slot?.MarkStarted(session);
                         used = true;
                         phase = Phase.Aiming;
                         elapsed = 0f;

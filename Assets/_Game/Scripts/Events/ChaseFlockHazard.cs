@@ -68,6 +68,7 @@ namespace DeliveryRider
             if (homes == null || rider == null) return;
             rider.ReactionChanged += OnReaction;
             rider.SafePositionRestored += OnSafePositionRestored;
+            if(slot!=null&&slot.StartedFor(session)){Finish();return;}
             ResetBirds();
             phase = Phase.Idle;
         }
@@ -107,6 +108,7 @@ namespace DeliveryRider
                     {
                         elapsed = 0f;
                         for (int i = 0; i < birds.Length; i++) turnAt[i] = 0f;
+                        slot?.MarkStarted(session);
                         phase = Phase.Chasing;
                     }
                     break;
@@ -114,7 +116,7 @@ namespace DeliveryRider
                     Chase();
                     break;
                 case Phase.Spent:
-                    if (!Near(transform.position, triggerRadius * 3f))
+                    if ((slot==null||slot.Role!=HazardRole.Trigger)&&!Near(transform.position, triggerRadius * 3f))
                     {
                         ResetBirds();
                         phase = Phase.Idle;

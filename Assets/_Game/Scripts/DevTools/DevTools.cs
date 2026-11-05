@@ -255,6 +255,8 @@ namespace DeliveryRider
                     var type = part.GetType();
                     if (type.Namespace != nameof(DeliveryRider)) continue;
                     var values = DevValue.Discover(part);
+                    if(kind.role==HazardRole.Trigger&&(part is RollingTireHazard||part is RollingMelonHazard||part is PigeonFlockHazard))
+                        values.RemoveAll(value=>value.PropertyPath=="rearmSeconds"||value.PropertyPath=="rearmDistance"||value.PropertyPath=="contactCooldown");
                     if (values.Count == 0) continue;
                     var entry = new HazardPart
                     {

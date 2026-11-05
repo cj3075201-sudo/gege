@@ -85,7 +85,7 @@ namespace DeliveryRider
             ResetWheel();
         }
 
-        private void OnEnable() { if (linkedDoor != null) linkedDoor.ContactHit += OnDoorHit; if (initialized) { phase = Phase.Ready; elapsed = 0f; hitThisCycle = false; PrepareWave(); ResetWheel(); } }
+        private void OnEnable() { if (linkedDoor != null) linkedDoor.ContactHit += OnDoorHit; if (initialized) { if(slot!=null&&slot.StartedFor(session)){Finish();return;} phase = Phase.Ready; elapsed = 0f; hitThisCycle = false; PrepareWave(); ResetWheel(); } }
         private void OnDisable()
         {
             if (linkedDoor != null) linkedDoor.ContactHit -= OnDoorHit;
@@ -100,12 +100,13 @@ namespace DeliveryRider
         public bool TryActivate()
         {
             if (!initialized || !isActiveAndEnabled || phase != Phase.Ready || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
-            if (slot != null && !slot.StrikeAllowed) return false;
+            if (slot != null && (!slot.StrikeAllowed||slot.StartedFor(session))) return false;
             ResetWheel();
             if (roadRun) BuildRoadRun();
             hitThisCycle = false;
             speed = roadRun ? (waveLarge ? largeSpeed : smallSpeed) : Mathf.Min(initialSpeed, maximumSpeed);
             segment = 1;
+            slot?.MarkStarted(session);
             Enter(Phase.Warning);
             SetLamp(true);
             return true;
@@ -131,7 +132,7 @@ namespace DeliveryRider
                     Advance();
                     break;
                 case Phase.Spent:
-                    if ((elapsed >= rearmSeconds) && !InApproach() &&
+                    if ((slot==null||slot.Role!=HazardRole.Trigger)&&(elapsed >= rearmSeconds) && !InApproach() &&
                         Vector3.Distance(rider.transform.position, transform.TransformPoint(localPath[0])) > 4)
                     { ResetWheel(); Enter(Phase.Ready); }
                     break;
