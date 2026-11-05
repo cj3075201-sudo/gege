@@ -54,6 +54,8 @@ namespace DeliveryRider
         [Header("Spawning (test values)")]
         [SerializeField] private VehicleKind[] kinds = Array.Empty<VehicleKind>();
         [SerializeField, Min(0)] private int vehicleCount = 50;
+        [Header("열린 구역 차량 수 (다시 배치 시 적용)")]
+        [SerializeField, Min(0)] private int[] vehicleCountByDay = { 30, 40, 50, 60 };
         [SerializeField, Min(4f)] private float minimumSpacing = 14f;
         [Tooltip("No car starts this close to the rider's start position.")]
         [SerializeField, Min(0f)] private float playerClearance = 10f;
@@ -68,6 +70,8 @@ namespace DeliveryRider
             public int connector = -1;
         }
 
+        // Refreshed on spawn/day reload, never per car or physics step. Null preserves legacy scenes.
+        private bool[] openPaths;
         private List<TrafficCar>[] occupants;
         private JunctionState[] states;
         private readonly List<TrafficCar> cars = new List<TrafficCar>();
@@ -110,17 +114,25 @@ namespace DeliveryRider
         // Cars go on lanes only, weighted by lane length, at least minimumSpacing apart.
         private void Spawn()
         {
+            RefreshOpenPaths();
+            int count = openPaths != null && vehicleCountByDay != null && vehicleCountByDay.Length > 0
+                ? Mathf.Max(0, vehicleCountByDay[Mathf.Clamp((session.Progress?.Day ?? 1) - 1, 0, Mathf.Min(3, vehicleCountByDay.Length - 1))])
+                : vehicleCount;
             var random = randomEachRun ? new System.Random() : new System.Random(seed);
             var lanes = new List<int>();
             float total = 0f;
             for (int i = 0; i < paths.Length; i++)
-                if (!paths[i].IsConnector && paths[i].length > 12f) { lanes.Add(i); total += paths[i].length; }
+                if (IsPathOpen(i) && !paths[i].IsConnector && paths[i].length > 12f) { lanes.Add(i); total += paths[i].length; }
             float shareTotal = 0f;
             foreach (var kind in kinds) if (kind.prefab != null) shareTotal += kind.share;
-            if (lanes.Count == 0 || shareTotal <= 0f) return;
+            if (lanes.Count == 0 || shareTotal <= 0f)
+            {
+                if (openPaths != null && count > 0) Debug.LogWarning("TrafficNetwork: no open circulating lanes or vehicle prefabs; fleet cannot spawn.", this);
+                return;
+            }
 
             int attempts = 0;
-            while (cars.Count < vehicleCount && attempts++ < vehicleCount * 40)
+            while (cars.Count < count && attempts++ < count * (openPaths != null ? 100 : 40))
             {
                 float pick = (float)random.NextDouble() * total;
                 int lane = lanes[lanes.Count - 1];
@@ -142,7 +154,41 @@ namespace DeliveryRider
                 car.Initialize(this, lane, distance, random.Next());
                 cars.Add(car);
             }
+            if (openPaths != null && cars.Count < count)
+                Debug.LogWarning($"TrafficNetwork: placed {cars.Count}/{count}; open circulating lanes have insufficient free spacing.", this);
         }
+
+        // A path needs an open start, distance midpoint and end. Then remove branches that cannot
+        // reach a circulating route. Cars never enter a boundary dead end, so no visible teleport,
+        // U-turn through opposing traffic, junction reservation or endless boundary wait is needed.
+        private void RefreshOpenPaths()
+        {
+            if (session == null || session.ZoneMap == null) { openPaths = null; return; }
+            var filter = new HazardZoneFilter(session.ZoneMap, session.IsZoneOpen);
+            openPaths = new bool[paths.Length];
+            for (int i = 0; i < paths.Length; i++)
+            {
+                var path = paths[i];
+                if (path.points == null || path.points.Length < 2) continue;
+                Sample(i, path.length * 0.5f, out var middle, out _);
+                openPaths[i] = filter.PointOpen(path.points[0]) && filter.PointOpen(middle)
+                    && filter.PointOpen(path.points[path.points.Length - 1]);
+            }
+            bool changed;
+            do
+            {
+                changed = false;
+                for (int i = 0; i < paths.Length; i++)
+                {
+                    if (!openPaths[i]) continue;
+                    bool exit = false;
+                    foreach (int next in paths[i].next) if (IsPathOpen(next)) { exit = true; break; }
+                    if (!exit) { openPaths[i] = false; changed = true; }
+                }
+            } while (changed);
+        }
+
+        public bool IsPathOpen(int path) => path >= 0 && path < paths.Length && (openPaths == null || openPaths[path]);
 
         private VehicleKind PickKind(System.Random random, float shareTotal)
         {
@@ -175,14 +221,17 @@ namespace DeliveryRider
             var p = paths[path];
             if (p.next.Length == 0) return -1;
             float total = 0f;
-            for (int i = 0; i < p.next.Length; i++) total += i < p.nextWeights.Length ? p.nextWeights[i] : 1f;
+            for (int i = 0; i < p.next.Length; i++)
+                if (IsPathOpen(p.next[i])) total += i < p.nextWeights.Length ? p.nextWeights[i] : 1f;
             float pick = (float)random.NextDouble() * total;
             for (int i = 0; i < p.next.Length; i++)
             {
+                if (!IsPathOpen(p.next[i])) continue;
                 pick -= i < p.nextWeights.Length ? p.nextWeights[i] : 1f;
                 if (pick <= 0f) return p.next[i];
             }
-            return p.next[p.next.Length - 1];
+            for (int i = p.next.Length - 1; i >= 0; i--) if (IsPathOpen(p.next[i])) return p.next[i];
+            return -1;
         }
 
         public void Enter(TrafficCar car, int path) { if (path >= 0) occupants[path].Add(car); }
