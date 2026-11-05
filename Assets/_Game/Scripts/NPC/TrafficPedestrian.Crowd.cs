@@ -11,6 +11,7 @@ namespace DeliveryRider
         private Vector3 crowdHome;
         private float crowdPhase, crowdBaseMass, crowdMassMultiplier = 1f;
         private CelebrityCrowdHazard crowdContact;
+        private Material crowdDefaultCoat;
         private float nextCrowdSlowAt = float.NegativeInfinity;
         private float crowdPushUntil = float.NegativeInfinity;
         public bool IsCrowdFan => crowdMember && crowdFan;
@@ -20,13 +21,16 @@ namespace DeliveryRider
         public void InitializeCrowd(PedestrianNetwork owner, int route, float along, int seed, Material material,
             Transform center, Vector3 spawnPosition, bool fan, float speedMultiplier, float resistance, float massMultiplier = 1f)
         {
-            InitializeState(owner, route, along, seed, material);
+            // A pooled fan keeps its original mass and appearance across repeated initialization.
+            float baseMass=crowdMember?crowdBaseMass:body.mass;
+            if(!crowdMember&&coat!=null)crowdDefaultCoat=coat.sharedMaterial;
+            InitializeState(owner, route, along, seed, material!=null?material:crowdDefaultCoat);
             crowdMember = true;
             crowdFan = fan;
             crowdCenter = center;
             crowdHome = spawnPosition;
             crowdPhase = (seed % 1000) * 0.01f;
-            crowdBaseMass = body.mass;
+            crowdBaseMass = baseMass;
             crowdMassMultiplier = Mathf.Max(0.1f, massMultiplier);
             speed *= speedMultiplier;
             BodyResistance = Mathf.Max(1f, resistance);

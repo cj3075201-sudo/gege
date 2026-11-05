@@ -37,7 +37,9 @@ namespace DeliveryRider
         private float crowdEndsAt;
         private float centerAlong, retryAt;
         private Transform celebrity;
-        private bool appeared;
+        private bool appeared, waitingPrepared;
+        private int actorsUsed;
+        private const float PrepareRadius=25f;
         private readonly List<TrafficPedestrian> actors = new List<TrafficPedestrian>();
         private readonly List<Vector3> spawnPoints = new List<Vector3>();
 
@@ -53,9 +55,8 @@ namespace DeliveryRider
             slot = GetComponent<HazardSlot>();
             if (session == null || network == null || network.Prefab == null ||
                 (!centerPrepared&&!FindCenter(network, transform.position, out centerPath, out centerAlong))) { enabled = false; return; }
-            for (int i = 0; i < waitingFans; i++)
-                SpawnFan(centerPath, centerAlong, WaitingSpot(transform.position, transform.rotation, i), true, i);
-            Physics.SyncTransforms();
+            // Waiting fans are prepared only when this selected slot is near the rider.
+            // Distant slots never allocate a crowd at pickup.
         }
 
         // Six equally spaced directions, each two metres from the celebrity spawn point.
@@ -67,6 +68,12 @@ namespace DeliveryRider
 
         private void Update()
         {
+            if(network!=null&&!appeared&&!waitingPrepared&&!session.IsSettled&&!session.IsPaused
+                &&Vector3.ProjectOnPlane(session.Player.position-transform.position,Vector3.up).sqrMagnitude<=PrepareRadius*PrepareRadius)
+            {
+                for(int i=0;i<waitingFans;i++)SpawnFan(centerPath,centerAlong,WaitingSpot(transform.position,transform.rotation,i),true,i);
+                waitingPrepared=true;if(slot!=null)slot.RefreshOwnedComponents();
+            }
             if(appeared)
             {
                 if(session.IsSettled||slot!=null&&!slot.StrikeAllowed||Time.time>=crowdEndsAt)ClearActors();
@@ -84,12 +91,13 @@ namespace DeliveryRider
             var star = SpawnActor(centerPath, centerAlong, transform.position, false, celebrityCoat, 1f, 1f, 100);
             star.name = "Celebrity";
             celebrity = star.transform;
-            foreach (var actor in actors) if (actor != star) actor.SetCrowdCenter(celebrity);
+            foreach (var actor in actors) if (actor != star&&actor.gameObject.activeSelf) actor.SetCrowdCenter(celebrity);
             for (int i = 0; i < spawnPoints.Count; i++)
             {
                 var point = spawnPoints[i];
                 SpawnFan(centerPath, centerAlong, point, false, waitingFans + i);
             }
+            if(slot!=null)slot.RefreshOwnedComponents();
             Physics.SyncTransforms();
         }
 
@@ -99,6 +107,7 @@ namespace DeliveryRider
             actor.SetCrowdCenter(celebrity != null ? celebrity : transform);
             actor.name = waiting ? $"WaitingFan_{index:00}" : $"IncomingFan_{index:00}";
             var visual = actor.transform.Find("Visual");
+            if(actor.transform.Find("Visual/GlowStick")!=null||actor.transform.Find("GlowStick")!=null)return actor;
             var stick = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             stick.name = "GlowStick";
             var collider = stick.GetComponent<Collider>();
@@ -124,11 +133,16 @@ namespace DeliveryRider
 
         private TrafficPedestrian SpawnActor(int route, float along, Vector3 spot, bool fan, Material coat, float speed, float resistance, int seed)
         {
-            var actor = Instantiate(network.Prefab, spot, transform.rotation, transform);
+            TrafficPedestrian actor;
+            if(actorsUsed<actors.Count)actor=actors[actorsUsed];
+            else{actor=Instantiate(network.Prefab,spot,transform.rotation,transform);actors.Add(actor);}
+            actorsUsed++;
+            actor.transform.SetPositionAndRotation(spot,transform.rotation);
+            actor.enabled=true;
             actor.InitializeCrowd(network, route, along, Random.Range(1, 100000) + seed, coat,
                 transform, spot, fan, speed, resistance, fan ? fanMassMultiplier : 1f);
-            if (fan) actor.ConfigureCrowdContact(this);
-            actors.Add(actor);
+            actor.ConfigureCrowdContact(fan?this:null);
+            actor.gameObject.SetActive(true);
             return actor;
         }
 
@@ -188,17 +202,16 @@ namespace DeliveryRider
 
         private void OnEnable()
         {
-            appeared = false; retryAt = 0f;
-            if (network != null && enabled)
-                for (int i = 0; i < waitingFans; i++) SpawnFan(centerPath, centerAlong, WaitingSpot(transform.position, transform.rotation, i), true, i);
+            ClearActors();
+            appeared=false;retryAt=0f;waitingPrepared=false;
         }
 
         private void OnDisable()=>ClearActors();
 
         private void ClearActors()
         {
-            foreach (var actor in actors) if (actor != null) { actor.gameObject.SetActive(false); Destroy(actor.gameObject); }
-            actors.Clear(); celebrity=null;
+            foreach(var actor in actors)if(actor!=null)actor.gameObject.SetActive(false);
+            actorsUsed=0;celebrity=null;waitingPrepared=false;
         }
     }
 }

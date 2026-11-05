@@ -19,6 +19,8 @@ namespace DeliveryRider
 
         public bool RuntimeActive { get; private set; } = true;
         private bool visualsPaused;
+        private Rigidbody[] pausedBodies=Array.Empty<Rigidbody>();
+        private bool[] bodyKinematic=Array.Empty<bool>();
         private MonoBehaviour[] controllers;
         private bool[] controllerEnabled;
         private Renderer[] visuals;
@@ -30,23 +32,34 @@ namespace DeliveryRider
         // OnEnable is the per-kind reset entry: tire/muscleman/celebrity explicitly restore their spent state.
         public void SetRuntimeActive(bool active, bool reset = false)
         {
-            if (controllers == null)
-            {
-                var list = new System.Collections.Generic.List<MonoBehaviour>();
-                foreach (var component in GetComponents<MonoBehaviour>()) if (component is IPlacedHazard) list.Add(component);
-                controllers = list.ToArray(); controllerEnabled = new bool[controllers.Length];
-                for(int i=0;i<controllers.Length;i++)controllerEnabled[i]=controllers[i].enabled;
-                visuals = GetComponentsInChildren<Renderer>(true); visualEnabled = new bool[visuals.Length];
-                for(int i=0;i<visuals.Length;i++)visualEnabled[i]=visuals[i].enabled;
-                volumes = GetComponentsInChildren<Collider>(true); volumeEnabled = new bool[volumes.Length];
-                for(int i=0;i<volumes.Length;i++)volumeEnabled[i]=volumes[i].enabled;
-            }
+            if (controllers == null) RefreshOwnedComponents();
             if(RuntimeActive==active&&!reset&&!visualsPaused)return;
             if(!active||reset)foreach(var controller in controllers)if(controller!=null)controller.enabled=false;
+            RestorePausedBodies();
             for(int i=0;i<visuals.Length;i++)if(visuals[i]!=null)visuals[i].enabled=active&&visualEnabled[i];
             for(int i=0;i<volumes.Length;i++)if(volumes[i]!=null)volumes[i].enabled=active&&volumeEnabled[i];
             RuntimeActive=active;visualsPaused=false;
             if(active)for(int i=0;i<controllers.Length;i++)if(controllers[i]!=null)controllers[i].enabled=controllerEnabled[i];
+        }
+
+        public void RefreshOwnedComponents()
+        {
+            var list=new System.Collections.Generic.List<MonoBehaviour>();
+            foreach(var component in GetComponentsInChildren<MonoBehaviour>(true))
+                if(component!=null&&(component is IPlacedHazard||component.transform!=transform&&component.GetType().Namespace==nameof(DeliveryRider)))list.Add(component);
+            var nextControllers=list.ToArray();var nextControllerStates=new bool[nextControllers.Length];
+            for(int i=0;i<nextControllers.Length;i++)
+            {
+                int old=controllers!=null?Array.IndexOf(controllers,nextControllers[i]):-1;
+                nextControllerStates[i]=old>=0?controllerEnabled[old]:nextControllers[i].enabled;
+            }
+            controllers=nextControllers;controllerEnabled=nextControllerStates;
+            var nextVisuals=GetComponentsInChildren<Renderer>(true);var nextVisualStates=new bool[nextVisuals.Length];
+            for(int i=0;i<nextVisuals.Length;i++){int old=visuals!=null?Array.IndexOf(visuals,nextVisuals[i]):-1;nextVisualStates[i]=old>=0?visualEnabled[old]:nextVisuals[i].enabled;}
+            visuals=nextVisuals;visualEnabled=nextVisualStates;
+            var nextVolumes=GetComponentsInChildren<Collider>(true);var nextVolumeStates=new bool[nextVolumes.Length];
+            for(int i=0;i<nextVolumes.Length;i++){int old=volumes!=null?Array.IndexOf(volumes,nextVolumes[i]):-1;nextVolumeStates[i]=old>=0?volumeEnabled[old]:nextVolumes[i].enabled;}
+            volumes=nextVolumes;volumeEnabled=nextVolumeStates;
         }
 
         public void PauseKeepingVisuals()
@@ -58,11 +71,19 @@ namespace DeliveryRider
             var visible=new bool[visuals.Length];
             for(int i=0;i<nodes.Length;i++){positions[i]=nodes[i].localPosition;rotations[i]=nodes[i].localRotation;states[i]=nodes[i].gameObject.activeSelf;}
             for(int i=0;i<visuals.Length;i++)visible[i]=visuals[i]!=null&&visuals[i].enabled;
+            pausedBodies=GetComponentsInChildren<Rigidbody>(true);bodyKinematic=new bool[pausedBodies.Length];
+            for(int i=0;i<pausedBodies.Length;i++){bodyKinematic[i]=pausedBodies[i].isKinematic;pausedBodies[i].isKinematic=true;}
             foreach(var controller in controllers)if(controller!=null)controller.enabled=false;
             for(int i=0;i<nodes.Length;i++)if(nodes[i]!=null){nodes[i].localPosition=positions[i];nodes[i].localRotation=rotations[i];if(nodes[i]!=transform)nodes[i].gameObject.SetActive(states[i]);}
             for(int i=0;i<visuals.Length;i++)if(visuals[i]!=null)visuals[i].enabled=visible[i];
             foreach(var volume in volumes)if(volume!=null)volume.enabled=false;
             visualsPaused=true;
+        }
+
+        private void RestorePausedBodies()
+        {
+            for(int i=0;i<pausedBodies.Length;i++)if(pausedBodies[i]!=null)pausedBodies[i].isKinematic=bodyKinematic[i];
+            pausedBodies=Array.Empty<Rigidbody>();bodyKinematic=Array.Empty<bool>();
         }
 
         public HazardPlanner Planner { get; set; }
