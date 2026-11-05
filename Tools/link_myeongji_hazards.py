@@ -25,7 +25,7 @@ def distance(p, a, b):
     return math.hypot(p[0]-a[0]-t*dx, p[1]-a[1]-t*dy)
 
 
-def link(bake, graph, anchors, route_table):
+def link(bake, graph, anchors, route_table, layout=None):
     nodes = graph['nodes']
     edges = {i: [] for i in range(len(nodes))}
     for a, b, cost in graph['edges']:
@@ -34,13 +34,19 @@ def link(bake, graph, anchors, route_table):
         edges[a].append((b, cost))
         edges[b].append((a, cost))
 
-    def tree(start):
+    def tree(start, main_only=False):
         costs, previous, queue = {start: 0}, {}, [(0, start)]
         while queue:
             cost, node = heapq.heappop(queue)
             if cost > costs[node]:
                 continue
             for dest, weight in edges[node]:
+                if main_only and layout is not None:
+                    # Include anchor spur edges, but never traverse a car-free alley.
+                    midpoint = ((nodes[node][0]+nodes[dest][0])*.5, (nodes[node][1]+nodes[dest][1])*.5)
+                    roads = [r for r in layout['roads'] if r['width'] >= 6]
+                    if not any(distance(midpoint, r['a'], r['b']) <= r['width']*.5+.1 for r in roads):
+                        continue
                 if cost + weight < costs.get(dest, math.inf):
                     costs[dest] = cost + weight
                     previous[dest] = node
@@ -76,9 +82,11 @@ def link(bake, graph, anchors, route_table):
             raise ValueError('Nonfinite spot position')
         spot['routes'] = []
     covered = []
+    result["routePaths"] = []
     for si, shop in enumerate(shops):
         start = graph['anchorNodes'][shop['name']]
         previous = tree(start)
+        main_previous = tree(start, True)
         for di, door in enumerate(doors):
             dest = graph['anchorNodes'][door['name']]
             path = [dest]
@@ -87,6 +95,12 @@ def link(bake, graph, anchors, route_table):
                     raise ValueError('Unreachable route: ' + shop['name'] + ' -> ' + door['name'])
                 path.append(previous[path[-1]])
             segments = list(zip(path, path[1:]))
+            main_path = [dest]
+            while main_path[-1] != start and main_path[-1] in main_previous:
+                main_path.append(main_previous[main_path[-1]])
+            if main_path[-1] != start:
+                main_path = path
+            result["routePaths"].append(dict(points=[dict(x=nodes[n][0], y=0, z=nodes[n][1]) for n in reversed(path)], mainPoints=[dict(x=nodes[n][0], y=0, z=nodes[n][1]) for n in reversed(main_path)]))
             route, hit = si * len(doors) + di, False
             for spot in spots:
                 p = (spot['position']['x'], spot['position']['z'])
@@ -109,6 +123,7 @@ def main():
     parser.add_argument('--graph', type=Path, default=BASE / 'road_graph_expanded.json')
     parser.add_argument('--anchors', type=Path, default=BASE / 'anchors_expanded.json')
     parser.add_argument('--route-table', type=Path, default=BASE / 'route_table_expanded.json')
+    parser.add_argument('--layout', type=Path, default=BASE / 'layout_expanded.json')
     parser.add_argument('--summary', type=Path)
     parser.add_argument('--allow-uncovered', action='store_true', help='Diagnostic only; normally all routes must be covered')
     args = parser.parse_args()
@@ -117,7 +132,7 @@ def main():
     if any(p in inputs for p in outputs) or len(outputs) != len(set(outputs)):
         parser.error('Input/output paths must be distinct')
     try:
-        result, summary = link(read_json(args.bake), read_json(args.graph), read_json(args.anchors), read_json(args.route_table))
+        result, summary = link(read_json(args.bake), read_json(args.graph), read_json(args.anchors), read_json(args.route_table), read_json(args.layout))
         if summary['missingRoutes'] and not args.allow_uncovered:
             raise ValueError('Routes without hazard spots: ' + str(summary['missingRoutes']))
     except (ValueError, KeyError, TypeError, IndexError) as error:

@@ -12,6 +12,353 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7989b48dae9efd478d4c76a9f0d5c9f, type: 3}
   m_Name: MyeongjiHazardSpawnSettings
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.HazardSpawnSettings
+  placementKeepouts:
+  - {x: -20, y: 0, z: 73.5}
+  - {x: -48, y: 0, z: 20.81}
+  - {x: 50.66, y: 0, z: 74.42}
+  - {x: 110.5, y: 0, z: 75.5}
+  - {x: -42, y: 0, z: -65}
+  - {x: -34, y: 0, z: -41.5}
+  - {x: 42.5, y: 0, z: -47}
+  - {x: -63.43, y: 0, z: -106.36}
+  - {x: 8.14, y: 0, z: -136.75}
+  - {x: 124.38, y: 0, z: -47.25}
+  - {x: 174.57, y: 0, z: -106.1}
+  - {x: 165.5, y: 0, z: -136.5}
+  - {x: -36, y: 0, z: 73.5}
+  - {x: -67.5, y: 0, z: 47.9}
+  - {x: 23.000002, y: 0, z: -23.000004}
+  - {x: 12, y: 0, z: 73.5}
+  - {x: -79.5, y: 0, z: 6}
+  - {x: 7.4199996, y: 0, z: -47.000004}
+  - {x: -79.5, y: 0, z: 70}
+  - {x: 11.365999, y: 0, z: -5.5}
+  - {x: 102, y: 0, z: 75.5}
+  - {x: 87, y: 0, z: -5.499999}
+  - {x: 37.8, y: 0, z: -25.5}
+  - {x: 165, y: 0, z: 30.63}
+  - {x: 90.565475, y: 0, z: -25.5}
+  - {x: 187.5, y: 0, z: 24}
+  - {x: 59.18, y: 0, z: 53.64}
+  - {x: 182, y: 0, z: 75.5}
+  - {x: 25.94, y: 0, z: -57.949993}
+  - {x: -37.62, y: 0, z: -131.14}
+  - {x: 52.999996, y: 0, z: -56.999996}
+  - {x: 30, y: 0, z: -121}
+  - {x: 44.999996, y: 0, z: -83.00001}
+  - {x: 48.12, y: 0, z: -138}
+  - {x: -61, y: 0, z: -68}
+  - {x: 59.5, y: 0, z: -119}
+  - {x: 171, y: 0, z: -58.05}
+  - {x: 187.5, y: 0, z: -128}
+  - {x: 95.81, y: 0, z: -137.3}
+  - {x: 139, y: 0, z: -125}
+  - {x: 187.5, y: 0, z: -16}
+  - {x: 113.5, y: 0, z: -54.04001}
+  - {x: 113.5, y: 0, z: -84.00001}
+  - {x: 92.54545, y: 0, z: -98.50001}
+  - {x: -72.38, y: 0, z: -107.3}
+  combos:
+  - name: "\uB9E8\uD640 \uC2AC\uB77C\uB86C"
+    alley: 0
+    count: 4
+    members:
+    - type: manhole
+      along: 0
+      side: 1
+      lateralFraction: -1
+    - type: B
+      along: 0
+      side: -1
+      lateralFraction: 0.75
+    - type: duck
+      along: 9
+      side: 1
+      lateralFraction: -1
+    - type: chicken
+      along: -9
+      side: 1
+      lateralFraction: -1
+  - name: "\uADFC\uC721\uB9E8\uACFC \uAE38\uB3D9\uBB34"
+    alley: 0
+    count: 2
+    members:
+    - type: muscleman
+      along: 0
+      side: 1
+      lateralFraction: -1
+    - type: manhole
+      along: 24
+      side: 1
+      lateralFraction: -1
+    - type: chicken
+      along: -24
+      side: -1
+      lateralFraction: -1
+    - type: duck
+      along: 33
+      side: 1
+      lateralFraction: -1
+    - type: B
+      along: -33
+      side: 1
+      lateralFraction: 0.3
+  - name: "\uD0C0\uC774\uC5B4 \uB418\uBC00\uAE30"
+    alley: 0
+    count: 4
+    members:
+    - type: tire
+      along: 0
+      side: 1
+      lateralFraction: -1
+    - type: manhole
+      along: -15
+      side: 1
+      lateralFraction: -1
+    - type: B
+      along: 15
+      side: 1
+      lateralFraction: 0.4
+    - type: chicken
+      along: 24
+      side: -1
+      lateralFraction: -1
+  - name: "\uD0C0\uC774\uC5B4 \uAE38\uBAA9"
+    alley: 0
+    count: 3
+    members:
+    - type: tire
+      along: 0
+      side: 1
+      lateralFraction: -1
+    - type: duck
+      along: 21
+      side: 1
+      lateralFraction: -1
+    - type: chicken
+      along: -21
+      side: 1
+      lateralFraction: -1
+    - type: cat
+      along: 12
+      side: -1
+      lateralFraction: -1
+  - name: "\uAC1C \uC9C8\uC8FC"
+    alley: 0
+    count: 3
+    members:
+    - type: dog
+      along: 0
+      side: 1
+      lateralFraction: -1
+    - type: manhole
+      along: 18
+      side: 1
+      lateralFraction: -1
+    - type: falling
+      along: -18
+      side: -1
+      lateralFraction: -1
+    - type: B
+      along: -30
+      side: 1
+      lateralFraction: 0.4
+  - name: "\uACE0\uC591\uC774 \uB9C1"
+    alley: 0
+    count: 4
+    members:
+    - type: cat
+      along: 0
+      side: 1
+      lateralFraction: -1
+    - type: B
+      along: 6
+      side: 1
+      lateralFraction: 0.6
+    - type: chicken
+      along: 15
+      side: -1
+      lateralFraction: -1
+  - name: "\uACE8\uBAA9 \uC5F0\uD0C0: \uB9E8\uD640 \uC9D5\uAC80\uB2E4\uB9AC"
+    alley: 1
+    count: 5
+    members:
+    - type: manhole
+      along: 0
+      side: 1
+      lateralFraction: 0
+    - type: manhole
+      along: 42
+      side: 1
+      lateralFraction: 0
+  - name: "\uACE8\uBAA9 \uC5F0\uD0C0: \uADFC\uC721\uB9E8"
+    alley: 1
+    count: 3
+    members:
+    - type: falling
+      along: -21
+      side: 1
+      lateralFraction: -1
+    - type: muscleman
+      along: 0
+      side: 1
+      lateralFraction: -1
+    - type: dog
+      along: 21
+      side: -1
+      lateralFraction: -1
+  - name: "\uACE8\uBAA9 \uC5F0\uD0C0: \uAC1C\xB7\uB9E8\uD640"
+    alley: 1
+    count: 5
+    members:
+    - type: dog
+      along: 0
+      side: 1
+      lateralFraction: -1
+    - type: manhole
+      along: 15
+      side: 1
+      lateralFraction: 0
+    - type: muscleman
+      along: -18
+      side: -1
+      lateralFraction: -1
+    - type: falling
+      along: 6
+      side: 1
+      lateralFraction: -1
+  - name: "\uACE8\uBAA9 \uC5F0\uD0C0: \uB099\uD558\uBB3C\xB7\uADFC\uC721\uB9E8"
+    alley: 1
+    count: 2
+    members:
+    - type: falling
+      along: 12
+      side: -1
+      lateralFraction: -1
+    - type: muscleman
+      along: 27
+      side: 1
+      lateralFraction: -1
+  - name: "\uB9F5 \uC5F0\uC1C4 0"
+    alley: 0
+    count: 1
+    members:
+    - type: tire
+      along: -27
+      side: 1
+      lateralFraction: -1
+    - type: muscleman
+      along: -3
+      side: -1
+      lateralFraction: -1
+    - type: hydrant
+      along: 24
+      side: 1
+      lateralFraction: -1
+  - name: "\uB9F5 \uC5F0\uC1C4 1"
+    alley: 0
+    count: 1
+    members:
+    - type: manhole
+      along: -27
+      side: 1
+      lateralFraction: -1
+    - type: chicken
+      along: -3
+      side: -1
+      lateralFraction: -1
+    - type: manhole
+      along: 24
+      side: 1
+      lateralFraction: -1
+  - name: "\uB9F5 \uC5F0\uC1C4 2"
+    alley: 0
+    count: 1
+    members:
+    - type: manhole
+      along: 0
+      side: 1
+      lateralFraction: -1
+    - type: dog
+      along: 27
+      side: -1
+      lateralFraction: -1
+  - name: "\uB9F5 \uC5F0\uC1C4 3"
+    alley: 0
+    count: 1
+    members:
+    - type: manhole
+      along: -3
+      side: 1
+      lateralFraction: -1
+    - type: hydrant
+      along: 24
+      side: -1
+      lateralFraction: -1
+  - name: "\uB9F5 \uC5F0\uC1C4 4"
+    alley: 0
+    count: 1
+    members:
+    - type: theft
+      along: -27
+      side: 1
+      lateralFraction: -1
+    - type: duck
+      along: -3
+      side: -1
+      lateralFraction: -1
+    - type: tire
+      along: 24
+      side: 1
+      lateralFraction: -1
+  - name: "\uB9F5 \uC5F0\uC1C4 5"
+    alley: 0
+    count: 1
+    members:
+    - type: tire
+      along: -27
+      side: 1
+      lateralFraction: -1
+    - type: manhole
+      along: 0
+      side: -1
+      lateralFraction: -1
+    - type: chicken
+      along: 27
+      side: 1
+      lateralFraction: -1
+  - name: "\uB9F5 \uC5F0\uC1C4 6"
+    alley: 0
+    count: 1
+    members:
+    - type: tire
+      along: -27
+      side: 1
+      lateralFraction: -1
+    - type: tire
+      along: -3
+      side: -1
+      lateralFraction: -1
+    - type: hydrant
+      along: 24
+      side: 1
+      lateralFraction: -1
+  - name: "\uB9F5 \uC5F0\uC1C4 7"
+    alley: 0
+    count: 1
+    members:
+    - type: muscleman
+      along: -27
+      side: 1
+      lateralFraction: -1
+    - type: manhole
+      along: -3
+      side: -1
+      lateralFraction: -1
+    - type: falling
+      along: 24
+      side: 1
+      lateralFraction: -1
   kinds:
   - type: celebrity
     prefab: {fileID: 6048872110664833949, guid: d6fe7b3a05a19d240a0c176359f28488, type: 3}
@@ -19,65 +366,134 @@ MonoBehaviour:
     unlockDay: 1
     countPerDay: 05000000
     poolSize: 5
+    mainPoolSize: -1
+    alleyPoolSize: 0
+    objectAlleyShare: 0
   - type: manhole
     prefab: {fileID: 6472710267201087100, guid: f596076374953f645ae82da9c8aef1d5, type: 3}
     role: 0
     unlockDay: 1
-    countPerDay: 10000000150000001b00000021000000
+    countPerDay: 28000000360000004600000054000000
     poolSize: 10
+    mainPoolSize: -1
+    alleyPoolSize: 0
+    objectAlleyShare: 0.5471698
   - type: hydrant
     prefab: {fileID: 5070404547343383542, guid: 7d4ef1a04abf7c843beb66a684257e83, type: 3}
     role: 0
     unlockDay: 1
-    countPerDay: 13000000130000001300000013000000
+    countPerDay: 26000000260000002600000026000000
     poolSize: 10
+    mainPoolSize: -1
+    alleyPoolSize: 0
+    objectAlleyShare: 0
   - type: melon
     prefab: {fileID: 6530980163086158173, guid: f76f44a5a22529a44bd073b5059e96e2, type: 3}
     role: 1
     unlockDay: 2
     countPerDay: 04000000030000000600000008000000
     poolSize: 15
+    mainPoolSize: 15
+    alleyPoolSize: 0
+    objectAlleyShare: 0
   - type: door
     prefab: {fileID: 2258765552048652787, guid: d9aa1405f52194043a5a9a9cb9a9c575, type: 3}
     role: 0
     unlockDay: 1
     countPerDay: 00000000000000000000000000000000
     poolSize: 10
+    mainPoolSize: -1
+    alleyPoolSize: 0
+    objectAlleyShare: 0
   - type: duck
     prefab: {fileID: 2613456982075538471, guid: 8c84d1a05a662454f881b318ef2c31fb, type: 3}
     role: 1
     unlockDay: 1
     countPerDay: 
-    poolSize: 24
+    poolSize: 22
+    mainPoolSize: 22
+    alleyPoolSize: 0
+    objectAlleyShare: 0
   - type: chicken
     prefab: {fileID: 1457955222934212062, guid: 1824a012844aee449927e112dda09ccd, type: 3}
     role: 1
     unlockDay: 1
     countPerDay: 
     poolSize: 36
+    mainPoolSize: 31
+    alleyPoolSize: 5
+    objectAlleyShare: 0
   - type: tire
     prefab: {fileID: 187407185860632136, guid: 28a9fcec772ac8948bed51bf36545ddc, type: 3}
     role: 1
     unlockDay: 2
     countPerDay: 
-    poolSize: 15
+    poolSize: 27
+    mainPoolSize: 27
+    alleyPoolSize: 0
+    objectAlleyShare: 0
   - type: theft
     prefab: {fileID: 5341357968200033377, guid: c25a8024297b4e64fb874d7dbf50beaf, type: 3}
     role: 1
     unlockDay: 2
     countPerDay: 
-    poolSize: 13
+    poolSize: 12
+    mainPoolSize: 12
+    alleyPoolSize: 0
+    objectAlleyShare: 0
   - type: muscleman
     prefab: {fileID: 7860594623088957268, guid: 9015fd045a43cb34f92ac4ee68005237, type: 3}
     role: 1
     unlockDay: 1
     countPerDay: 08000000050000000800000008000000
-    poolSize: 18
+    poolSize: 27
+    mainPoolSize: 10
+    alleyPoolSize: 17
+    objectAlleyShare: 0
   - type: pigeonflock
     prefab: {fileID: 3615365105597982156, guid: 25b3eca937e83684896c0efb18a72047, type: 3}
     role: 1
     unlockDay: 2
     countPerDay: 
-    poolSize: 8
-  spacing: 8
-  sameTypeSpacing: 8
+    poolSize: 7
+    mainPoolSize: 7
+    alleyPoolSize: 0
+    objectAlleyShare: 0
+  - type: falling
+    prefab: {fileID: 3387710401019531394, guid: 613aa786a8535044a9401dab814dd7ee, type: 3}
+    role: 1
+    unlockDay: 1
+    countPerDay: 
+    poolSize: 40
+    mainPoolSize: 17
+    alleyPoolSize: 23
+    objectAlleyShare: 0
+  - type: cat
+    prefab: {fileID: 3427698856218832095, guid: f57ace7bfdc15f24ba2c8a413c8ebf4d, type: 3}
+    role: 1
+    unlockDay: 2
+    countPerDay: 
+    poolSize: 31
+    mainPoolSize: 25
+    alleyPoolSize: 6
+    objectAlleyShare: 0
+  - type: dog
+    prefab: {fileID: 6091937976889780831, guid: 11137c949a3a8ec46ae16a5174f3e28f, type: 3}
+    role: 1
+    unlockDay: 2
+    countPerDay: 
+    poolSize: 29
+    mainPoolSize: 13
+    alleyPoolSize: 16
+    objectAlleyShare: 0
+  - type: clone
+    prefab: {fileID: 2438978742905171858, guid: b610bc90a5efc6f42a28ba1e7b5041a5, type: 3}
+    role: 1
+    unlockDay: 2
+    countPerDay: 
+    poolSize: 7
+    mainPoolSize: 7
+    alleyPoolSize: 0
+    objectAlleyShare: 0
+  spacing: 9
+  sameTypeSpacing: 9

@@ -1,0 +1,23 @@
+// Execute the read-only prototype; never copy its hand-maintained numbers by guessing.
+const fs = require('fs'), vm = require('vm'), path = require('path');
+const root = process.argv[2] || '/mnt/c/Users/cj307/Desktop/3-2/캡스톤 게임엔진/프로토타입';
+const source = fs.readFileSync(path.join(root, '3d/logic3d.js'), 'utf8').replace('/*DATA*/', fs.readFileSync(path.join(root, 'map_data.json'), 'utf8')).replace("/*VER*/'full'", "/*VER*/'zone'");
+const box = { URLSearchParams, location: {search:''}, console, performance };
+vm.createContext(box);
+vm.runInContext(source.slice(0, source.indexOf("const cv=")) + source.match(/const SPU=.*?;/)[0] + `\nresult={T,BASE_N,TPL,ATPL,MAPC,COMBO_KEY,SPN,SPU,unlock:D.unlock,mainLength:SEGS.filter(s=>!s.alley).reduce((n,s)=>n+hyp(s.b[0]-s.a[0],s.b[1]-s.a[1]),0),alleyLength:SEGS.filter(s=>s.alley).reduce((n,s)=>n+hyp(s.b[0]-s.a[0],s.b[1]-s.a[1]),0),main:{},alley:{}};
+const inc=(a,t,n)=>a[t]=(a[t]||0)+n;
+for(const t of MAP1)inc(result.main,t,1);for(const [t,n] of BAG_MAIN)inc(result.main,t,n);for(const c of MAPC)for(const [t] of c.mem)inc(result.main,t,1);
+for(const [,n,mem] of TPL)for(const [t] of mem)inc(result.main,t,n);
+for(const [,n,mem] of ATPL)for(const [t] of mem)inc(result.alley,t,n);for(const [t,n] of ALLEY1)inc(result.alley,t,n);`, box);
+const data=box.result;
+const assembled=fs.readFileSync(path.join(root,'배달_체험판_3D_구역해금.html'),'utf8');
+const assembledBox={URLSearchParams,location:{search:''},console,performance};vm.createContext(assembledBox);
+const prefix=assembled.slice(assembled.indexOf('const D=',assembled.indexOf('// 배달 체험판 3D 로직')),assembled.indexOf('const cv='));
+vm.runInContext(prefix+assembled.match(/const SPU=.*?;/)[0]+'\nresult={T,BASE_N,TPL,ATPL,MAPC,COMBO_KEY,SPN,SPU};',assembledBox);
+for(const key of ['BASE_N','TPL','ATPL','MAPC','COMBO_KEY','SPN','SPU'])if(JSON.stringify(data[key])!==JSON.stringify(assembledBox.result[key]))throw new Error('Assembled HTML differs: '+key);
+data.assembledVerified=true;
+data.sourceSha256=require('crypto').createHash('sha256').update(source).digest('hex');
+data.densityPer100m={main:Object.fromEntries(Object.entries(data.main).map(([k,n])=>[k,n/data.mainLength*100])),alley:Object.fromEntries(Object.entries(data.alley).map(([k,n])=>[k,n/data.alleyLength*100]))};
+const output = process.argv[3] || 'Docs/MapLayout/Myeongji/html_hazard_rules.json';
+fs.writeFileSync(output, JSON.stringify(data,null,2)+'\n');
+console.log(JSON.stringify({output,BASE_N:data.BASE_N,main:data.main,alley:data.alley,mainLength:data.mainLength,alleyLength:data.alleyLength,combos:[...data.TPL,...data.ATPL].reduce((s,x)=>s+x[1],0)}));
