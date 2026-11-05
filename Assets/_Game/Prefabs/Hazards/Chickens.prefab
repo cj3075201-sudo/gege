@@ -55,9 +55,9 @@ MonoBehaviour:
   - {fileID: 7091117577642646442}
   - {fileID: 6746447372287291489}
   triggerRadius: 3
-  chaseSeconds: 14
-  attachmentSeconds: 5
-  extraAttachmentSeconds: 3
+  chaseSeconds: 7
+  attachmentSeconds: 2.5
+  extraAttachmentSeconds: 1.5
   chaseSpeed: 6.5
   riderSpeedShare: 0
   maximumChaseSpeed: 20
@@ -65,7 +65,8 @@ MonoBehaviour:
   wanderRadius: 2.5
   wanderAngle: 65
   separationDistance: 0.8
-  contactRadius: 0.65
+  contactRadius: 0.9
+  landingRadius: 2.6
 --- !u!1 &1680630381634810605
 GameObject:
   m_ObjectHideFlags: 0

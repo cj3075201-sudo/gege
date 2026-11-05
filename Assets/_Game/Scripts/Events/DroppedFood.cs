@@ -25,7 +25,8 @@ namespace DeliveryRider
             from = start;
             landing = restingPoint;
             pickupRadius = radius;
-            float gravity = Mathf.Max(0.01f, -Physics.gravity.y);
+            float scale = player.TryGetComponent<RiderMotor>(out var motor) ? motor.AccidentGravityScale : 1f;
+            float gravity = Mathf.Max(0.01f, -Physics.gravity.y * scale);
             flightSeconds = Mathf.Max(0.1f, 2f * upSpeed / gravity);
             peak = upSpeed * upSpeed / (2f * gravity);
             transform.position = start;

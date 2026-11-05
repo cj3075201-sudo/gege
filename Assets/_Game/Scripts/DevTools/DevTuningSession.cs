@@ -15,18 +15,26 @@ namespace DeliveryRider
         }
 
         private static readonly Dictionary<string, Dictionary<string, Edit>> targets = new Dictionary<string, Dictionary<string, Edit>>();
-        private static readonly Dictionary<HazardSpawnSettings.Kind, int[]> originalDayCounts = new Dictionary<HazardSpawnSettings.Kind, int[]>();
+        private sealed class Schedule
+        {
+            public int[] Counts, Main, Alley;
+        }
+        private static readonly Dictionary<HazardSpawnSettings.Kind, Schedule> originalDayCounts = new Dictionary<HazardSpawnSettings.Kind, Schedule>();
 
-        // Legacy one-value schedules repeat on every day. Expand only the runtime array for four independent controls.
-        public static void EnsureFourDays(HazardSpawnSettings settings)
+        // Runtime expansion is reversible unless the editor explicitly saves this asset.
+        public static void EnsureFiveDays(HazardSpawnSettings settings)
         {
             foreach (var kind in settings.Kinds)
             {
-                if (kind.role != HazardRole.Object || kind.countPerDay.Length >= 4 || originalDayCounts.ContainsKey(kind)) continue;
-                originalDayCounts[kind] = kind.countPerDay;
-                var expanded = new int[4];
-                for (int i = 0; i < expanded.Length; i++) expanded[i] = kind.Count(i + 1);
-                kind.countPerDay = expanded;
+                bool expand = kind.role == HazardRole.Object ? kind.countPerDay.Length < 5
+                    : kind.mainCountPerDay.Length < 5 || kind.alleyCountPerDay.Length < 5;
+                if (!expand) continue;
+                if (!originalDayCounts.ContainsKey(kind)) originalDayCounts[kind] = new Schedule
+                    { Counts=kind.countPerDay, Main=kind.mainCountPerDay, Alley=kind.alleyCountPerDay };
+                var counts=new int[5];var main=new int[5];var alley=new int[5];
+                for(int i=0;i<5;i++){counts[i]=kind.Count(i+1);main[i]=kind.MainCount(i+1);alley[i]=kind.AlleyCount(i+1);}
+                if(kind.role==HazardRole.Object)kind.countPerDay=counts;
+                else{kind.mainCountPerDay=main;kind.alleyCountPerDay=alley;}
             }
         }
 
@@ -75,7 +83,12 @@ namespace DeliveryRider
                     if (edit.Pending && edit.Source is ScriptableObject && edit.Source != null)
                         edit.Field.Write(edit.Source, edit.Baseline);
             targets.Clear();
-            foreach (var original in originalDayCounts) original.Key.countPerDay = original.Value;
+            foreach (var original in originalDayCounts)
+            {
+                original.Key.countPerDay=original.Value.Counts;
+                original.Key.mainCountPerDay=original.Value.Main;
+                original.Key.alleyCountPerDay=original.Value.Alley;
+            }
             originalDayCounts.Clear();
         }
 

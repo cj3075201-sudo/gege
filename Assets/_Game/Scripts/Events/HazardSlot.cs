@@ -4,12 +4,12 @@ using UnityEngine;
 namespace DeliveryRider
 {
     // Objects are always placed for the day and strike any time (even before pickup).
-    // Placed triggers are active without a call. Only the food thief requires carried food.
+    // Reserved triggers are selected per call and armed throughout delivery, including food recovery.
     public enum HazardRole { Object, Trigger }
 
     // Planner data for one spawned hazard; HazardPlanner adds it at spawn and turns the hazard on and off.
     [DisallowMultipleComponent]
-    public sealed class HazardSlot : MonoBehaviour
+    public sealed partial class HazardSlot : MonoBehaviour
     {
         [SerializeField] private string type;
         [SerializeField] private HazardRole role;
@@ -17,6 +17,106 @@ namespace DeliveryRider
         [Tooltip("Call routes (shop index x door count + door index) that pass within 7 m.")]
         [SerializeField] private int[] routes = Array.Empty<int>();
 
+        public bool RuntimeActive { get; private set; } = true;
+        private bool visualsPaused;
+        private Rigidbody[] pausedBodies=Array.Empty<Rigidbody>();
+        private bool[] bodyKinematic=Array.Empty<bool>();
+        private bool bodiesPaused;
+        private Transform[] poseNodes=Array.Empty<Transform>();
+        private Vector3[] posePositions=Array.Empty<Vector3>();
+        private Quaternion[] poseRotations=Array.Empty<Quaternion>();
+        private bool[] poseActive=Array.Empty<bool>(),poseVisible=Array.Empty<bool>();
+        private MonoBehaviour[] controllers;
+        private bool[] controllerEnabled;
+        private Renderer[] visuals;
+        private bool[] visualEnabled;
+        private Collider[] volumes;
+        private bool[] volumeEnabled;
+
+        // Root objects stay alive for the day. Pausing a slot stops its frame callbacks and hides its visuals.
+        // OnEnable is the per-kind reset entry: tire/muscleman/celebrity explicitly restore their spent state.
+        public void SetRuntimeActive(bool active, bool reset = false)
+        {
+            if (controllers == null) RefreshOwnedComponents();
+            if(active)RestorePreviewLabels();
+            if(RuntimeActive==active&&!reset&&!visualsPaused&&!IsPreviewVisible)return;
+            if(!active&&visualsPaused&&TryGetComponent<CelebrityCrowdHazard>(out var crowd))crowd.EndHeldVisuals();
+            IsPreviewVisible=false;ghostFading=false;ApplyGhostOpacity(1f);
+            if(!active||reset)foreach(var controller in controllers)if(controller!=null)controller.enabled=false;
+            RestorePausedBodies();
+            for(int i=0;i<visuals.Length;i++)if(visuals[i]!=null)visuals[i].enabled=active&&visualEnabled[i];
+            for(int i=0;i<volumes.Length;i++)if(volumes[i]!=null)volumes[i].enabled=active&&volumeEnabled[i];
+            RuntimeActive=active;visualsPaused=false;
+            if(active)for(int i=0;i<controllers.Length;i++)if(controllers[i]!=null)controllers[i].enabled=controllerEnabled[i];
+        }
+
+        public void RefreshOwnedComponents()
+        {
+            var list=new System.Collections.Generic.List<MonoBehaviour>();
+            foreach(var component in GetComponentsInChildren<MonoBehaviour>(true))
+                if(component!=null&&(component is IPlacedHazard||component.transform!=transform&&component.GetType().Namespace==nameof(DeliveryRider)))list.Add(component);
+            var nextControllers=list.ToArray();var nextControllerStates=new bool[nextControllers.Length];
+            for(int i=0;i<nextControllers.Length;i++)
+            {
+                int old=controllers!=null?Array.IndexOf(controllers,nextControllers[i]):-1;
+                nextControllerStates[i]=old>=0?controllerEnabled[old]:nextControllers[i].enabled;
+            }
+            controllers=nextControllers;controllerEnabled=nextControllerStates;
+            var nextVisuals=GetComponentsInChildren<Renderer>(true);var nextVisualStates=new bool[nextVisuals.Length];
+            for(int i=0;i<nextVisuals.Length;i++){int old=visuals!=null?Array.IndexOf(visuals,nextVisuals[i]):-1;nextVisualStates[i]=old>=0?visualEnabled[old]:nextVisuals[i].enabled;}
+            CacheGhostRenderers(nextVisuals);
+            visuals=nextVisuals;visualEnabled=nextVisualStates;
+            var nextVolumes=GetComponentsInChildren<Collider>(true);var nextVolumeStates=new bool[nextVolumes.Length];
+            for(int i=0;i<nextVolumes.Length;i++){int old=volumes!=null?Array.IndexOf(volumes,nextVolumes[i]):-1;nextVolumeStates[i]=old>=0?volumeEnabled[old]:nextVolumes[i].enabled;}
+            volumes=nextVolumes;volumeEnabled=nextVolumeStates;
+            poseNodes=GetComponentsInChildren<Transform>(true);posePositions=new Vector3[poseNodes.Length];
+            poseRotations=new Quaternion[poseNodes.Length];poseActive=new bool[poseNodes.Length];poseVisible=new bool[visuals.Length];
+            pausedBodies=GetComponentsInChildren<Rigidbody>(true);bodyKinematic=new bool[pausedBodies.Length];
+        }
+
+        public void PauseKeepingVisuals()
+        {
+            if(!RuntimeActive||visualsPaused)return;
+            if(controllers==null)SetRuntimeActive(true);
+            var nodes=poseNodes;var positions=posePositions;var rotations=poseRotations;var states=poseActive;var visible=poseVisible;
+            for(int i=0;i<nodes.Length;i++)if(nodes[i]!=null){positions[i]=nodes[i].localPosition;rotations[i]=nodes[i].localRotation;states[i]=nodes[i].gameObject.activeSelf;}
+            for(int i=0;i<visuals.Length;i++)visible[i]=visuals[i]!=null&&visuals[i].enabled;
+            for(int i=0;i<pausedBodies.Length;i++)if(pausedBodies[i]!=null){bodyKinematic[i]=pausedBodies[i].isKinematic;pausedBodies[i].isKinematic=true;}
+            bodiesPaused=true;
+            foreach(var controller in controllers)if(controller!=null)controller.enabled=false;
+            if(!previewPreparing&&GetComponent<CloneRiderHazard>()!=null)
+            {
+                foreach(var volume in volumes)if(volume!=null)volume.enabled=false;
+                visualsPaused=true;return;
+            }
+            for(int i=0;i<nodes.Length;i++)if(nodes[i]!=null){nodes[i].localPosition=positions[i];nodes[i].localRotation=rotations[i];if(nodes[i]!=transform)nodes[i].gameObject.SetActive(states[i]);}
+            for(int i=0;i<visuals.Length;i++)if(visuals[i]!=null)visuals[i].enabled=visible[i];
+            foreach(var volume in volumes)if(volume!=null)volume.enabled=false;
+            visualsPaused=true;
+        }
+
+        private void RestorePausedBodies()
+        {
+            if(!bodiesPaused)return;
+            for(int i=0;i<pausedBodies.Length;i++)if(pausedBodies[i]!=null)pausedBodies[i].isKinematic=bodyKinematic[i];
+            bodiesPaused=false;
+        }
+
+        private bool started;
+        private object startedOrder;
+        public bool StartedFor(DeliverySession owner) => Role==HazardRole.Trigger&&owner!=null&&started&&ReferenceEquals(startedOrder,owner.ActiveOrder);
+        public void MarkStarted(DeliverySession owner)
+        {
+            if(Role!=HazardRole.Trigger||owner==null)return;
+            started=true;startedOrder=owner.ActiveOrder;
+        }
+
+        public HazardPlanner Planner { get; set; }
+        public HazardCandidate Candidate { get; set; }
+        public int Combo { get; set; } = -1;
+        public bool NeedsCallReset { get; set; }
+        public bool Selected { get; set; }
+        public bool Consumed { get; set; }
         public string Type => type;
         public HazardRole Role => role;
         public int UnlockDay => unlockDay;

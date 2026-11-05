@@ -151,8 +151,8 @@ namespace DeliveryRider.Editor
             hazardSettings.Configure(new[] { kind });
             try
             {
-                DevTuningSession.EnsureFourDays(hazardSettings);
-                Equal(4, kind.countPerDay.Length, "four independently editable days");
+                DevTuningSession.EnsureFiveDays(hazardSettings);
+                Equal(5, kind.countPerDay.Length, "five independently editable days");
                 Equal(5, kind.Count(4), "fourth day keeps original repeated value");
                 kind.countPerDay[3] = 8;
                 Equal(5, kind.Count(1), "fourth day edit does not change first day");
@@ -162,11 +162,11 @@ namespace DeliveryRider.Editor
                 DevTuningSession.EndSession();
                 Equal(1, kind.countPerDay.Length, "unsaved schedule shape restored");
                 Equal(5, kind.Count(4), "unsaved schedule values restored");
-                DevTuningSession.EnsureFourDays(hazardSettings);
+                DevTuningSession.EnsureFiveDays(hazardSettings);
                 kind.countPerDay[3] = 9;
                 DevTuningSession.MarkSaved(hazardSettings);
                 DevTuningSession.EndSession();
-                Equal(4, kind.countPerDay.Length, "saved schedule shape kept");
+                Equal(5, kind.countPerDay.Length, "saved schedule shape kept");
                 Equal(9, kind.Count(4), "saved fourth day kept");
             }
             finally { UnityEngine.Object.DestroyImmediate(hazardSettings); DevTuningSession.EndSession(); }

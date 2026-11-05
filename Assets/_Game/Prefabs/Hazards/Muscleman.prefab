@@ -157,17 +157,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a9916360fdc811468ebf75d05a61254, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.MusclemanHazard
+  trackingTurnRate: 3
+  directionLockSeconds: 0.8
+  maximumLockedSeconds: 2.5
   runner: {fileID: 5311844959050261010}
   sidewalks: {fileID: 0}
   spawnBehindDistance: 12
   minimumStraightBehind: 10
-  speedMultiplier: 1.92
-  disappearAfterTurn: 1
+  speedMultiplier: 1.9166666
+  disappearAfterTurn: 2.5
   runnerHeight: 3
-  runnerRadius: 0.75
+  runnerRadius: 1.15
   shoveSpeed: 10
+  shoveForward: 4
+  shoveRiderShare: 0.3
+  shoveLift: 6.5
   pedestrianLift: 1
   recoverySeconds: 0.6
+  routeRetrySeconds: 0.25
+  detectionRadius: 7
+  windSeconds: {x: 0.8, y: 2}
+  maximumChaseSeconds: 8
 --- !u!1 &8370717909306833683
 GameObject:
   m_ObjectHideFlags: 0

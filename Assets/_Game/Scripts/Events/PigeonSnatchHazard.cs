@@ -64,12 +64,18 @@ namespace DeliveryRider
             Perch();
         }
 
-        private void OnEnable() { if (rider != null) { Perch(); phase = Phase.Ready; } }
+        private void OnEnable() { if (rider != null) { Perch(); phase = slot!=null&&slot.StartedFor(session)?Phase.Spent:Phase.Ready; } }
         private void OnDisable()
         {
             SetLamp(false);
-            // A pigeon still carrying food is a live recovery target; it keeps flying on its own.
-            if (phase != Phase.Flying && pigeon != null) pigeon.gameObject.SetActive(false);
+            // A consumed/hidden slot cannot leave an invisible recovery target behind.
+            if(phase==Phase.Flying&&session!=null&&pigeon!=null)
+            {
+                session.RequireReplacement(pigeon.transform);
+                pigeon.Rest();
+            }
+            if(pigeon!=null)pigeon.gameObject.SetActive(false);
+            phase=Phase.Spent;
         }
 
         private void Update() { if (session.IsSettled && phase != Phase.Spent && phase != Phase.Flying) { SetLamp(false); Perch(); phase = Phase.Spent; } }
@@ -84,6 +90,7 @@ namespace DeliveryRider
                     if ((slot == null || slot.StrikeAllowed) && !session.IsMapOpen && session.Stage == DeliveryStage.Carrying
                         && !rider.IsRecovering && Vector3.Distance(rider.transform.position, perch.position) <= triggerRadius * TriggerScale)
                     {
+                        slot?.MarkStarted(session);
                         Enter(Phase.Warning);
                     }
                     break;
@@ -107,7 +114,7 @@ namespace DeliveryRider
                     if (pigeon.Finished || !pigeon.gameObject.activeInHierarchy) { Perch(); Enter(Phase.Spent); }
                     break;
                 case Phase.Spent:
-                    if (session.Stage == DeliveryStage.Carrying && Vector3.Distance(rider.transform.position, perch.position) > triggerRadius * 2f * TriggerScale)
+                    if ((slot==null||slot.Role!=HazardRole.Trigger)&&session.Stage == DeliveryStage.Carrying && Vector3.Distance(rider.transform.position, perch.position) > triggerRadius * 2f * TriggerScale)
                     {
                         Perch();
                         Enter(Phase.Ready);

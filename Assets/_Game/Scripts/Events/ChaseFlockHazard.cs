@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace DeliveryRider
 {
-    // Free birds chase for six seconds. Attached birds share a separate, extendable attachment timer.
+    // Free birds chase for seven seconds. Attached birds share a separate, extendable attachment timer.
     public sealed class ChaseFlockHazard : MonoBehaviour, IPlacedHazard
     {
         private enum Phase { Idle, Chasing, Spent }
@@ -10,9 +10,9 @@ namespace DeliveryRider
         [SerializeField] private Transform[] birds = System.Array.Empty<Transform>();
         [Header("Test values")]
         [SerializeField, Min(0.1f)] private float triggerRadius = 7f;
-        [SerializeField, Min(0.1f)] private float chaseSeconds = 6f;
+        [SerializeField, Min(0.1f)] private float chaseSeconds = 7f;
         [Tooltip("Attachment duration when the first chicken attaches.")]
-        [SerializeField, Min(0.1f)] private float attachmentSeconds = 3f;
+        [SerializeField, Min(0.1f)] private float attachmentSeconds = 2.5f;
         [Tooltip("Time added for each additional chicken while attached.")]
         [SerializeField, Min(0.1f)] private float extraAttachmentSeconds = 1.5f;
         [SerializeField, Min(0.1f)] private float chaseSpeed = 5.2f;
@@ -24,6 +24,7 @@ namespace DeliveryRider
         [SerializeField, Range(0f, 180f)] private float wanderAngle = 65f;
         [SerializeField, Min(0.1f)] private float separationDistance = 0.8f;
         [SerializeField, Min(0.1f)] private float contactRadius = 0.65f;
+        [SerializeField, Min(.1f)] private float landingRadius = 2.6f;
         private RiderMotor rider;
         private CapsuleCollider playerShape;
         private RoadNetwork ground;
@@ -67,6 +68,7 @@ namespace DeliveryRider
             if (homes == null || rider == null) return;
             rider.ReactionChanged += OnReaction;
             rider.SafePositionRestored += OnSafePositionRestored;
+            if(slot!=null&&slot.StartedFor(session)){Finish();return;}
             ResetBirds();
             phase = Phase.Idle;
         }
@@ -106,6 +108,7 @@ namespace DeliveryRider
                     {
                         elapsed = 0f;
                         for (int i = 0; i < birds.Length; i++) turnAt[i] = 0f;
+                        slot?.MarkStarted(session);
                         phase = Phase.Chasing;
                     }
                     break;
@@ -113,7 +116,7 @@ namespace DeliveryRider
                     Chase();
                     break;
                 case Phase.Spent:
-                    if (!Near(transform.position, triggerRadius * 3f))
+                    if ((slot==null||slot.Role!=HazardRole.Trigger)&&!Near(transform.position, triggerRadius * 3f))
                     {
                         ResetBirds();
                         phase = Phase.Idle;
@@ -134,7 +137,7 @@ namespace DeliveryRider
                 if (!hasAttachedBirds) { Finish(); return; }
             }
             bool mayStrike = slot == null || slot.StrikeAllowed;
-            // Losing the food shakes off attached birds at once, which also ends the slowdown.
+            // Completion ends attachment; recovering dropped food remains part of delivery.
             if (hasAttachedBirds && !mayStrike) EndAttachedBirds();
             if (hasAttachedBirds)
             {
@@ -177,7 +180,7 @@ namespace DeliveryRider
                 // Sweep the travelled segment so fast birds can touch the rider between fixed frames.
                 var flatStep = Vector3.ProjectOnPlane(position - before, Vector3.up);
                 float t = flatStep.sqrMagnitude > 0.0001f ? Mathf.Clamp01(Vector3.Dot(feet - before, flatStep) / flatStep.sqrMagnitude) : 0f;
-                if (mayStrike && Near(Vector3.Lerp(before, position, t), contactRadius) && !rider.IsRecovering)
+                if (mayStrike && Near(Vector3.Lerp(before, position, t), rider.Velocity.y < -.1f ? Mathf.Max(contactRadius, landingRadius) : contactRadius) && !rider.IsRecovering)
                 {
                     if (rider.TryAttachChicken(this, attachmentSeconds, extraAttachmentSeconds)) { attached[i] = true; hasAttachedBirds = true; }
                 }

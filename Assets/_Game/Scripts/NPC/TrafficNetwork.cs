@@ -55,7 +55,7 @@ namespace DeliveryRider
         [SerializeField] private VehicleKind[] kinds = Array.Empty<VehicleKind>();
         [SerializeField, Min(0)] private int vehicleCount = 50;
         [Header("열린 구역 차량 수 (다시 배치 시 적용)")]
-        [SerializeField, Min(0)] private int[] vehicleCountByDay = { 30, 40, 50, 60 };
+        [SerializeField, Min(0)] private int[] vehicleCountByDay = { 30, 40, 50, 60, 60 };
         [SerializeField, Min(4f)] private float minimumSpacing = 14f;
         [Tooltip("No car starts this close to the rider's start position.")]
         [SerializeField, Min(0f)] private float playerClearance = 10f;
@@ -116,7 +116,7 @@ namespace DeliveryRider
         {
             RefreshOpenPaths();
             int count = openPaths != null && vehicleCountByDay != null && vehicleCountByDay.Length > 0
-                ? Mathf.Max(0, vehicleCountByDay[Mathf.Clamp((session.Progress?.Day ?? 1) - 1, 0, Mathf.Min(3, vehicleCountByDay.Length - 1))])
+                ? Mathf.Max(0, vehicleCountByDay[Mathf.Clamp((session.Progress?.Day ?? 1) - 1, 0, Mathf.Min(4, vehicleCountByDay.Length - 1))])
                 : vehicleCount;
             var random = randomEachRun ? new System.Random() : new System.Random(seed);
             var lanes = new List<int>();

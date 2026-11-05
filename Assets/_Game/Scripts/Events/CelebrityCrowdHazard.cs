@@ -11,7 +11,7 @@ namespace DeliveryRider
         [SerializeField] private Material glowMaterial;
         [SerializeField, Min(0.1f)] private float triggerRadius = 10f;
         [SerializeField, Min(0.1f)] private float spawnRadius = 15f;
-        [SerializeField, Min(1)] private int waitingFans = 6;
+        [SerializeField, Min(0)] private int waitingFans = 6;
         [SerializeField, Min(1)] private int incomingFans = 26;
         [SerializeField, Min(0.1f)] private float fanSpeedMultiplier = 3.75f;
         [SerializeField, Min(1f)] private float fanResistance = 2f;
@@ -31,9 +31,16 @@ namespace DeliveryRider
         private HazardSlot slot;
         private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private int centerPath;
+        private bool centerPrepared;
+        public void PrepareCenter(int path,float along){centerPath=path;centerAlong=along;centerPrepared=path>=0;}
+        [SerializeField, Min(.1f)] private float crowdSeconds=14f;
+        private float crowdEndsAt;
         private float centerAlong, retryAt;
         private Transform celebrity;
-        private bool appeared;
+        private TrafficPedestrian waitingStar;
+        private bool appeared, waitingPrepared;
+        private int actorsUsed;
+        private const float PrepareRadius=25f;
         private readonly List<TrafficPedestrian> actors = new List<TrafficPedestrian>();
         private readonly List<Vector3> spawnPoints = new List<Vector3>();
 
@@ -43,16 +50,24 @@ namespace DeliveryRider
             ground = roads;
         }
 
-        private void Start()
+        private void Start()=>EnsurePlacement();
+        private bool EnsurePlacement()
         {
-            network = FindFirstObjectByType<PedestrianNetwork>();
-            slot = GetComponent<HazardSlot>();
-            if (session == null || network == null || network.Prefab == null ||
-                !FindCenter(network, transform.position, out centerPath, out centerAlong)) { enabled = false; return; }
-            for (int i = 0; i < waitingFans; i++)
-                SpawnFan(centerPath, centerAlong, WaitingSpot(transform.position, transform.rotation, i), true, i);
-            Physics.SyncTransforms();
+            if(network==null)network=FindFirstObjectByType<PedestrianNetwork>();
+            if(slot==null)slot=GetComponent<HazardSlot>();
+            if(session==null||network==null||network.Prefab==null||ground==null)return false;
+            if(!centerPrepared)centerPrepared=FindCenter(network,transform.position,out centerPath,out centerAlong);
+            return centerPrepared;
         }
+        public void ShowWaitingPreview()
+        {
+            if(!EnsurePlacement())return;
+            ClearActors();
+            var star=SpawnActor(centerPath,centerAlong,transform.position,false,celebrityCoat,1f,1f,100);
+            star.name="Celebrity_Preview";celebrity=star.transform;waitingStar=star;
+            if(slot!=null)slot.RefreshOwnedComponents();
+        }
+        public void EndHeldVisuals()=>ClearActors();
 
         // Six equally spaced directions, each two metres from the celebrity spawn point.
         public static Vector3 WaitingSpot(Vector3 center, Quaternion rotation, int index)
@@ -63,7 +78,18 @@ namespace DeliveryRider
 
         private void Update()
         {
-            if (appeared || network == null || !enabled || Time.time < retryAt || session.IsPaused || session.IsSettled || session.IsMapOpen
+            if(network!=null&&ground!=null&&(slot==null||slot.Selected)&&!appeared&&!waitingPrepared&&!session.IsSettled&&!session.IsPaused
+                &&Vector3.ProjectOnPlane(session.Player.position-transform.position,Vector3.up).sqrMagnitude<=PrepareRadius*PrepareRadius)
+            {
+                for(int i=0;i<waitingFans;i++)SpawnFan(centerPath,centerAlong,WaitingSpot(transform.position,transform.rotation,i),true,i);
+                waitingPrepared=true;if(slot!=null)slot.RefreshOwnedComponents();
+            }
+            if(appeared)
+            {
+                if(session.IsSettled||slot!=null&&!slot.StrikeAllowed||Time.time>=crowdEndsAt)ClearActors();
+                return;
+            }
+            if (network == null || !enabled || Time.time < retryAt || session.IsPaused || session.IsSettled || session.IsMapOpen
                 || slot != null && !slot.StrikeAllowed) return;
             var offset = session.Player.position - transform.position;
             float reach = triggerRadius * TriggerScale;
@@ -71,16 +97,19 @@ namespace DeliveryRider
             // Resolve all 26 safe positions before spawning anything; a busy area retries instead of producing a partial wave.
             Physics.SyncTransforms();
             if (!FindSpawnPoints()) { retryAt = Time.time + 1f; return; }
-            appeared = true;
-            var star = SpawnActor(centerPath, centerAlong, transform.position, false, celebrityCoat, 1f, 1f, 100);
+            slot?.MarkStarted(session);
+            appeared = true; crowdEndsAt=Time.time+crowdSeconds;
+            var star = waitingStar!=null&&waitingStar.gameObject.activeSelf?waitingStar:SpawnActor(centerPath, centerAlong, transform.position, false, celebrityCoat, 1f, 1f, 100);
+            waitingStar=null;
             star.name = "Celebrity";
             celebrity = star.transform;
-            foreach (var actor in actors) if (actor != star) actor.SetCrowdCenter(celebrity);
+            foreach (var actor in actors) if (actor != star&&actor.gameObject.activeSelf) actor.SetCrowdCenter(celebrity);
             for (int i = 0; i < spawnPoints.Count; i++)
             {
                 var point = spawnPoints[i];
                 SpawnFan(centerPath, centerAlong, point, false, waitingFans + i);
             }
+            if(slot!=null)slot.RefreshOwnedComponents();
             Physics.SyncTransforms();
         }
 
@@ -90,6 +119,7 @@ namespace DeliveryRider
             actor.SetCrowdCenter(celebrity != null ? celebrity : transform);
             actor.name = waiting ? $"WaitingFan_{index:00}" : $"IncomingFan_{index:00}";
             var visual = actor.transform.Find("Visual");
+            if(actor.transform.Find("Visual/GlowStick")!=null||actor.transform.Find("GlowStick")!=null)return actor;
             var stick = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             stick.name = "GlowStick";
             var collider = stick.GetComponent<Collider>();
@@ -115,11 +145,16 @@ namespace DeliveryRider
 
         private TrafficPedestrian SpawnActor(int route, float along, Vector3 spot, bool fan, Material coat, float speed, float resistance, int seed)
         {
-            var actor = Instantiate(network.Prefab, spot, transform.rotation, transform);
+            TrafficPedestrian actor;
+            if(actorsUsed<actors.Count)actor=actors[actorsUsed];
+            else{actor=Instantiate(network.Prefab,spot,transform.rotation,transform);actors.Add(actor);}
+            actorsUsed++;
+            actor.transform.SetPositionAndRotation(spot,transform.rotation);
+            actor.enabled=true;
             actor.InitializeCrowd(network, route, along, Random.Range(1, 100000) + seed, coat,
                 transform, spot, fan, speed, resistance, fan ? fanMassMultiplier : 1f);
-            if (fan) actor.ConfigureCrowdContact(this);
-            actors.Add(actor);
+            actor.ConfigureCrowdContact(fan?this:null);
+            actor.gameObject.SetActive(true);
             return actor;
         }
 
@@ -177,10 +212,18 @@ namespace DeliveryRider
             return route >= 0;
         }
 
-        private void OnDisable()
+        private void OnEnable()
         {
-            foreach (var actor in actors) if (actor != null) { actor.gameObject.SetActive(false); Destroy(actor.gameObject); }
-            actors.Clear();
+            ClearActors();
+            appeared=slot!=null&&slot.StartedFor(session);retryAt=0f;waitingPrepared=false;
+        }
+
+        private void OnDisable()=>ClearActors();
+
+        private void ClearActors()
+        {
+            foreach(var actor in actors)if(actor!=null)actor.gameObject.SetActive(false);
+            actorsUsed=0;celebrity=null;waitingStar=null;waitingPrepared=false;
         }
     }
 }

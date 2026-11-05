@@ -218,15 +218,20 @@ namespace DeliveryRider
         // Objects place their daily count; triggers place a pool and a few of them light up per call.
         private DevTarget HazardCounts()
         {
-            DevTuningSession.EnsureFourDays(hazardSettings);
+            DevTuningSession.EnsureFiveDays(hazardSettings);
             var values = new List<DevValue>();
             for (int i = 0; i < hazardSettings.Kinds.Count; i++)
             {
                 var kind = hazardSettings.Kinds[i];
                 string name = DevLabels.HazardType(kind.type), at = $"kinds.Array.data[{i}].";
-                if (kind.role == HazardRole.Trigger) values.Add(DevValue.Find(hazardSettings, at + "poolSize", name + " 배치 수 (트리거)"));
+                if (kind.role == HazardRole.Trigger)
+                    for(int day=1;day<=5;day++)
+                    {
+                        values.Add(DevValue.Find(hazardSettings,$"{at}mainCountPerDay.Array.data[{day-1}]",$"{name} 큰길 배치 수 ({day}일차)"));
+                        values.Add(DevValue.Find(hazardSettings,$"{at}alleyCountPerDay.Array.data[{day-1}]",$"{name} 차 없는 길 배치 수 ({day}일차)"));
+                    }
                 else if (kind.countPerDay.Length > 0)
-                    for (int day = 1; day <= 4; day++)
+                    for (int day = 1; day <= 5; day++)
                     {
                         values.Add(DevValue.Find(hazardSettings, $"{at}countPerDay.Array.data[{day - 1}]", $"{name} 개수 ({day}일차)"));
                     }
@@ -250,6 +255,8 @@ namespace DeliveryRider
                     var type = part.GetType();
                     if (type.Namespace != nameof(DeliveryRider)) continue;
                     var values = DevValue.Discover(part);
+                    if(kind.role==HazardRole.Trigger&&(part is RollingTireHazard||part is RollingMelonHazard||part is PigeonFlockHazard))
+                        values.RemoveAll(value=>value.PropertyPath=="rearmSeconds"||value.PropertyPath=="rearmDistance"||value.PropertyPath=="contactCooldown");
                     if (values.Count == 0) continue;
                     var entry = new HazardPart
                     {

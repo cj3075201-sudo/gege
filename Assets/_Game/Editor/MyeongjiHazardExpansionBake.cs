@@ -33,6 +33,7 @@ namespace DeliveryRider.Editor
         {
             public HazardCandidates.Spot[] spots;
             public HazardCandidate[] candidates;
+            public HazardCandidates.RoutePath[] routePaths;
         }
 
         private sealed class Context : IDisposable
@@ -112,7 +113,7 @@ namespace DeliveryRider.Editor
                     QueryTriggerInteraction.Ignore).Any(c => !floors.Contains(c) && c.attachedRigidbody == null);
             }
 
-            public bool Away(Vector3 p, float clearance = 4f) => Flat(p - home).magnitude >= 11f
+            public bool Away(Vector3 p, float clearance = 8f) => Flat(p - home).magnitude >= 11f
                 && keep.All(k => Flat(p - k).magnitude >= clearance);
             public bool Junction(Vector3 p, JToken self) => roads.Any(r => r != self && Distance(p, r) < (float)r["width"] * .5f + 2.5f);
             public bool LineClear(Vector3 a, Vector3 b, float radius)
@@ -158,9 +159,9 @@ namespace DeliveryRider.Editor
                     if (oldRoad && beforeOld == 0) beforeOld = places.Count;
                     var a = P2(road["a"]); var b = P2(road["b"]);
                     var along = (b - a).normalized; var right = Vector3.Cross(Vector3.up, along);
-                    float half = (float)road["width"] * .5f; bool alley = half < 2.5f;
+                    float half = (float)road["width"] * .5f; bool alley = half < 3f;
                     var rotation = Quaternion.LookRotation(along);
-                    for (float d = 5f; d < Vector3.Distance(a, b) - 5f; d += 4f)
+                    for (float d = 5f; d < Vector3.Distance(a, b) - 5f; d += 2f)
                     {
                         var center = a + along * d;
                         if (!context.Ground(center, out center) || !context.Away(center) || context.Junction(center, road) || !context.Clear(center, .6f)) continue;
@@ -178,7 +179,7 @@ namespace DeliveryRider.Editor
                             }
                             if (!alley || side == 1)
                             {
-                                var lid = center + (alley ? Vector3.zero : right * side * half * .5f);
+                                var lid = center + (alley ? Vector3.zero : right * side * half * .3f);
                                 if (context.Ground(lid, out lid) && context.Clear(lid, .98f) && !context.Junction(lid, road))
                                     Add("manhole", lid + Vector3.up * .008f, rotation);
                             }
@@ -188,7 +189,7 @@ namespace DeliveryRider.Editor
                             var melon = center + right * side * (half + pile + .15f);
                             if (context.Ground(melon, out melon) && context.Away(melon, 5f) && !context.Junction(melon, road)
                                 && context.Clear(melon, pile + .1f) && context.LineClear(melon - along * 2f, melon + along * 2f, pile)) Add("melon", melon, rotation);
-                            var hydrant = center + right * side * (half + .85f);
+                            var hydrant = center + right * side * (Mathf.Max(.4f, half - 1.2f));
                             if (context.Ground(hydrant, out hydrant) && context.Clear(hydrant, .85f) && !context.Junction(hydrant, road))
                                 Add("hydrant", hydrant, Quaternion.LookRotation(-right * side));
                             // Doors are retained as an existing type; new ones still require a real facade, even in geometry mode.
@@ -223,6 +224,20 @@ namespace DeliveryRider.Editor
                                 // PigeonFlockInstaller copies the safe main-road duck places verbatim.
                                 if (!alley && half >= 2f) Add("pigeonflock", center, rotation);
                             }
+                            // HTML additions; all use the same ground, 8 m destination and junction checks.
+                            if (side == 1)
+                            {
+                                if (context.Clear(center, .6f)) Add("falling", center, rotation);
+                                if (context.LineClear(center - along * 2f, center + along * 2f, .6f)
+                                    && context.Clear(center + right * Mathf.Min(1f, half - .6f), .35f)
+                                    && context.Clear(center - right * Mathf.Min(1f, half - .6f), .35f)) Add("cat", center, rotation);
+                                if (!alley && context.LineClear(center - along * 14f, center + along * 6f, .45f)
+                                    && context.Clear(center - along * 14f - right * 1.4f, .45f)
+                                    && context.Clear(center - along * 14f + right * 1.4f, .45f)) Add("clone", center, rotation);
+                            }
+                            var dog = center + right * side * Mathf.Max(.6f, half - .6f);
+                            if (context.Ground(dog, out dog) && context.Clear(dog, .45f)
+                                && context.LineClear(dog - along * 3f, dog + along * 3f, .45f)) Add("dog", dog, rotation);
                             var pole = center + right * side * (half + 1f);
                             if (!context.Ground(pole, out pole) || !context.Clear(pole, .5f) || !context.Away(pole, 5f)) continue;
                             foreach (bool flip in new[] { false, true })
@@ -319,7 +334,41 @@ namespace DeliveryRider.Editor
             }
             if (routes.Count != 384) throw new InvalidOperationException("Expected all 384 routes, got " + routes.Count);
             SaveCopy(input, output, linked.spots.ToList(), linked.candidates.ToList());
+            var routed = Load(output); routed.ConfigureRoutes(linked.routePaths); EditorUtility.SetDirty(routed); AssetDatabase.SaveAssetIfDirty(routed);
             Debug.Log("HAZARD_ROUTES verified=384 candidateFieldBytesAfterEolNormalization=true sourceSha256=" + Hash(SourcePath));
+        }
+
+        public static void ApplyHtmlRules()
+        {
+            var source = Load(InputPath()); ValidatePrefix(source);
+            const string targetPath = "Assets/_Game/Settings/MyeongjiHazardCandidatesExpanded.asset";
+            string guid = AssetDatabase.AssetPathToGUID(targetPath);
+            var target = Load(targetPath);
+            EditorUtility.CopySerialized(source, target);
+            target.name = "MyeongjiHazardCandidatesExpanded";
+            EditorUtility.SetDirty(target); AssetDatabase.SaveAssetIfDirty(target);
+            if (AssetDatabase.AssetPathToGUID(targetPath) != guid) throw new InvalidOperationException("Candidate GUID changed");
+            HtmlHazardSettingsInstaller.Apply();
+            Debug.Log($"HTML_APPLY candidates={target.Candidates.Count} spots={target.Spots.Count} routes={target.RoutePaths.Count} guid={guid}; scene unchanged");
+        }
+
+        public static void RebakePlacementMetadata()
+        {
+            const string path="Assets/_Game/Settings/MyeongjiHazardCandidatesExpanded.asset";
+            string guid=AssetDatabase.AssetPathToGUID(path),sourceHash=Hash(SourcePath);
+            var asset=Load(path);ValidatePrefix(asset);
+            string prefix=CandidateBlock(File.ReadAllText(path));
+            var scene=EditorSceneManager.OpenScene("Assets/_Game/Scenes/FourDistrictPrototype_Myeongji.unity",OpenSceneMode.Single);
+            var planner=UnityEngine.Object.FindFirstObjectByType<HazardPlanner>();
+            var ground=(RoadNetwork)new SerializedObject(planner).FindProperty("ground").objectReferenceValue;
+            var roads=ground.Roads;var sidewalks=UnityEngine.Object.FindFirstObjectByType<PedestrianNetwork>();
+            var metadata=asset.Candidates.Select(c=>HazardCandidates.Classify(c,roads,sidewalks)).ToArray();
+            asset.ConfigurePlacements(metadata);EditorUtility.SetDirty(asset);AssetDatabase.SaveAssetIfDirty(asset);
+            ValidatePrefix(asset);
+            if(guid!=AssetDatabase.AssetPathToGUID(path)||sourceHash!=Hash(SourcePath))throw new InvalidOperationException("GUID/source changed");
+            // CandidateBlock now also reaches the appended metadata, so compare the original candidate block prefix.
+            if(!CandidateBlock(File.ReadAllText(path)).StartsWith(prefix,StringComparison.Ordinal))throw new InvalidOperationException("Candidate records changed");
+            Debug.Log($"REVIEW_METADATA_PASS placements={metadata.Length} invalid={metadata.Count(m=>!m.valid)} guid={guid} frozen887=true spots306=true sourceSha={sourceHash}");
         }
 
         private static void ValidateNetwork(PedestrianNetwork network)

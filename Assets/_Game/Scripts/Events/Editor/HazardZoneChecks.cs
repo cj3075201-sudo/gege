@@ -297,8 +297,21 @@ namespace DeliveryRider.Editor
                 foreach (float scale in new[] { 1f, 2f, 4f })
                     foreach (var direction in new[] { Vector3.forward, Vector3.back, Vector3.left, Vector3.right })
                     {
-                        float flightSeconds = 2f * (14f * scale) / Mathf.Max(0.01f, -Physics.gravity.y);
-                        sources.Add(player.transform.position + direction * (24f * scale * flightSeconds));
+                        var motor = player.GetComponent<RiderMotor>();
+                        float gravity = Mathf.Max(.01f,-Physics.gravity.y * motor.AccidentGravityScale);
+                        float up = 30f * scale, horizontal = 24f * scale, travel = 0f;
+                        var reaction = new SerializedObject(motor);
+                        int maximum = reaction.FindProperty("maximumFloorBounces").intValue;
+                        float reflection = reaction.FindProperty("floorReflection").floatValue;
+                        float friction = reaction.FindProperty("floorFriction").floatValue;
+                        for(int bounce=0;bounce<=maximum;bounce++)
+                        {
+                            travel += horizontal*(2f*up/gravity);
+                            sources.Add(player.transform.position+direction*travel);
+                            // The runtime compares INCOMING impact speed, before reflection.
+                            if(up<reaction.FindProperty("minimumBounceSpeed").floatValue)break;
+                            up*=reflection;horizontal*=friction;
+                        }
                     }
 
                 var far = new Vector3(4000f, 0f, 4000f);

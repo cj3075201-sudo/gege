@@ -60,7 +60,7 @@ namespace DeliveryRider
             ResetWave();
         }
 
-        private void OnEnable() { if (ready) ResetWave(); }
+        private void OnEnable() { if (ready) { if(slot!=null&&slot.StartedFor(session))Finish();else ResetWave(); } }
         private void OnDisable() { if (ready) Finish(); }
         private void Update()
         {
@@ -85,13 +85,15 @@ namespace DeliveryRider
                     if (elapsed >= Mathf.Min(waveSeconds, 10f)) Finish();
                     break;
                 case Phase.Spent:
-                    if (elapsed >= rearmSeconds && distance > rearmDistance) ResetWave();
+                    if ((slot==null||slot.Role!=HazardRole.Trigger)&&elapsed >= rearmSeconds && distance > rearmDistance) ResetWave();
                     break;
             }
         }
 
         private void BeginWave()
         {
+            if(slot!=null&&slot.StartedFor(session))return;
+            slot?.MarkStarted(session);
             phase = Phase.Rolling;
             elapsed = 0f;
             released = 0;

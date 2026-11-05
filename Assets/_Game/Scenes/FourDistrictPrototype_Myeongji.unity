@@ -2967,6 +2967,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5815388a5927054f9ef5c25c7a4ae78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.HazardPlanner
+  activePerDay: 05000000080000000a0000000d0000000d000000
+  routeShare: 0.7
+  routeRadius: 7
+  typeGuarantee: 0.5
+  stealChance: 0.5
+  duckChance: 0.25
+  visibilityHoldRadius: 25
+  igniteChance: 0.8
+  objectIgniteChance: 0.3
+  igniteRadius: 40
+  combosEnabled: 1
+  comboCountScale: 1
+  objectMinimumSpacing: 5
+  comboFirst: 0.35
+  showSelectedBeforePickup: 1
+  previewOpacity: 0.4
+  previewFadeSeconds: 0.3
   session: {fileID: 421427440}
   rider: {fileID: 424159419}
   ground: {fileID: 1954410165}
@@ -2980,7 +2997,9 @@ MonoBehaviour:
   foodSpeedShare: 0.55
   foodSpreadSpeed: 5
   foodUpShare: 0.7
-  foodExtraUp: 2.23
+  foodExtraUp: 5
+  hazardCountScale: 1
+  hazardTriggerScale: 1
 --- !u!4 &32693208
 Transform:
   m_ObjectHideFlags: 0
@@ -35245,6 +35264,7 @@ MonoBehaviour:
     - {r: 0.93, g: 0.93, b: 0.9, a: 1}
     - {r: 0.6, g: 0.62, b: 0.64, a: 1}
   vehicleCount: 50
+  vehicleCountByDay: 1e00000028000000320000003c0000003c000000
   minimumSpacing: 14
   playerClearance: 10
   randomEachRun: 1
@@ -66726,13 +66746,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64d6d6962a77ad4292b2b6bd14df57c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryRider.RiderMotor
+  airGravityScale: 2.24
   airSteering: 7
   airInputSpeedLimit: 10
   wallReflection: 0.58
   floorReflection: 0.46
   floorFriction: 0.78
-  minimumBounceSpeed: 2.23
-  maximumFloorBounces: 3
+  minimumBounceSpeed: 5
+  maximumFloorBounces: 4
   contactInterval: 0.12
   rollDeceleration: 14
   getUpSpeed: 1.7
@@ -66770,6 +66791,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   jumpSpeed: 4.24
+  hazardHeightScale: 1
+  hazardDistanceScale: 1
   slipSteering: 4
   slipMaximumSpeed: 8
   chickenSpeedScale: 0.3

@@ -53,3 +53,7 @@ MonoBehaviour:
   fanSpeedMultiplier: 4
   fanResistance: 1.35
   fanMassMultiplier: 3
+  fanKnockMinimumSpeed: 8.5
+  fanContactSpeedShare: 0.74
+  riderMinimumProgressSpeed: 1.5
+  fanContactCooldown: 0.35
