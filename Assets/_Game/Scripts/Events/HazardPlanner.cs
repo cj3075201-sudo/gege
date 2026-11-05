@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace DeliveryRider
 {
-    // Objects are active all the time; triggers wait for the food when triggersRequireFood is on. Theft always needs food.
-    public sealed class HazardPlanner : MonoBehaviour
+    // Objects remain armed; call-selected triggers share one delivery-stage gate.
+    public sealed partial class HazardPlanner : MonoBehaviour
     {
         [SerializeField] private DeliverySession session;
         [SerializeField] private RiderMotor rider;
@@ -14,7 +14,7 @@ namespace DeliveryRider
         [Tooltip("Off: always use the seed below, to reproduce a layout.")]
         [SerializeField] private bool randomEachRun = true;
         [SerializeField] private int seed = 11;
-        [Tooltip("On: triggers strike only while the rider carries the food (HTML prototype). Off: they strike regardless (team rule).")]
+        [Tooltip("On: selected triggers strike throughout delivery, including food recovery. Off: selected triggers strike before pickup too.")]
         [SerializeField] private bool triggersRequireFood = true;
         [Header("Food knocked loose by a hazard (test values)")]
         [SerializeField, Range(0f, 1f)] private float foodDropChance = 0.18f;
@@ -36,6 +36,7 @@ namespace DeliveryRider
         public IReadOnlyDictionary<string, int> RequestedCounts => requestedCounts;
         private DroppedFood droppedFood;
         private HazardZoneFilter openRoads;
+        private PedestrianNetwork placementSidewalks;
         private bool appliedFoodRule;
         private readonly List<HazardSlot> slots = new List<HazardSlot>();
         private int day = 1;
@@ -44,7 +45,7 @@ namespace DeliveryRider
             get
             {
                 int count = 0;
-                foreach (var slot in slots) if (slot != null && slot.Role == HazardRole.Trigger && slot.gameObject.activeSelf) count++;
+                foreach (var slot in slots) if (slot != null && slot.Role == HazardRole.Trigger && slot.RuntimeActive) count++;
                 return count;
             }
         }
@@ -59,44 +60,16 @@ namespace DeliveryRider
             OnSessionChanged();
         }
 
-        // Reserve the flock's scarce main-road candidates first, then place objects and the other triggers.
-        // All passes use the same spacing rules; a later type cannot consume a reserved flock location.
+        // Resolve grouped and independent safe candidates before instantiating the day's fixed slot pool.
         private void Spawn()
         {
             if (settings == null || candidates == null || ground == null) { Debug.LogError("Hazard planner needs spawn settings, candidates and the road network.", this); return; }
             requestedCounts.Clear();
             var random = randomEachRun ? new System.Random() : new System.Random(seed);
-            var placed = new List<(Vector3 position, string type)>();
             openRoads = new HazardZoneFilter(session.ZoneMap, session.IsZoneOpen);
-            float openShare = openRoads.OpenRoadShare(ground.Roads);
-            var shuffled = new List<int>();
-            // Prefabs are instantiated under an inactive parent so they can be fitted before they wake.
-            var staging = new GameObject("HazardStaging");
-            staging.SetActive(false);
-            for (int priority = 0; priority < 3; priority++)
-                foreach (var kind in settings.Kinds)
-                {
-                    int placementPriority = kind.type == "pigeonflock" ? 0 : kind.role == HazardRole.Object ? 1 : 2;
-                    if (placementPriority != priority || kind.prefab == null || kind.unlockDay > day) continue;
-                    // Settings hold whole-map counts, so an open part of the map keeps the same hazards per metre.
-                    int want = HazardZoneFilter.ScaleCount(kind.Count(day), openShare), count = 0;
-                    want = HazardZoneFilter.ScaleCount(want, hazardCountScale);
-                    requestedCounts[kind.type] = (requestedCounts.TryGetValue(kind.type, out int requested) ? requested : 0) + want;
-                    shuffled.Clear();
-                    for (int i = 0; i < candidates.Candidates.Count; i++)
-                        if (candidates.Candidates[i].type == kind.type && CandidateOpen(candidates.Candidates[i])) shuffled.Add(i);
-                    for (int i = shuffled.Count - 1; i > 0; i--) { int j = random.Next(i + 1); (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]); }
-                    foreach (int index in shuffled)
-                    {
-                        if (count >= want) break;
-                        var spot = candidates.Candidates[index];
-                        if (!HasRoom(placed, spot.position, kind.type)) continue;
-                        SpawnOne(kind, spot, staging.transform);
-                        placed.Add((spot.position, kind.type));
-                        count++;
-                    }
-                    if (count < want) Debug.LogWarning($"Hazards: placed {count} of {want} {kind.type} (not enough spaced candidates).", this);
-                }
+            placementSidewalks=FindFirstObjectByType<PedestrianNetwork>();
+            var staging = new GameObject("HazardStaging"); staging.SetActive(false);
+            PlaceDailyLayout(random, staging.transform);
             appliedTriggerScale = hazardTriggerScale;
             if (Application.isPlaying) Destroy(staging);
             else DestroyImmediate(staging);
@@ -106,6 +79,9 @@ namespace DeliveryRider
         private bool CandidateOpen(HazardCandidate candidate)
         {
             if (!openRoads.PointOpen(candidate.position)) return false;
+            foreach (var point in settings.PlacementKeepouts)
+                if (Vector3.ProjectOnPlane(candidate.position - point, Vector3.up).sqrMagnitude < 64f) return false;
+            if(candidate.type=="celebrity"&&(placementSidewalks==null||!CelebrityCrowdHazard.FindCenter(placementSidewalks,candidate.position,out _,out _)))return false;
             if (candidate.type == "theft" && PigeonSnatchHazard.OpenEscapePoints(candidate, openRoads, PigeonSnatchHazard.MinimumEscapePoints) < PigeonSnatchHazard.MinimumEscapePoints) return false;
             var spots = candidates.Spots;
             return candidate.spot < 0 || candidate.spot >= spots.Count || openRoads.PointOpen(spots[candidate.spot].position);
@@ -124,22 +100,12 @@ namespace DeliveryRider
                     else DestroyImmediate(slot.gameObject);
                 }
             slots.Clear();
+            rolledOrder = null;
             Spawn();
             OnSessionChanged();
         }
 
-        private bool HasRoom(List<(Vector3 position, string type)> placed, Vector3 position, string type)
-        {
-            foreach (var other in placed)
-            {
-                float gap = other.type == type ? settings.SameTypeSpacing : settings.Spacing;
-                var offset = other.position - position;
-                if (offset.x * offset.x + offset.z * offset.z < gap * gap) return false;
-            }
-            return true;
-        }
-
-        private void SpawnOne(HazardSpawnSettings.Kind kind, HazardCandidate spot, Transform staging)
+        private HazardSlot SpawnOne(HazardSpawnSettings.Kind kind, HazardCandidate spot, Transform staging)
         {
             var obj = Instantiate(kind.prefab, spot.position, spot.rotation, staging);
             obj.name = $"{slots.Count:00}_{kind.type}" + (spot.alley ? "_alley" : "");
@@ -147,11 +113,15 @@ namespace DeliveryRider
             foreach (var hazard in obj.GetComponents<IPlacedHazard>()) hazard.Place(session, ground, spot);
             var slot = obj.AddComponent<HazardSlot>();
             slot.Configure(kind.type, kind.role, kind.unlockDay, candidates.Routes(spot.spot));
-            slot.StrikeAllowed = CanStrike(slot);
+            slot.Planner = this;
+            slot.Candidate = spot;
+            slot.StrikeAllowed = kind.role == HazardRole.Object;
             slot.SetTriggerScale(hazardTriggerScale);
             obj.SetActive(true);
             obj.transform.SetParent(transform, true);
             slots.Add(slot);
+            if (kind.role == HazardRole.Trigger) slot.SetRuntimeActive(false);
+            return slot;
         }
 
         private void OnEnable()
@@ -168,20 +138,25 @@ namespace DeliveryRider
 
         private void OnSessionChanged()
         {
+            RefreshCall();
             appliedFoodRule = triggersRequireFood;
             foreach (var slot in slots)
-                if (slot != null) slot.StrikeAllowed = CanStrike(slot);
+                if (slot != null) slot.StrikeAllowed = CanStrike(slot) && (slot.Role == HazardRole.Object || slot.Selected);
+            ApplyPendingSlots();
         }
 
         private bool CanStrike(HazardSlot slot)
         {
-            bool needsFood = slot.Type == "theft" || triggersRequireFood && slot.Role == HazardRole.Trigger;
-            return !needsFood || session.Stage == DeliveryStage.Carrying;
+            return slot.Role == HazardRole.Object || !triggersRequireFood && slot.Type != "theft" && slot.Type != "clone" || DeliveryInProgress(session);
         }
+
+        public static bool DeliveryInProgress(DeliverySession owner) => owner != null
+            && (owner.Stage == DeliveryStage.Carrying || owner.Stage == DeliveryStage.FoodLost);
 
         // The developer panel can flip the rule mid-run, between session changes.
         private void Update()
         {
+            ApplyPendingSlots();
             if (appliedFoodRule != triggersRequireFood) OnSessionChanged();
             if (appliedTriggerScale == hazardTriggerScale) return;
             appliedTriggerScale = hazardTriggerScale;
@@ -191,6 +166,9 @@ namespace DeliveryRider
         // Melons are the weak hits that never cost the food.
         private void OnRiderHazardHit(Object source)
         {
+            Ignite(source);
+            if (source is CatBoxerHazard cat && cat.KeepsFoodOnCurrentHit) return;
+            if (source is Component hitPart && hitPart.GetComponentInParent<RollingTireHazard>(true) is RollingTireHazard tire && tire.KeepsFoodOnCurrentHit) return;
             if (source is RollingMelon || droppedFood != null || session.Stage != DeliveryStage.Carrying || Random.value >= foodDropChance) return;
             var launch = rider.ContactVelocity;
             var sideways = Vector3.ProjectOnPlane(launch, Vector3.up) * foodSpeedShare

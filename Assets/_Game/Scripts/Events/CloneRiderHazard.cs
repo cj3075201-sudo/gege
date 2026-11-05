@@ -83,7 +83,7 @@ namespace DeliveryRider
             { Stop(); order = session.ActiveOrder; phase = Phase.Ready; }
             if (session.IsSettled) { Stop(); return; }
             if (phase == Phase.Escaping) { Escape(); return; }
-            if (session.IsMapOpen || session.Stage != DeliveryStage.Carrying || slot != null && !slot.StrikeAllowed)
+            if (session.IsMapOpen || !(slot != null ? slot.StrikeAllowed : HazardPlanner.DeliveryInProgress(session)))
             {
                 if (phase == Phase.Approaching) Stop();
                 return;

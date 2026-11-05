@@ -20,11 +20,14 @@ namespace DeliveryRider
         [Tooltip("Manhole only: rider speed share added to forwardImpulse, thrown along the rider's heading.")]
         [SerializeField, Min(0)] private float riderSpeedShare;
         [SerializeField, Min(0.1f)] private float slipSeconds = 2.2f;
+        [SerializeField, Min(0f)] private float objectRearmSeconds = 10f;
+        [SerializeField, Min(0.1f)] private float landingRadius = 2.6f;
         private BoxCollider volume;
         private CapsuleCollider playerShape;
         private RiderMotor rider;
         private Phase phase;
         private float elapsed;
+        private float nextArmedAt;
         private bool contactConsumed;
         private HazardSlot slot;
         private bool CanStrike => slot == null || slot.StrikeAllowed;
@@ -64,18 +67,26 @@ namespace DeliveryRider
                     if (elapsed >= activeSeconds) Finish();
                     break;
                 case Phase.Spent:
-                    // No cooldown: armed again as soon as the rider is off it, so standing on it cannot loop bursts.
-                    if (!Touching()) Enter(Phase.Ready);
+                    // Rearm after the HTML cooldown, once the rider has left the contact volume.
+                    if (Time.time >= nextArmedAt && !Touching()) Enter(Phase.Ready);
                     break;
             }
         }
-        private bool Touching() => Physics.ComputePenetration(volume, transform.position, transform.rotation, playerShape,
-            playerShape.transform.position, playerShape.transform.rotation, out _, out _);
+        private bool Touching()
+        {
+            if (Physics.ComputePenetration(volume, transform.position, transform.rotation, playerShape,
+                playerShape.transform.position, playerShape.transform.rotation, out _, out _)) return true;
+            var delta = playerShape.bounds.min.y - volume.bounds.max.y;
+            var planar = Vector3.ProjectOnPlane(rider.transform.position - transform.position, Vector3.up);
+            float scale = slot != null ? slot.TriggerScale : 1f;
+            return rider.Velocity.y < -0.1f && delta >= -0.2f && delta <= 0.5f && planar.sqrMagnitude <= landingRadius * landingRadius * scale * scale;
+        }
         private void TryContact()
         {
             if (contactConsumed || session.IsMapOpen || kind == GroundHazardKind.Melon && !rider.IsGroundedForHazards) return;
             if (!Touching()) return;
             contactConsumed = true;
+            nextArmedAt = Time.time + objectRearmSeconds;
             // Consume even rejected contact: this activation cannot hit repeatedly later.
             if (kind == GroundHazardKind.Melon) { rider.TryHazardSlip(this, transform.forward, slipSeconds); Finish(); return; }
             // No warning: at running speed the rider would be past before a timed burst, so it erupts on touch.

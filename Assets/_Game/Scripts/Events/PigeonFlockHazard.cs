@@ -70,6 +70,8 @@ namespace DeliveryRider
             return Quaternion.LookRotation(heading.sqrMagnitude > 0.0001f ? heading : Vector3.forward, Vector3.up);
         }
 
+        private void OnEnable() { contactConsumed=false; nextContactAt=0f; }
+
         private bool IsPlayer(Collider other) => session != null && other.attachedRigidbody != null
             && other.attachedRigidbody.transform == session.Player;
 

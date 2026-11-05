@@ -34,6 +34,34 @@ namespace DeliveryRider
             public int[] routes = Array.Empty<int>();
         }
 
+        [Serializable]
+        public sealed class RoutePath
+        {
+            public Vector3[] points = Array.Empty<Vector3>();
+            public Vector3[] mainPoints = Array.Empty<Vector3>();
+        }
+        [SerializeField] private RoutePath[] routePaths = Array.Empty<RoutePath>();
+        public IReadOnlyList<RoutePath> RoutePaths => routePaths;
+        public void ConfigureRoutes(RoutePath[] value) => routePaths = value ?? Array.Empty<RoutePath>();
+
+        public float RouteDistance(int route, Vector3 point, bool shortestOnly = false)
+        {
+            if (route < 0 || route >= routePaths.Length) return float.PositiveInfinity;
+            float distance = Distance(routePaths[route].points, point);
+            return shortestOnly ? distance : Mathf.Min(distance, Distance(routePaths[route].mainPoints, point));
+        }
+        private static float Distance(Vector3[] path, Vector3 point)
+        {
+            float best = float.PositiveInfinity;
+            for (int i = 1; i < path.Length; i++)
+            {
+                var a = path[i - 1]; var delta = path[i] - a; delta.y = 0f;
+                var relative = point - a; relative.y = 0f;
+                float t = delta.sqrMagnitude > 0f ? Mathf.Clamp01(Vector3.Dot(relative, delta) / delta.sqrMagnitude) : 0f;
+                best = Mathf.Min(best, (relative - delta * t).magnitude);
+            }
+            return best;
+        }
         [SerializeField] private Spot[] spots = Array.Empty<Spot>();
         [SerializeField] private HazardCandidate[] candidates = Array.Empty<HazardCandidate>();
 

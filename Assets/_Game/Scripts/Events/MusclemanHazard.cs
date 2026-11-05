@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace DeliveryRider
 {
-    // An invisible sidewalk trigger releases a runner behind the rider on a fixed sidewalk route.
+    // Placed HTML chases use the road corridor; the legacy sidewalk helpers remain for existing installer checks.
     [RequireComponent(typeof(BoxCollider))]
-    public sealed class MusclemanHazard : MonoBehaviour, IPlacedHazard
+    public sealed partial class MusclemanHazard : MonoBehaviour, IPlacedHazard
     {
-        private enum Phase { Ready, Running, Turning, Spent }
+        private enum Phase { Ready, Running, Turning, Spent, Winding }
         [SerializeField] private Transform runner;
         [SerializeField] private PedestrianNetwork sidewalks;
         [Header("Rush (test values)")]
@@ -28,6 +28,10 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float recoverySeconds = 0.6f;
         [Tooltip("A rider touching the trigger where no sidewalk route exists is tried again after this long, not every physics step.")]
         [SerializeField, Min(0.02f)] private float routeRetrySeconds = 0.25f;
+        [SerializeField, Min(.1f)] private float detectionRadius = 7f;
+        [SerializeField] private Vector2 windSeconds = new Vector2(.8f, 2f);
+        [SerializeField, Min(.1f)] private float maximumChaseSeconds = 8f;
+        private float windElapsed, chaseElapsed;
         private float nextRouteTryAt;
         private DeliverySession session;
         private RiderMotor rider;
@@ -44,7 +48,10 @@ namespace DeliveryRider
         private readonly List<int> approach = new List<int>();
         private int approachIndex;
 
-        public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot) => session = owner;
+        public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot)
+        {
+            session = owner; chaseGround = ground; htmlOrigin = spot.position; htmlForward = spot.rotation * Vector3.forward;
+        }
 
         private void Awake()
         {
@@ -53,11 +60,13 @@ namespace DeliveryRider
             volume = GetComponent<BoxCollider>();
             volume.isTrigger = true;
             slot = GetComponent<HazardSlot>();
-            if (rider == null || sidewalks == null || runner == null) { enabled = false; return; }
+            if (rider == null || sidewalks == null && chaseGround == null || runner == null) { enabled = false; return; }
             playerShape = rider.GetComponent<CapsuleCollider>();
+            if(chaseGround!=null) htmlPath = new PursuitHazardPath(session,chaseGround,transform,roadsideReach);
             runner.gameObject.SetActive(false);
         }
 
+        private void OnEnable() { phase = Phase.Ready; nextRouteTryAt = 0f; ResetHtmlChase(); }
         private void OnDisable() => Finish();
 
         private void Update()
@@ -71,12 +80,26 @@ namespace DeliveryRider
         private void FixedUpdate()
         {
             if (rider == null || session.IsPaused || session.IsSettled) return;
-            if (session.IsMapOpen) { if (phase == Phase.Running || phase == Phase.Turning) Finish(); return; }
+            if(htmlPath!=null) { TickHtmlChase(); return; }
+            if (session.IsMapOpen) { if (phase == Phase.Winding || phase == Phase.Running || phase == Phase.Turning) Finish(); return; }
             switch (phase)
             {
                 case Phase.Ready:
-                    if (Time.time >= nextRouteTryAt && (slot == null || slot.StrikeAllowed) && Touching() && !BeginRush())
-                        nextRouteTryAt = Time.time + routeRetrySeconds;
+                    if (Time.time >= nextRouteTryAt && (slot == null || slot.StrikeAllowed)
+                        && Vector3.ProjectOnPlane(rider.transform.position - transform.position, Vector3.up).sqrMagnitude <= detectionRadius * detectionRadius * TriggerScale * TriggerScale)
+                    {
+                        if (windSeconds.y <= 0f) { if (!BeginRush()) nextRouteTryAt = Time.time + routeRetrySeconds; }
+                        else { phase = Phase.Winding; windElapsed = 0f; }
+                    }
+                    break;
+                case Phase.Winding:
+                    if (slot != null && !slot.StrikeAllowed) { Finish(); break; }
+                    windElapsed += Time.fixedDeltaTime;
+                    if (windElapsed >= windSeconds.y || windElapsed >= windSeconds.x
+                        && Vector3.ProjectOnPlane(rider.transform.position - transform.position, Vector3.up).magnitude >= spawnBehindDistance)
+                    {
+                        if (!BeginRush()) { phase = Phase.Ready; nextRouteTryAt = Time.time + routeRetrySeconds; }
+                    }
                     break;
                 case Phase.Running:
                 case Phase.Turning:
@@ -202,7 +225,7 @@ namespace DeliveryRider
             distance = spawnDistance;
             // Lock speed and route now: subsequent player movement does not steer the runner.
             rushSpeed = rider.Speed * speedMultiplier;
-            turningTime = 0f;
+            turningTime = chaseElapsed = 0f;
             struck.Clear();
             sidewalks.Sample(path, distance, out var feet, out var forward);
             runner.SetPositionAndRotation(feet, Quaternion.LookRotation(forward));
@@ -214,6 +237,8 @@ namespace DeliveryRider
         private void Advance()
         {
             float dt = Time.fixedDeltaTime;
+            chaseElapsed += dt;
+            if (chaseElapsed >= maximumChaseSeconds) { Finish(); return; }
             if (phase == Phase.Turning) turningTime += dt;
             if (phase == Phase.Turning && turningTime >= disappearAfterTurn) { Finish(); return; }
             float travel = rushSpeed * dt;
@@ -280,6 +305,8 @@ namespace DeliveryRider
             if (!body.TryGetComponent<RiderMotor>(out var player) && !body.TryGetComponent<TrafficPedestrian>(out _)) return;
             // The food may be gone since the rush started: the runner passes the rider but still bowls over walkers.
             if (player != null && slot != null && !slot.StrikeAllowed) return;
+            if(player!=null&&htmlPath!=null&&(HtmlFootHeight>=1.2f
+                ||Vector3.ProjectOnPlane(player.transform.position-runner.position,Vector3.up).sqrMagnitude>runnerRadius*runnerRadius*TriggerScale*TriggerScale))return;
             struck.Add(body);
             var right = Vector3.Cross(Vector3.up, forward).normalized;
             float side = Vector3.Dot(body.position - runner.position, right) >= 0f ? 1f : -1f;

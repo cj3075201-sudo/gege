@@ -31,6 +31,8 @@ namespace DeliveryRider
         private HazardSlot slot;
         private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
         private int centerPath;
+        [SerializeField, Min(.1f)] private float crowdSeconds=14f;
+        private float crowdEndsAt;
         private float centerAlong, retryAt;
         private Transform celebrity;
         private bool appeared;
@@ -63,7 +65,12 @@ namespace DeliveryRider
 
         private void Update()
         {
-            if (appeared || network == null || !enabled || Time.time < retryAt || session.IsPaused || session.IsSettled || session.IsMapOpen
+            if(appeared)
+            {
+                if(session.IsSettled||slot!=null&&!slot.StrikeAllowed||Time.time>=crowdEndsAt)ClearActors();
+                return;
+            }
+            if (network == null || !enabled || Time.time < retryAt || session.IsPaused || session.IsSettled || session.IsMapOpen
                 || slot != null && !slot.StrikeAllowed) return;
             var offset = session.Player.position - transform.position;
             float reach = triggerRadius * TriggerScale;
@@ -71,7 +78,7 @@ namespace DeliveryRider
             // Resolve all 26 safe positions before spawning anything; a busy area retries instead of producing a partial wave.
             Physics.SyncTransforms();
             if (!FindSpawnPoints()) { retryAt = Time.time + 1f; return; }
-            appeared = true;
+            appeared = true; crowdEndsAt=Time.time+crowdSeconds;
             var star = SpawnActor(centerPath, centerAlong, transform.position, false, celebrityCoat, 1f, 1f, 100);
             star.name = "Celebrity";
             celebrity = star.transform;
@@ -177,10 +184,19 @@ namespace DeliveryRider
             return route >= 0;
         }
 
-        private void OnDisable()
+        private void OnEnable()
+        {
+            appeared = false; retryAt = 0f;
+            if (network != null && enabled)
+                for (int i = 0; i < waitingFans; i++) SpawnFan(centerPath, centerAlong, WaitingSpot(transform.position, transform.rotation, i), true, i);
+        }
+
+        private void OnDisable()=>ClearActors();
+
+        private void ClearActors()
         {
             foreach (var actor in actors) if (actor != null) { actor.gameObject.SetActive(false); Destroy(actor.gameObject); }
-            actors.Clear();
+            actors.Clear(); celebrity=null;
         }
     }
 }

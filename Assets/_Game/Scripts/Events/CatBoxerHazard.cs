@@ -42,14 +42,14 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float idleTrackDistance = 12f;
         [Header("Launch velocities — already converted from HTML gravity 22 to 9.81")]
         [SerializeField, Min(0f)] private float jabForward = 11f;
-        [SerializeField, Min(0f)] private float jabUp = 2.4525f;
+        [SerializeField, Min(0f)] private float jabUp = 5.5f;
         [SerializeField, Min(0f)] private float hookSide = 15f;
         [SerializeField, Min(0f)] private float hookForward = 3f;
-        [SerializeField, Min(0f)] private float hookUp = 3.567273f;
+        [SerializeField, Min(0f)] private float hookUp = 8f;
         [SerializeField, Min(0f)] private float upperForward = 3f;
-        [SerializeField] private Vector2 upperUp = new Vector2(9.81f, 11.147727f);
+        [SerializeField] private Vector2 upperUp = new Vector2(22f, 25f);
         [SerializeField, Min(0f)] private float lossForward = 15f;
-        [SerializeField] private Vector2 lossUp = new Vector2(10.701818f, 12.039545f);
+        [SerializeField] private Vector2 lossUp = new Vector2(24f, 27f);
         [SerializeField, Min(0.1f)] private float recoverySeconds = 0.6f;
         [Header("Escape and friend")]
         [SerializeField, Min(0f)] private float escapeDistance = 7.5f;
@@ -60,7 +60,7 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float chaseSeconds = 2.5f;
         [SerializeField, Min(0.1f)] private float chaseReach = 1.5f;
         [SerializeField, Min(0f)] private float chaseForward = 15f;
-        [SerializeField, Min(0f)] private float chaseUp = 3.121364f;
+        [SerializeField, Min(0f)] private float chaseUp = 7f;
         [SerializeField, Min(0f)] private float knockoutSeconds = 1.8f;
         [SerializeField, Min(0.1f)] private float palSeconds = 70f;
         [SerializeField, Min(0.1f)] private float palSpeed = 10.5f;
@@ -69,6 +69,7 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float palTeleportDistance = 30f;
         [SerializeField, Min(0.1f)] private float leaveSeconds = 1.2f;
         [SerializeField, Min(0.1f)] private float shoutSeconds = 3f;
+        [SerializeField, Min(.1f)] private float palCoverInterval = .5f;
         private DeliverySession session;
         private RiderMotor rider;
         private HazardSlot slot;
@@ -80,6 +81,7 @@ namespace DeliveryRider
         private Vector3 origin, laneForward, laneRight, aim;
         private float halfWidth = 3f, lateral, elapsed, remaining, farTime, sentTime, stagger;
         private bool wasSelected;
+        private float nextPalCoverAt;
         private InputAction shout;
         public Mode State { get; private set; }
         public Beat Phase { get; private set; }
@@ -90,7 +92,7 @@ namespace DeliveryRider
         public Vector3 Position => presentation != null ? presentation.transform.position : transform.position;
         private float Scale => slot != null ? slot.TriggerScale : 1f;
         private bool Selected => slot == null || slot.StrikeAllowed;
-        private bool FoodReady => session != null && session.Stage == DeliveryStage.Carrying;
+        private bool FoodReady => slot != null ? slot.StrikeAllowed : HazardPlanner.DeliveryInProgress(session);
         private bool Open(Vector3 p) => openRoads == null || openRoads.PointOpen(p);
 
         public void Place(DeliverySession owner, RoadNetwork roads, HazardCandidate spot)
@@ -167,6 +169,11 @@ namespace DeliveryRider
             if (State == Mode.Knockout) { if (elapsed >= knockoutSeconds) Enter(Mode.Pal); return; }
             if (State == Mode.Pal)
             {
+                if (slot != null && slot.Planner != null && Time.time >= nextPalCoverAt)
+                {
+                    nextPalCoverAt = Time.time + palCoverInterval;
+                    slot.Planner.TryConsumeSlot(rider.transform.position, 6f, slot);
+                }
                 if (elapsed >= palSeconds) { Enter(Mode.Leaving); return; }
                 if (distance > palFollowDistance) Move(rider.transform.position - Heading() * palOffset, palSpeed, dt, distance > palTeleportDistance);
                 return;
@@ -256,9 +263,9 @@ namespace DeliveryRider
         private bool Strike(Vector3 velocity, bool keepFood)
         {
             if (!Selected || !FoodReady || !Open(Position) || !Open(rider.transform.position)) return false;
-            // HazardPlanner's generic drop subscriber cannot express keepFood. Contact hits preserve food.
+            // The planner skips food drop on a jab while the shared crash path applies F1 launch scales.
             KeepsFoodOnCurrentHit = keepFood;
-            return keepFood ? rider.TryContactCrash(velocity, recoverySeconds) : rider.TryHazardCrash(this, velocity, recoverySeconds);
+            return rider.TryHazardCrash(this, velocity, recoverySeconds);
         }
 
         public bool ReceivePunch(Vector3 direction)

@@ -27,7 +27,7 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float obstacleRadius = 0.45f;
         [Tooltip("Keep HTML horizontal speed 5; only vertical velocity scales by 9.81/22 to preserve flight time and distance.")]
         [SerializeField, Min(0f)] private float bounceSpeed = 5f;
-        [SerializeField, Min(0f)] private float bounceLift = 4.013182f;
+        [SerializeField, Min(0f)] private float bounceLift = 9f;
         private RiderMotor rider;
         private Rigidbody playerBody;
         private HazardSlot slot;
@@ -81,8 +81,7 @@ namespace DeliveryRider
             {
                 Stop(); order = session.ActiveOrder; phase = Phase.Ready; dog.localPosition = home;
             }
-            bool allowed = !session.IsSettled && !session.IsMapOpen && (slot == null || slot.StrikeAllowed)
-                && session.Stage == DeliveryStage.Carrying;
+            bool allowed = !session.IsSettled && !session.IsMapOpen && (slot != null ? slot.StrikeAllowed : HazardPlanner.DeliveryInProgress(session));
             if (!allowed)
             {
                 if (phase == Phase.Chasing || phase == Phase.Dashing) Stop();

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace DeliveryRider
 {
     // Objects are always placed for the day and strike any time (even before pickup).
-    // Placed triggers are active without a call. Only the food thief requires carried food.
+    // Reserved triggers are selected per call and armed throughout delivery, including food recovery.
     public enum HazardRole { Object, Trigger }
 
     // Planner data for one spawned hazard; HazardPlanner adds it at spawn and turns the hazard on and off.
@@ -17,6 +17,60 @@ namespace DeliveryRider
         [Tooltip("Call routes (shop index x door count + door index) that pass within 7 m.")]
         [SerializeField] private int[] routes = Array.Empty<int>();
 
+        public bool RuntimeActive { get; private set; } = true;
+        private bool visualsPaused;
+        private MonoBehaviour[] controllers;
+        private bool[] controllerEnabled;
+        private Renderer[] visuals;
+        private bool[] visualEnabled;
+        private Collider[] volumes;
+        private bool[] volumeEnabled;
+
+        // Root objects stay alive for the day. Pausing a slot stops its frame callbacks and hides its visuals.
+        // OnEnable is the per-kind reset entry: tire/muscleman/celebrity explicitly restore their spent state.
+        public void SetRuntimeActive(bool active, bool reset = false)
+        {
+            if (controllers == null)
+            {
+                var list = new System.Collections.Generic.List<MonoBehaviour>();
+                foreach (var component in GetComponents<MonoBehaviour>()) if (component is IPlacedHazard) list.Add(component);
+                controllers = list.ToArray(); controllerEnabled = new bool[controllers.Length];
+                for(int i=0;i<controllers.Length;i++)controllerEnabled[i]=controllers[i].enabled;
+                visuals = GetComponentsInChildren<Renderer>(true); visualEnabled = new bool[visuals.Length];
+                for(int i=0;i<visuals.Length;i++)visualEnabled[i]=visuals[i].enabled;
+                volumes = GetComponentsInChildren<Collider>(true); volumeEnabled = new bool[volumes.Length];
+                for(int i=0;i<volumes.Length;i++)volumeEnabled[i]=volumes[i].enabled;
+            }
+            if(RuntimeActive==active&&!reset&&!visualsPaused)return;
+            if(!active||reset)foreach(var controller in controllers)if(controller!=null)controller.enabled=false;
+            for(int i=0;i<visuals.Length;i++)if(visuals[i]!=null)visuals[i].enabled=active&&visualEnabled[i];
+            for(int i=0;i<volumes.Length;i++)if(volumes[i]!=null)volumes[i].enabled=active&&volumeEnabled[i];
+            RuntimeActive=active;visualsPaused=false;
+            if(active)for(int i=0;i<controllers.Length;i++)if(controllers[i]!=null)controllers[i].enabled=controllerEnabled[i];
+        }
+
+        public void PauseKeepingVisuals()
+        {
+            if(!RuntimeActive||visualsPaused)return;
+            if(controllers==null)SetRuntimeActive(true);
+            var nodes=GetComponentsInChildren<Transform>(true);
+            var positions=new Vector3[nodes.Length];var rotations=new Quaternion[nodes.Length];var states=new bool[nodes.Length];
+            var visible=new bool[visuals.Length];
+            for(int i=0;i<nodes.Length;i++){positions[i]=nodes[i].localPosition;rotations[i]=nodes[i].localRotation;states[i]=nodes[i].gameObject.activeSelf;}
+            for(int i=0;i<visuals.Length;i++)visible[i]=visuals[i]!=null&&visuals[i].enabled;
+            foreach(var controller in controllers)if(controller!=null)controller.enabled=false;
+            for(int i=0;i<nodes.Length;i++)if(nodes[i]!=null){nodes[i].localPosition=positions[i];nodes[i].localRotation=rotations[i];if(nodes[i]!=transform)nodes[i].gameObject.SetActive(states[i]);}
+            for(int i=0;i<visuals.Length;i++)if(visuals[i]!=null)visuals[i].enabled=visible[i];
+            foreach(var volume in volumes)if(volume!=null)volume.enabled=false;
+            visualsPaused=true;
+        }
+
+        public HazardPlanner Planner { get; set; }
+        public HazardCandidate Candidate { get; set; }
+        public int Combo { get; set; } = -1;
+        public bool NeedsCallReset { get; set; }
+        public bool Selected { get; set; }
+        public bool Consumed { get; set; }
         public string Type => type;
         public HazardRole Role => role;
         public int UnlockDay => unlockDay;

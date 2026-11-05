@@ -39,7 +39,7 @@ namespace DeliveryRider
         private float elapsed;
         private Vector3 target;
         private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
-        private bool CanStrike => (slot == null || slot.StrikeAllowed) && session.Stage == DeliveryStage.Carrying;
+        private bool CanStrike => slot != null ? slot.StrikeAllowed : HazardPlanner.DeliveryInProgress(session);
 
         public void Place(DeliverySession owner, RoadNetwork network, HazardCandidate spot)
         {

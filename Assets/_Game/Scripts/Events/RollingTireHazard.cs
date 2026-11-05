@@ -3,7 +3,7 @@ using UnityEngine;
 namespace DeliveryRider
 {
     // Authored ground-following path: a controlled hazard, not a free rigidbody vehicle.
-    public sealed class RollingTireHazard : MonoBehaviour, IPlacedHazard
+    public sealed partial class RollingTireHazard : MonoBehaviour, IPlacedHazard
     {
         private enum Phase { Ready, Warning, Rolling, Spent }
         [SerializeField] private DeliverySession session;
@@ -80,16 +80,17 @@ namespace DeliveryRider
             if (rider == null) { enabled = false; return; }
             initialRotation = wheel.localRotation;
             slot = GetComponent<HazardSlot>();
+            InitializeWave();
             initialized = true;
             ResetWheel();
         }
 
-        private void OnEnable() { if (linkedDoor != null) linkedDoor.ContactHit += OnDoorHit; }
+        private void OnEnable() { if (linkedDoor != null) linkedDoor.ContactHit += OnDoorHit; if (initialized) { phase = Phase.Ready; elapsed = 0f; hitThisCycle = false; PrepareWave(); ResetWheel(); } }
         private void OnDisable()
         {
             if (linkedDoor != null) linkedDoor.ContactHit -= OnDoorHit;
             SetLamp(false);
-            if (initialized) { wheel.gameObject.SetActive(false); phase = Phase.Spent; elapsed = 0; }
+            if (initialized) { wheel.gameObject.SetActive(false); HideWave(); phase = Phase.Spent; elapsed = 0; }
         }
         private void OnDoorHit() => TryActivate();
 
@@ -103,7 +104,7 @@ namespace DeliveryRider
             ResetWheel();
             if (roadRun) BuildRoadRun();
             hitThisCycle = false;
-            speed = Mathf.Min(initialSpeed, maximumSpeed);
+            speed = roadRun ? (waveLarge ? largeSpeed : smallSpeed) : Mathf.Min(initialSpeed, maximumSpeed);
             segment = 1;
             Enter(Phase.Warning);
             SetLamp(true);
@@ -147,7 +148,7 @@ namespace DeliveryRider
             int steps = Mathf.Max(1, Mathf.CeilToInt((behind + rollPast) / PathStep));
             localPath = new Vector3[steps + 1];
             for (int i = 0; i <= steps; i++)
-                localPath[i] = transform.InverseTransformPoint(road.OnGround(lane + along * Mathf.Lerp(-behind, rollPast, i / (float)steps), WheelHeight));
+                localPath[i] = transform.InverseTransformPoint(road.OnGround(lane + along * Mathf.Lerp(-behind, rollPast, i / (float)steps), CurrentWheelHeight));
             wheel.localPosition = localPath[0];
         }
 
@@ -169,7 +170,7 @@ namespace DeliveryRider
         {
             Vector3 target = transform.TransformPoint(localPath[segment]);
             Vector3 direction = (target - wheel.position).normalized;
-            speed = Mathf.Clamp(speed - direction.y * slopeAcceleration * Time.fixedDeltaTime, 1, maximumSpeed);
+            speed = Mathf.Clamp(speed - direction.y * slopeAcceleration * Time.fixedDeltaTime, 1, roadRun ? (waveLarge ? largeSpeed : smallSpeed) : maximumSpeed);
             float remaining = speed * Time.fixedDeltaTime;
             // Bound segment transitions by path length, including duplicate points.
             for (int guard = 0; guard < localPath.Length && remaining > 0; guard++)
@@ -179,11 +180,12 @@ namespace DeliveryRider
                 float travel = Mathf.Min(delta.magnitude, remaining);
                 direction = delta.normalized;
                 Vector3 from = wheel.position;
-                if (CheckContact(from, direction, travel)) { Finish(); return; }
+                if (CheckWaveContact(from, direction, travel)) { Finish(); return; }
                 wheel.position = from + direction * travel;
                 spin = Mathf.Repeat(spin + travel / radius * Mathf.Rad2Deg, 360);
                 if (direction.sqrMagnitude > 0.01f)
                     wheel.rotation = Quaternion.LookRotation(direction, Vector3.up) * Quaternion.Euler(spin, 0, 0);
+                ShowWave(direction);
                 remaining -= travel;
                 if (delta.magnitude > travel + 0.0001f) break;
                 if (++segment >= localPath.Length) { Finish(); return; }
@@ -230,12 +232,12 @@ namespace DeliveryRider
                         if (sweepHits[i].collider.transform.IsChildOf(rider.transform)) playerDistance = Mathf.Min(playerDistance, sweepHits[i].distance);
                 }
             }
-            // The food may be gone since the tire started: it keeps rolling and can still hit if the food comes back.
+            // Check the shared delivery gate again at impact; food recovery remains armed.
             if (!hitThisCycle && (slot == null || slot.StrikeAllowed) && playerDistance <= distance && playerDistance < obstruction)
             {
                 hitThisCycle = true;
                 Vector3 push = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
-                rider.TryHazardCrash(this, push * impulse + Vector3.up * upwardImpulse, recoverySeconds);
+                rider.TryHazardCrash(waveWheels != null ? waveWheels[currentWheel] : (UnityEngine.Object)this, push * (waveLarge ? impulse : smallImpulse) + Vector3.up * (waveLarge ? upwardImpulse : smallUpwardImpulse), recoverySeconds);
             }
             return obstruction <= distance;
         }
@@ -248,8 +250,8 @@ namespace DeliveryRider
         }
         private void Enter(Phase value) { phase = value; elapsed = 0; }
         private void SetLamp(bool on) { if (warningLamp != null) warningLamp.enabled = on; }
-        private void ResetWheel() { spin = 0; wheel.localPosition = roadRun ? parkedLocal : localPath[0]; wheel.localRotation = initialRotation; wheel.gameObject.SetActive(true); }
-        private void Finish() { if (phase != Phase.Spent) Enter(Phase.Spent); SetLamp(false); wheel.gameObject.SetActive(false); }
+        private void ResetWheel() { spin = 0; wheel.localPosition = roadRun ? parkedLocal + Vector3.up * (CurrentWheelHeight - WheelHeight) : localPath[0]; wheel.localRotation = initialRotation; wheel.gameObject.SetActive(true); }
+        private void Finish() { if (phase != Phase.Spent) Enter(Phase.Spent); SetLamp(false); wheel.gameObject.SetActive(false); HideWave(); }
         private void OnDrawGizmosSelected()
         {
             Gizmos.matrix = transform.localToWorldMatrix;

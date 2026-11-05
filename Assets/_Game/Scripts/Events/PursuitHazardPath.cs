@@ -11,11 +11,13 @@ namespace DeliveryRider
         private readonly RoadSurface[] roads;
         private readonly HazardZoneFilter zones;
         private readonly Transform owner, player;
+        private readonly float roadsideReach;
         private readonly RaycastHit[] hits = new RaycastHit[32];
 
-        internal PursuitHazardPath(DeliverySession session, RoadNetwork network, Transform root)
+        internal PursuitHazardPath(DeliverySession session, RoadNetwork network, Transform root, float roadside = 0f)
         {
             ground = network;
+            roadsideReach=roadside;
             owner = root;
             player = session.Player;
             zones = new HazardZoneFilter(session.ZoneMap, session.IsZoneOpen);
@@ -41,8 +43,8 @@ namespace DeliveryRider
                 if (roads.Length == 0) continue;
                 bool onRoad = false;
                 foreach (var road in roads)
-                    if (road != null && road.FootprintContains(p, 1f)
-                        && road.DistanceToCentre(p) <= road.HalfWidth + road.SidewalkWidth - radius)
+                    if (road != null && road.FootprintContains(p, 1f + roadsideReach)
+                        && road.DistanceToCentre(p) <= road.HalfWidth + Mathf.Max(road.SidewalkWidth,roadsideReach) - radius)
                     { onRoad = true; break; }
                 if (!onRoad) return false;
             }
