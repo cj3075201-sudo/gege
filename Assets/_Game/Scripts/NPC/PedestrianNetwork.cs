@@ -33,6 +33,11 @@ namespace DeliveryRider
         [SerializeField] private bool randomEachRun = true;
         [SerializeField] private int seed = 37;
         private const float LaneOffset = 0.35f;
+        // Lane offset slack when ruling out sidewalks and segments that cannot beat the best spot so far.
+        private const float ReturnMargin = 0.01f;
+        private Bounds[] returnBounds;
+        public int ReturnSegmentsChecked { get; private set; }
+        public int ReturnSpotsSampled { get; private set; }
         private readonly List<TrafficPedestrian> pedestrians = new List<TrafficPedestrian>();
         private readonly Collider[] spawnHits = new Collider[8];
         public DeliverySession Session => session;
@@ -117,15 +122,23 @@ namespace DeliveryRider
         {
             pathIndex = -1; distance = 0f; feet = from;
             float best = float.PositiveInfinity;
+            ReturnSegmentsChecked = ReturnSpotsSampled = 0;
+            if (returnBounds == null || returnBounds.Length != paths.Length) BuildReturnBounds();
             for (int p = 0; p < paths.Length; p++)
             {
                 var path = paths[p];
                 if (path.connector) continue;
+                // Neither a sidewalk nor a segment can give a nearer spot than its line allows, lane offset included.
+                float margin = Mathf.Abs(Mathf.Min(LaneOffset, path.halfWidth - 0.35f)) + ReturnMargin;
+                if (Beyond(Mathf.Sqrt(returnBounds[p].SqrDistance(from)), margin, best)) continue;
                 for (int i = 0; i < path.points.Length - 1; i++)
                 {
                     var a = path.points[i];
                     var ab = path.points[i + 1] - a;
                     float t = Mathf.Clamp01(Vector3.Dot(from - a, ab) / Mathf.Max(0.001f, ab.sqrMagnitude));
+                    ReturnSegmentsChecked++;
+                    if (Beyond((a + ab * t - from).magnitude, margin, best)) continue;
+                    ReturnSpotsSampled++;
                     float along = Mathf.Lerp(path.cumulative[i], path.cumulative[i + 1], t);
                     Sample(p, along, out var position, out var direction);
                     position += Vector3.Cross(Vector3.up, direction) * Mathf.Min(LaneOffset, path.halfWidth - 0.35f);
@@ -135,6 +148,24 @@ namespace DeliveryRider
                 }
             }
             return pathIndex >= 0;
+        }
+
+        private static bool Beyond(float lineDistance, float margin, float bestSquared)
+        {
+            float nearest = lineDistance - margin;
+            return nearest > 0f && nearest * nearest >= bestSquared;
+        }
+
+        private void BuildReturnBounds()
+        {
+            returnBounds = new Bounds[paths.Length];
+            for (int p = 0; p < paths.Length; p++)
+            {
+                var points = paths[p].points;
+                var box = new Bounds(points.Length > 0 ? points[0] : Vector3.zero, Vector3.zero);
+                foreach (var point in points) box.Encapsulate(point);
+                returnBounds[p] = box;
+            }
         }
 
         public bool Free(Vector3 feet, TrafficPedestrian self)

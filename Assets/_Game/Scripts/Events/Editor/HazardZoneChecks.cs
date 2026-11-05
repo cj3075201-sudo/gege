@@ -144,6 +144,73 @@ namespace DeliveryRider.Editor
                 Check(!File.ReadAllText(source).Contains(", ~0,"), "no everything-mask query in " + Path.GetFileName(source));
         }
 
+        // FindReturn with its shortcuts against the plain scan it replaced: same answer from the same points, on the real network.
+        public static void RunWalkerReturn()
+        {
+            try
+            {
+                var scene = EditorSceneManager.OpenScene("Assets/_Game/Scenes/FourDistrictPrototype_Myeongji.unity", OpenSceneMode.Single);
+                var network = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<PedestrianNetwork>(true)).Single();
+                var walker = UnityEngine.Object.Instantiate(network.Prefab, new Vector3(9000f, 0f, 9000f), Quaternion.identity);
+                Physics.SyncTransforms();
+                int total = 0;
+                for (int p = 0; p < network.PathCount; p++) if (!network.Path(p).connector) total += network.Path(p).points.Length - 1;
+                const float laneOffset = 0.35f;
+                bool Plain(Vector3 from, out int pathIndex, out float distance, out Vector3 feet)
+                {
+                    pathIndex = -1; distance = 0f; feet = from;
+                    float best = float.PositiveInfinity;
+                    for (int p = 0; p < network.PathCount; p++)
+                    {
+                        var path = network.Path(p);
+                        if (path.connector) continue;
+                        for (int i = 0; i < path.points.Length - 1; i++)
+                        {
+                            var a = path.points[i];
+                            var ab = path.points[i + 1] - a;
+                            float t = Mathf.Clamp01(Vector3.Dot(from - a, ab) / Mathf.Max(0.001f, ab.sqrMagnitude));
+                            float along = Mathf.Lerp(path.cumulative[i], path.cumulative[i + 1], t);
+                            network.Sample(p, along, out var position, out var direction);
+                            position += Vector3.Cross(Vector3.up, direction) * Mathf.Min(laneOffset, path.halfWidth - 0.35f);
+                            float squared = (position - from).sqrMagnitude;
+                            if (squared >= best || !network.Free(position, walker) || !walker.HasRoom(position)) continue;
+                            best = squared; pathIndex = p; distance = along; feet = position;
+                        }
+                    }
+                    return pathIndex >= 0;
+                }
+                var random = new System.Random(4153);
+                int same = 0, runs = 1500;
+                long checkedSum = 0, sampledSum = 0, plainTicks = 0, fastTicks = 0;
+                int checkedMost = 0, sampledMost = 0;
+                var watch = new System.Diagnostics.Stopwatch();
+                for (int n = 0; n < runs; n++)
+                {
+                    var from = new Vector3(-100f + (float)random.NextDouble() * 310f, (float)random.NextDouble() * 3f, -160f + (float)random.NextDouble() * 255f);
+                    watch.Restart();
+                    bool plain = Plain(from, out int plainPath, out float plainAlong, out var plainFeet);
+                    plainTicks += watch.ElapsedTicks;
+                    watch.Restart();
+                    bool fast = network.FindReturn(from, walker, out int fastPath, out float fastAlong, out var fastFeet);
+                    fastTicks += watch.ElapsedTicks;
+                    if (plain != fast || plainPath != fastPath || plainAlong != fastAlong || plainFeet != fastFeet)
+                        throw new InvalidOperationException($"from {from}: plain {plainPath}/{plainAlong}/{plainFeet}, fast {fastPath}/{fastAlong}/{fastFeet}");
+                    same++;
+                    checkedSum += network.ReturnSegmentsChecked; sampledSum += network.ReturnSpotsSampled;
+                    checkedMost = Mathf.Max(checkedMost, network.ReturnSegmentsChecked); sampledMost = Mathf.Max(sampledMost, network.ReturnSpotsSampled);
+                }
+                double ms = 1000d / System.Diagnostics.Stopwatch.Frequency / runs;
+                Debug.Log($"HazardZoneChecks ok: FindReturn same as the plain scan at {same}/{runs} points; lane segments {total}; per call segments looked at {checkedSum / runs} (most {checkedMost}), spots sampled {sampledSum / runs} (most {sampledMost}); plain {plainTicks * ms:0.00} ms, now {fastTicks * ms:0.00} ms per call");
+                Debug.Log("HazardZoneChecks PASS: walker return.");
+                EditorApplication.Exit(0);
+            }
+            catch (Exception failure)
+            {
+                Debug.LogError("HazardZoneChecks FAIL: " + failure.Message);
+                EditorApplication.Exit(1);
+            }
+        }
+
         // The tuning copy must not share a save folder with the team project.
         public static void PrintDataPath()
         {
