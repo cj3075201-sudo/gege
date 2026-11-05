@@ -74,12 +74,14 @@ namespace DeliveryRider
         }
         private bool Touching()
         {
-            if (Physics.ComputePenetration(volume, transform.position, transform.rotation, playerShape,
-                playerShape.transform.position, playerShape.transform.rotation, out _, out _)) return true;
-            var delta = playerShape.bounds.min.y - volume.bounds.max.y;
-            var planar = Vector3.ProjectOnPlane(rider.transform.position - transform.position, Vector3.up);
-            float scale = slot != null ? slot.TriggerScale : 1f;
-            return rider.Velocity.y < -0.1f && delta >= -0.2f && delta <= 0.5f && planar.sqrMagnitude <= landingRadius * landingRadius * scale * scale;
+            var bounds=volume.bounds;var playerBounds=playerShape.bounds;
+            float delta=playerBounds.min.y-bounds.max.y;
+            var planar=Vector3.ProjectOnPlane(rider.transform.position-transform.position,Vector3.up);
+            float scale=slot!=null?slot.TriggerScale:1f;
+            if(rider.Velocity.y<-.1f&&delta>=-.2f&&delta<=.5f&&planar.sqrMagnitude<=landingRadius*landingRadius*scale*scale)return true;
+            if(!bounds.Intersects(playerBounds))return false;
+            return Physics.ComputePenetration(volume,transform.position,transform.rotation,playerShape,
+                playerShape.transform.position,playerShape.transform.rotation,out _,out _);
         }
         private void TryContact()
         {
