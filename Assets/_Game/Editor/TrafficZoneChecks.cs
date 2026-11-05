@@ -24,11 +24,11 @@ namespace DeliveryRider.Editor
             var host = new GameObject("TrafficFixture");
             var network = host.AddComponent<TrafficNetwork>();
             var values = DevValue.Discover(network);
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
                 Check(values.Exists(v => v.PropertyPath == $"vehicleCountByDay.Array.data[{i}]"), "F1 daily count " + (i + 1));
             Check(DevLabels.Find(nameof(TrafficNetwork), "vehicleCountByDay") != null, "Korean daily count label");
             var counts = Get<int[]>(network, "vehicleCountByDay");
-            Check(counts.Length == 4 && counts[0] == 30 && counts[1] == 40 && counts[2] == 50 && counts[3] == 60, "30/40/50/60 defaults");
+            Check(counts.Length == 5 && counts[0] == 30 && counts[1] == 40 && counts[2] == 50 && counts[3] == 60 && counts[4] == 60, "30/40/50/60/60 defaults");
             var map = ScriptableObject.CreateInstance<ZoneMap>();
             Set(map, "zones", new[] { Zone("C", 0f), Zone("A", 100f) });
             var session = new GameObject("Session").AddComponent<DeliverySession>();

@@ -43,7 +43,7 @@ namespace DeliveryRider.Editor
                 Check(kinds[0].Count(5)==20&&kinds[0].Count(6)==20&&kinds[0].Count(99)==20,"day5 F1 count reaches gameplay and caps later days");
                 Check(kinds[0].Count(4)==13,"fifth-day edit leaves earlier day alone");target.RevertAll();Check(kinds[0].Count(5)==13,"F1 revert updates actual counts");
                 var planner=host.AddComponent<HazardPlanner>();var fields=DevValue.Discover(planner);
-                foreach(string field in new[]{"activePerDay.Array.data[4]","routeShare","combosEnabled","showSelectedBeforePickup"})Check(fields.Any(v=>v.PropertyPath==field),"F1 missing rule "+field);
+                foreach(string field in new[]{"activePerDay.Array.data[4]","routeShare","combosEnabled","showSelectedBeforePickup","previewOpacity","previewFadeSeconds"})Check(fields.Any(v=>v.PropertyPath==field),"F1 missing rule "+field);
                 Check((int)Get(planner,"activePerDay").GetType().GetProperty("Length").GetValue(Get(planner,"activePerDay"))==5,"ACT five days");
                 Check((bool)Get(planner,"showSelectedBeforePickup"),"before-pickup preview defaults on");
             }

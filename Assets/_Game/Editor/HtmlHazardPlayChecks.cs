@@ -31,7 +31,7 @@ namespace DeliveryRider.Editor
         public static void Finish(Exception error)
         {
             if (error != null) Debug.LogError("HTML_PLAY_FAIL " + error);
-            else Debug.Log("HTML_PLAY_PASS: actual Myeongji scene, 4 days x 3 seeds x 4 accepted calls, stage/reset/count/distribution/spacing/zone checks");
+            else Debug.Log("HTML_PLAY_PASS: actual Myeongji scene, 6 days x 3 seeds x 4 accepted calls, stage/reset/count/distribution/spacing/zone checks");
             SessionState.SetInt(Pending+".exit",error == null?0:1); EditorApplication.ExitPlaymode();
         }
     }
@@ -55,7 +55,7 @@ namespace DeliveryRider.Editor
             var rider=session.Player.GetComponent<RiderMotor>(); var body=rider.GetComponent<Rigidbody>();
             body.isKinematic=true;
             Set(planner,"visibilityHoldRadius",0f); Set(planner,"randomEachRun",false);
-            for(int day=1;day<=4;day++) for(int seed=1;seed<=3;seed++)
+            for(int day=1;day<=6;day++) for(int seed=1;seed<=3;seed++)
             {
                 Property(session,"Progress",new RunProgress(day,100000)); Set(session,"openZones",session.Economy.ZonesForDay(day));
                 Property(session,"DayPhase",WorkDayPhase.Working); Set(session,"dayDuration",1e9d);
@@ -78,7 +78,7 @@ namespace DeliveryRider.Editor
                 for(int call=0;call<4;call++)
                 {
                     Check(session.OpenCall(),"call opens"); var acceptance=MeasureAccept(session); Check(acceptance.ok,"call accepted");
-                    Check(planner.SelectedTriggers==new[]{5,8,10,13}[day-1],"ACT day="+day+" selected="+planner.SelectedTriggers);
+                    Check(planner.SelectedTriggers==new[]{5,8,10,13,13}[Mathf.Min(day-1,4)],"ACT day="+day+" selected="+planner.SelectedTriggers);
                     Check(all.Where(s=>s.Role==HazardRole.Trigger).All(s=>!s.StrikeAllowed),"pre-pickup gate");
                     var selected=all.Where(s=>s.Selected&&s.Type!="celebrity").ToArray();
                     for(int a=0;a<selected.Length;a++)for(int b=a+1;b<selected.Length;b++)
