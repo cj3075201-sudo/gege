@@ -18,13 +18,15 @@ namespace DeliveryRider.Editor
     // link_myeongji_hazards.py -> ImportRoutes. Every write targets a NEW copy, never source settings or scenes.
     // Pedestrian candidates use the existing installers, which sample paths by array index. reverse/next must refer
     // to the SAME final PedestrianNetwork; rebaking/reordering that network requires repeating phase 2.
+    // -hazardIncludeOldRoads true: the original roads get the same rules too, appended after the frozen 887 candidates.
+    // Those keep their indices and values; a new candidate is skipped where one of its kind and side already stands.
     public static class MyeongjiHazardExpansionBake
     {
         private const string SourcePath = "Assets/_Game/Settings/MyeongjiHazardCandidates.asset";
         private const string ScenePath = "Assets/_Game/Scenes/FourDistrictPrototype_Myeongji.unity";
         private const string DataPath = "Docs/MapLayout/Myeongji/";
         private const int OriginalCandidates = 887, OriginalSpots = 306;
-        private const float SidewalkReach = 3f;
+        private const float SidewalkReach = 3f, SamePlace = 1f;
 
         [Serializable]
         public sealed class BakeData
@@ -148,8 +150,12 @@ namespace DeliveryRider.Editor
                 float pile = RollingMelonHazard.PileHalfExtent(rider.GetComponent<CapsuleCollider>().height * .3f);
                 // MyeongjiEvents.Bake rules: 5 m ends, 4 m sampling, 2.5 m junction margin;
                 // imported-map clearances take precedence over the procedural four-district installer's defaults.
-                foreach (var road in context.newRoads)
+                bool includeOld = IncludeOldRoads();
+                int beforeOld = 0;
+                foreach (var road in includeOld ? context.newRoads.Concat(context.roads.Except(context.newRoads)).ToArray() : context.newRoads)
                 {
+                    bool oldRoad = !context.newRoads.Contains(road);
+                    if (oldRoad && beforeOld == 0) beforeOld = places.Count;
                     var a = P2(road["a"]); var b = P2(road["b"]);
                     var along = (b - a).normalized; var right = Vector3.Cross(Vector3.up, along);
                     float half = (float)road["width"] * .5f; bool alley = half < 2.5f;
@@ -158,13 +164,15 @@ namespace DeliveryRider.Editor
                     {
                         var center = a + along * d;
                         if (!context.Ground(center, out center) || !context.Away(center) || context.Junction(center, road) || !context.Clear(center, .6f)) continue;
-                        int spot = spots.Count;
-                        spots.Add(new HazardCandidates.Spot { position = center });
+                        int spotsBefore = spots.Count, placesBefore = places.Count;
+                        int spot = oldRoad ? spots.FindIndex(s => Flat(s.position - center).sqrMagnitude < SamePlace) : -1;
+                        if (spot < 0) { spot = spots.Count; spots.Add(new HazardCandidates.Spot { position = center }); }
                         foreach (int side in new[] { -1, 1 })
                         {
                             void Add(string type, Vector3 p, Quaternion rot, bool flip = false)
                             {
                                 if (!context.Away(p)) return;
+                                if (oldRoad && places.Any(c => c.type == type && c.side == side && c.flip == flip && Flat(c.position - p).sqrMagnitude < SamePlace)) return;
                                 places.Add(new HazardCandidate { type = type, spot = spot, position = p, rotation = rot,
                                     halfWidth = half, side = side, alley = alley, flip = flip });
                             }
@@ -230,8 +238,10 @@ namespace DeliveryRider.Editor
                                 if (clear) Add("theft", pole, rotation, flip);
                             }
                         }
+                        if (oldRoad && spots.Count > spotsBefore && places.Count == placesBefore) spots.RemoveAt(spots.Count - 1);
                     }
                 }
+                if (includeOld) Debug.Log("HAZARD_OLD_ROADS added=" + (places.Count - beforeOld));
                 SaveCopy(SourcePath, output, spots, places);
                 Report(output, "roads", context, null);
             }
@@ -269,7 +279,10 @@ namespace DeliveryRider.Editor
                 CelebrityCrowdInstaller.AppendCandidates(extraSpots, extra, session, network, ground);
                 foreach (var candidate in extra)
                 {
-                    if (!OnNewRoad(context, candidate.position) || places.Any(c => c.type == candidate.type && (c.position - candidate.position).sqrMagnitude < .01f)) continue;
+                    bool onNew = OnNewRoad(context, candidate.position);
+                    if (!onNew && !IncludeOldRoads()) continue;
+                    float same = onNew ? .01f : SamePlace;
+                    if (places.Any(c => c.type == candidate.type && (c.position - candidate.position).sqrMagnitude < same)) continue;
                     var c = candidate; c.spot = spots.Count; places.Add(c); spots.Add(CloneSpot(extraSpots[candidate.spot]));
                 }
                 if (!places.Skip(data.Candidates.Count).Any(c => c.type == "muscleman") || !places.Skip(data.Candidates.Count).Any(c => c.type == "celebrity"))
@@ -428,6 +441,12 @@ namespace DeliveryRider.Editor
                 || File.Exists(path) || !Directory.Exists(Path.GetDirectoryName(path)))
                 throw new InvalidOperationException("Use a new .asset in an existing Assets folder outside Settings (never overwrite an asset).");
             return path;
+        }
+        private static bool IncludeOldRoads()
+        {
+            string value = Arg("-hazardIncludeOldRoads", "false");
+            if (value != "true" && value != "false") throw new ArgumentException("-hazardIncludeOldRoads must be true or false.");
+            return value == "true";
         }
         private static bool OnNewRoad(Context c, Vector3 p) => c.newRoads.Any(r => Distance(p, r) <= (float)r["width"] * .5f + SidewalkReach)
             && !c.roads.Except(c.newRoads).Any(r => Distance(p, r) < (float)r["width"] * .5f);

@@ -230,6 +230,28 @@ namespace DeliveryRider.Editor
                     Debug.Log($"HazardZoneChecks ok: day {d + 1} open {string.Concat(open)}: {sources.Count} sources, {picks} picked points, {hops} closed landings, none in or behind a wall");
                 }
 
+                // Startup cost of the planner's zone work on the real candidates, per day. Instantiating hazards is not included.
+                var plannerData = new SerializedObject(roots.SelectMany(g => g.GetComponentsInChildren<HazardPlanner>(true)).Single());
+                var stored = (HazardCandidates)plannerData.FindProperty("candidates").objectReferenceValue;
+                var settings = (HazardSpawnSettings)plannerData.FindProperty("settings").objectReferenceValue;
+                var roadNetwork = (RoadNetwork)plannerData.FindProperty("ground").objectReferenceValue;
+                for (int d = 0; d < days.Length; d++)
+                {
+                    var open = days[d];
+                    var filter = new HazardZoneFilter(map, z => open.Contains(z));
+                    var watch = System.Diagnostics.Stopwatch.StartNew();
+                    float share = filter.OpenRoadShare(roadNetwork.Roads);
+                    long shareMs = watch.ElapsedMilliseconds;
+                    int compared = 0, kept = 0;
+                    foreach (var kind in settings.Kinds)
+                        foreach (var candidate in stored.Candidates)
+                        {
+                            compared++;
+                            if (candidate.type == kind.type && filter.PointOpen(candidate.position) && filter.PointOpen(stored.Spots[candidate.spot].position)) kept++;
+                        }
+                    Debug.Log($"HazardZoneChecks ok: day {d + 1} startup filter {watch.ElapsedMilliseconds} ms (road share {shareMs} ms, share {share:0.000}), {stored.Candidates.Count} candidates, {compared} type comparisons, {kept} open");
+                }
+
                 // The checks must be able to fail: a point on a closed wall, and the old defect, are caught.
                 var dayOne = new HazardZoneFilter(map, z => z == "C");
                 foreach (var barrier in barriers)
