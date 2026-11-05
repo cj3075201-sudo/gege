@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><title>배달 수치 계산기</title>
+<style>
+:root{--ink:#1c1f24;--ink2:#5a616b;--ink3:#8a9099;--rule:#dfe2e6;--bg:#fff;--accent:#B4532A;--bot:#2F6FA8;--warn:#9a3412}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Pretendard,'Malgun Gothic',sans-serif}
+h1,h2,h3{font-family:Paperlogy,Pretendard,'Malgun Gothic',sans-serif;font-weight:500;margin:0}
+h1{font-size:28px}h2{font-size:17px;padding-top:18px;margin-top:18px;border-top:1px solid var(--rule)}
+.top{padding:22px 32px 16px;border-bottom:1px solid var(--ink)}.top p{margin:4px 0 0;color:var(--ink2)}
+.wrap{display:grid;grid-template-columns:372px 1fr;min-height:100vh}
+aside{padding:6px 24px 40px 32px;border-right:1px solid var(--rule)}main{padding:18px 32px 60px;min-width:0}
+.f{margin-top:12px}.f label{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;color:var(--ink)}
+.f output{font-variant-numeric:tabular-nums;font-weight:600}.f input[type=range]{width:100%;accent-color:var(--accent);margin:3px 0 0}
+.f small,.note{display:block;color:var(--ink3);font-size:12px;line-height:1.45}
+.out{color:var(--warn);font-size:12px;font-weight:600}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px}.days div{font-size:11px;color:var(--ink3);text-align:center}
+input[type=number]{width:100%;padding:4px 5px;border:1px solid var(--rule);border-radius:3px;font:inherit;font-size:13px;text-align:right}
+.btn{margin-top:10px;padding:6px 10px;background:#fff;border:1px solid var(--ink3);border-radius:3px;font:inherit;font-size:13px;cursor:pointer}.btn:hover{border-color:var(--accent);color:var(--accent)}
+.hero{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule)}
+.hero>div{padding:0 18px 16px 0}.hero>div+div{padding-left:18px;border-left:1px solid var(--rule)}
+.k{font-size:13px;color:var(--ink2)}.v{font-family:Paperlogy,Pretendard,sans-serif;font-weight:500;font-size:34px;line-height:1.2;font-variant-numeric:tabular-nums}.s{font-size:12.5px;color:var(--ink2)}
+.tag{display:inline-block;margin-top:3px;font-size:12px;font-weight:600}.ok{color:#256b3a}.no{color:var(--warn)}
+.legend{display:flex;gap:18px;font-size:13px;color:var(--ink2);margin:12px 0 2px}.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.chart{position:relative;width:100%}svg{display:block;width:100%;height:auto}#tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--ink3);padding:7px 9px;font-size:12.5px;display:none;white-space:nowrap;z-index:2}
+table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px;font-variant-numeric:tabular-nums}th{font-weight:500;color:var(--ink2);text-align:right;border-bottom:1px solid var(--ink);padding:5px 8px;white-space:nowrap}th:first-child,td:first-child{text-align:left}td{padding:5px 8px;border-bottom:1px solid var(--rule);text-align:right}
+tr.clear td{font-weight:700}tr.tail td{color:var(--ink3)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px}pre{background:#f6f6f4;padding:10px 12px;font:12.5px/1.6 Consolas,monospace;margin:6px 0 0;white-space:pre-wrap}
+</style></head><body>
+<div class="top"><h1>배달 수치 계산기</h1><p>속도, 함정, 보상, 빚을 바꾸면 빚 갚는 날과 플레이 시간을 예측합니다. 봇 실측 689판(최신 코드 기준)으로 만든 식입니다. 기준선은 사람과 봇의 중간(회피 강도 .5)이며, 회피 정도는 가정입니다.</p></div>
+<div class="wrap"><aside id="ctl"></aside><main>
+<div class="hero" id="hero"></div>
+<div class="legend"><span><i style="background:var(--accent)"></i>기준(사람과 봇 중간)</span><span><i style="background:var(--bot)"></i>봇(안 피함, 측정값)</span><span><i style="background:var(--ink3);height:1px"></i>빚</span></div>
+<div class="chart" id="chartBox"><div id="tip"></div><svg id="chart" viewBox="0 0 900 300" role="img" aria-label="일차별 보유 현금과 빚 비교"></svg></div>
+<div class="note" id="errNote"></div>
+<h2>일차별</h2><div style="overflow-x:auto"><table id="tbl"></table></div>
+<div class="note">굵은 줄: 기준선의 빚을 갚는 날. 흐린 줄: 그 뒤. 콜당 돈과 거리는 측정 평균 거리 기준입니다. 5일차 이후 값은 4일차 측정과 같습니다(코드상 같은 값으로 대조함).</div>
+<div class="two"><div><h2>이 빚이면 며칠에 깨나</h2><table id="debtTbl"></table></div>
+<div><h2>게임에 넣을 값 (F1)</h2><pre id="f1"></pre><button class="btn" id="copy">복사</button> <button class="btn" id="link">이 설정 주소 복사</button></div></div>
+<h2>믿을 수 있는 범위</h2><div class="note" id="trust" style="font-size:13px;color:var(--ink2)"></div>
+</main></div>
+<script id="model">
+const DATA={"model": {"clean": {"t0": 6.342968099064806, "walk": 54.167593731498, "perMeterAtOneMs": 0.8895944467465831, "calls": 346, "rmse": 8.111516350660304}, "cost": {"extra": 0.0, "cost": {"manhole": 4.605147413421421, "hydrant": 13.583911838406557, "car": 7.11720655913016, "falling": 3.393774821593542, "chicken": 2.0392449354935565, "tire": 1.4659030124826435, "duck": 8.472172843178333, "other": 1.556787811999661}, "se": {"manhole": 0.3696948857987744, "hydrant": 0.6068058275746628, "car": 0.4357468673326094, "falling": 0.8208800808324962, "chicken": 0.8904607530253357, "tire": 0.7866322715407542, "duck": 2.7937946704237313, "other": 0.7424230861847773}, "calls": 832, "r2": 0.7627377228645991, "hits": {"manhole": 1513.0, "hydrant": 870.0, "car": 1418.0, "falling": 640.0, "chicken": 562.0, "tire": 217.0, "duck": 52.0, "other": 550.0}}, "day": {"1": {"rates": {"manhole": 0.4888214108433392, "hydrant": 0.4713635033132199, "car": 0.9951007292167977, "falling": 0.5353758309236573, "chicken": 0.4597248982931404, "tire": 0.0, "duck": 0.05237372259035777, "other": 0.12802465522087453}, "L": 147.6726213592233, "n": 12}, "2": {"rates": {"manhole": 0.7451666682099112, "hydrant": 0.3703786989919085, "car": 0.5026568057747329, "falling": 0.23810059220908406, "chicken": 0.16755226859157768, "tire": 0.14550591746110692, "duck": 0.013227810678282447, "other": 0.38360650967019094}, "L": 260.7512, "n": 12}, "3": {"rates": {"manhole": 1.0511601674983297, "hydrant": 0.5811702849149419, "car": 0.727726269806536, "falling": 0.19203887675450254, "chicken": 0.181931567451634, "tire": 0.12634136628585693, "duck": 0.0454828918629085, "other": 0.3537558256003995}, "L": 273.3889830508474, "n": 12}, "4": {"rates": {"manhole": 1.196133256787989, "hydrant": 0.5657387025348596, "car": 0.6681104677554532, "falling": 0.17241560458205246, "chicken": 0.1966615489764036, "tire": 0.09428978375580993, "duck": 0.005387987643189139, "other": 0.387935110309618}, "L": 276.9692857142858, "n": 22}}, "exp": {"objectOnObject": {"manhole": 1.0884689123352627, "hydrant": 1.2162020979620656}, "objectOnCar": 0.251490947414958, "objectOnTrigger": -0.16469033067978991, "actOnTrigger": 0.33626585591522645, "actOnObject": -0.0396786336119667, "speed": {"object": -0.09540585027260541, "trigger": 0.1569632929707697, "car": -1.4870794542037364}, "costSpeed": 0}, "objectCap": {"1": {"manhole": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.367, "2.0": 1.633}, "hydrant": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.5, "2.0": 1.917}, "all": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.439, "2.0": 1.788}}, "4": {"manhole": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.286, "2.0": 1.512}, "hydrant": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.5, "2.0": 1.325}, "all": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.352, "2.0": 1.454}}, "2": {"manhole": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.34, "2.0": 1.593}, "hydrant": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.5, "2.0": 1.72}, "all": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.41, "2.0": 1.677}}, "3": {"manhole": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.313, "2.0": 1.552}, "hydrant": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.5, "2.0": 1.522}, "all": {"0.5": 0.5, "1.0": 1.0, "1.5": 1.381, "2.0": 1.565}}}, "placed": {"1": {"0.5": {"manhole": 5.0, "hydrant": 6.0}, "1.0": {"manhole": 10.0, "hydrant": 12.0}, "1.5": {"manhole": 13.7, "hydrant": 18.0}, "2.0": {"manhole": 16.3, "hydrant": 23.0}}, "2": {"1.0": {"manhole": 27.0, "hydrant": 20.0}}, "3": {"1.0": {"manhole": 52.0, "hydrant": 31.0}}, "4": {"0.5": {"manhole": 42.0, "hydrant": 19.0}, "1.0": {"manhole": 84.0, "hydrant": 38.0}, "1.5": {"manhole": 108.0, "hydrant": 57.0}, "2.0": {"manhole": 127.0, "hydrant": 50.3}}, "5": {"1.0": {"manhole": 84.0, "hydrant": 38.0}}, "7": {"1.0": {"manhole": 84.0, "hydrant": 38.0}}}, "bias": 0.9442636881255134, "count": {"u": 1.0068377815430538, "b": 0.6585741701059395}, "late": {"a": -0.5629914431895019, "b": 0.7635482878384718}, "defaultActivePerDay": [5, 8, 10, 13, 13], "incomeScale": 0.9519937277720231, "fixedSeedDay": {"1": {"rates": {"manhole": 0.49005327968157425, "hydrant": 0.4174527938028225, "car": 1.161607774060028, "falling": 0.4991283404164183, "chicken": 0.4083777330679786, "tire": 0.0, "duck": 0.03630024293937587, "other": 0.13612591102265953}, "L": 149.01815384615384, "n": 8}, "2": {"rates": {"manhole": 0.8780903665814151, "hydrant": 0.49445865302642794, "car": 0.545609548167093, "falling": 0.23870417732310317, "chicken": 0.20460358056265981, "tire": 0.23870417732310317, "duck": 0.017050298380221655, "other": 0.3495311167945439}, "L": 265.9862162162162, "n": 7}, "3": {"rates": {"manhole": 0.9888799140987148, "hydrant": 0.6738385255362924, "car": 0.5250689809373706, "falling": 0.21877874205723777, "chicken": 0.2450321911041063, "tire": 0.13126724523434266, "duck": 0.017502299364579022, "other": 0.3325436879270014}, "L": 267.3554285714285, "n": 7}, "4": {"rates": {"manhole": 1.1830717781388203, "hydrant": 0.6321757593108199, "car": 0.6773311706901642, "falling": 0.2077148923449837, "chicken": 0.2709324682760657, "tire": 0.27996355055193456, "duck": 0.027093246827606568, "other": 0.36124329103475433}, "L": 273.7527272727272, "n": 7}}, "displayError90": {"T": 0.189, "N": 0.133, "Income": 0.173, "Hits": 0.131}, "inline": {"byDay": {"1": {"timeMultiplier": 0.872, "incomeBefore": 23057, "incomeAfter": 27720, "T0": 62.9, "T1": 54.8, "n": 6}, "4": {"timeMultiplier": 0.84, "incomeBefore": 13532, "incomeAfter": 18007, "T0": 120.1, "T1": 100.9, "n": 6}}, "timeMultiplier": 0.856, "note": "속도 9.6은 모델 범위 밖이라 착용은 시간 배수로만 쓴다. 기본 값에서 1·4일차만 쟀다."}}, "range": {"day": {"min": 1, "max": 7, "note": "1~4일차 측정. 5·7일차는 코드상 4일차와 같은 값이고 시드 3개로 대조. 6일차는 안 잼"}, "objectScale": {"min": 0.5, "max": 2, "note": "요청 배율. 실제 놓이는 수는 objectCap 표대로 덜 는다"}, "activePerDay": {"min": 3, "max": 25, "byDay": {"1": [3, 13], "2": [5, 13], "3": [5, 13], "4": [8, 25], "5": [8, 25]}, "note": "2·3일차는 조합 검증으로만 잼"}, "runSpeed": {"min": 5, "max": 8, "note": "라이더 달리기 속도. 인라인 미착용"}, "dayLength": {"min": 300, "max": 600}, "note": "이 범위 밖은 \"측정 범위 밖\"으로 표시한다"}};
+const KINDS=['manhole','hydrant','car','falling','chicken','tire','duck','other'],OBJ=['manhole','hydrant'];
+function predict(M,q){
+  const day=q.day,cap=M.objectCap[String(Math.min(day,4))]||{},dm=M.day[String(Math.min(day,4))],L=dm.L,A0=M.defaultActivePerDay[Math.min(day,5)-1];
+  const o=q.objectScale??1,A=q.activePerDay??A0,v=q.runSpeed??6,D=q.dayLength??600,eco=q.limitRunSpeed??6,base=q.rewardBase??1500,per=q.rewardPerMeter??8,avoid=q.avoid||{};
+  const eff=k=>{const p=Object.entries(cap[k]).map(([a,b])=>[Number(a),b]).sort((x,y)=>x[0]-y[0]);if(o<=p[0][0])return o/p[0][0]*p[0][1];for(let i=0;i+1<p.length;i++)if(o<=p[i+1][0])return p[i][1]+(p[i+1][1]-p[i][1])*(o-p[i][0])/(p[i+1][0]-p[i][0]);return p[p.length-1][1]};
+  const hits={};
+  for(const k of KINDS){let r=dm.rates[k];
+    if(OBJ.includes(k))r*=Math.pow(eff(k),M.exp.objectOnObject[k]);else if(k==='car')r*=Math.pow(eff('all'),M.exp.objectOnCar)*(q.carScale??1);else r*=Math.pow(A/A0,M.exp.actOnTrigger)*Math.pow(eff('all'),M.exp.objectOnTrigger);
+    const g=OBJ.includes(k)?'object':k==='car'?'car':'trigger';r*=Math.pow(v/6,M.exp.speed[g]);hits[k]=r*L/100*(1-(avoid[k]||0))}
+  const clean=M.clean.t0+(M.clean.walk+M.clean.perMeterAtOneMs*L)/v;let T=clean+M.cost.extra;
+  for(const k of KINDS)T+=hits[k]*M.cost.cost[k]*Math.pow(6/v,M.exp.costSpeed??1);
+  T*=M.bias;T*=(q.timeMult??1);
+  const N=Math.max(0,M.count.u*D/T-M.count.b),limit=Math.ceil((L/eco*1.5+25)/5)*5,late=Math.min(1,Math.max(0,M.late.a+M.late.b*T/limit)),reward=base+per*L;
+  return{callSeconds:T,callsDone:N,income:N*reward*(1-.4*late)*(M.incomeScale??1),hitsPerCall:KINDS.reduce((s,k)=>s+hits[k],0),hits,distance:L,reward,late,limit}}
+</script>
+<script>
+const M=DATA.model,R=DATA.range,AV0={manhole:.7,hydrant:.7,car:.7,falling:.8,duck:.7,chicken:.3,tire:.3,other:.3};
+const DEF={dayLength:480,runSpeed:7,limitRunSpeed:7,objectScale:1,carScale:1,act:[5,8,10,13,15],rewardBase:1500,rewardPerMeter:8,debt:95000,life:5000,inlinePrice:8000,inlineDay:2,inlineMult:M.inline.timeMultiplier,ev:[60,60,60,60,60],evPay:[0,0,0,0,0],targetLo:6,targetHi:7,minLo:40,minHi:60,avoidK:.5,play1:'',play4:'',playLen:600};
+let S=JSON.parse(JSON.stringify(DEF));try{const h=decodeURIComponent(location.hash.slice(1));if(h)S=Object.assign(S,JSON.parse(h))}catch(e){}
+const won=n=>Math.round(n).toLocaleString('ko-KR')+'원',f1=n=>(Math.round(n*10)/10).toFixed(1);
+const SL=[['dayLength','하루 길이','초',200,900,10,R.dayLength.min,R.dayLength.max],['runSpeed','달리기 속도','m/s',4,10,.1,R.runSpeed.min,R.runSpeed.max],['objectScale','맨홀·소화전 양','배',.25,3,.05,R.objectScale.min,R.objectScale.max],['carScale','차와 부딪히는 정도','배',.3,1.5,.05,.3,1.5]];
+const MO=[['rewardBase','콜당 기본 보상','원',0,4000,100],['rewardPerMeter','m당 보상','원',0,20,.5],['debt','시작 빚','원',20000,300000,5000],['life','하루 생활비','원',0,15000,500],['inlinePrice','인라인 가격','원',0,30000,1000],['inlineDay','인라인 사는 일차(0=안 삼)','일',0,7,1]];
+function slider(a){const[k,l,u,mn,mx,st,lo,hi]=a;return`<div class="f"><label for="${k}">${l}<output id="o_${k}"></output></label><input id="${k}" type="range" min="${mn}" max="${mx}" step="${st}" value="${S[k]}"><div class="out" id="w_${k}"></div></div>`}
+function days(key,lab,note){return`<div class="f"><label>${lab}</label><div class="days">${[1,2,3,4,5].map((d,i)=>`<div>${d}일<input type="number" data-a="${key}" data-i="${i}" value="${S[key][i]}"></div>`).join('')}</div>${note?`<small>${note}</small>`:''}</div>`}
+document.getElementById('ctl').innerHTML=`<h2 style="border:0;margin-top:0">기본</h2>${SL.map(slider).join('')}<small class="note">기본값: 지금 게임 값. 제한 시간 기준 속도는 7로 고정. 차 정도는 측정 없는 근사(1배=일차별 30/40/50/60대).</small>
+<h2>함정</h2>${days('act','콜당 켜지는 랜덤 트리거 (6일차 이후 5일 값)',`측정 범위: 1일 3~13, 2·3일 5~13, 4·5일 8~25`)}<div class="out" id="w_act"></div>
+<h2>돈</h2>${MO.map(a=>slider(a)).join('')}
+<h2>고정 이벤트 (가정)</h2>${days('ev','일차별 이벤트가 쓰는 시간(초)','아직 게임에 없어 측정 없음. 이 시간만큼 하루가 줄어듭니다.')}${days('evPay','이벤트 보상(원)','')}
+<h2>목표</h2><div class="f"><label>클리어 일차</label><div class="days" style="grid-template-columns:1fr 1fr"><input type="number" id="targetLo" value="${S.targetLo}"><input type="number" id="targetHi" value="${S.targetHi}"></div></div>
+<div class="f"><label>전체 플레이 시간(분)</label><div class="days" style="grid-template-columns:1fr 1fr"><input type="number" id="minLo" value="${S.minLo}"><input type="number" id="minHi" value="${S.minHi}"></div></div>
+<h2>사람 보정</h2><div class="f"><label for="avoidK">회피 강도<output id="o_avoidK"></output></label><input id="avoidK" type="range" min="0" max="1.3" step=".05" value="${S.avoidK}"><small>1 = 가정값(맨홀·소화전·차·오리 70%, 낙하물 80%, 나머지 30%를 사람이 피함). 측정 아님, 아래로 맞추세요.</small></div>
+<div class="f"><label>직접 플레이한 끝낸 콜 수</label><div class="days" style="grid-template-columns:1fr 1fr 1fr"><div>1일차<input type="number" id="play1" value="${S.play1}"></div><div>4일차<input type="number" id="play4" value="${S.play4}"></div><div>길이(초)<input type="number" id="playLen" value="${S.playLen}"></div></div><small>지금 게임 값으로 플레이한 결과을 넣고 버튼을 누르세요.</small></div><button class="btn" id="fit">회피 강도 맞추기</button><div class="note" id="fitNote"></div>
+<button class="btn" id="reset" style="display:block">지금 게임 값으로 되돌리기</button>`;
+const av=k=>Object.fromEntries(Object.entries(AV0).map(([a,b])=>[a,Math.min(.95,b*k)]));
+function run(k){let cash=0,inl=false,clear=null;const rows=[];
+  for(let d=1;d<=12;d++){const i=Math.min(d,5)-1,ev=d<=5?(S.ev[i]||0):0,q={day:d,objectScale:S.objectScale,activePerDay:S.act[i],runSpeed:S.runSpeed,dayLength:Math.max(30,S.dayLength-ev),limitRunSpeed:S.limitRunSpeed,rewardBase:S.rewardBase,rewardPerMeter:S.rewardPerMeter,avoid:av(k),carScale:S.carScale,timeMult:inl?S.inlineMult:1};
+    const p=predict(M,q),inc=p.income+(d<=5?(S.evPay[i]||0):0);cash+=inc;cash-=Math.min(cash,S.life);
+    if(!clear&&cash>=S.debt)clear=d;
+    if(!inl&&S.inlineDay>0&&d>=S.inlineDay&&cash>=S.inlinePrice&&!(clear===d)){cash-=S.inlinePrice;inl=true}
+    rows.push({d,p,inc,cash,inl})}
+  return{rows,clear}}
+function clearWith(k,scale){let cash=0,inl=false;for(let d=1;d<=30;d++){const i=Math.min(d,5)-1,ev=d<=5?(S.ev[i]||0):0,p=predict(M,{day:d,objectScale:S.objectScale,activePerDay:S.act[i],runSpeed:S.runSpeed,dayLength:Math.max(30,S.dayLength-ev),limitRunSpeed:S.limitRunSpeed,rewardBase:S.rewardBase,rewardPerMeter:S.rewardPerMeter,avoid:av(k),carScale:S.carScale,timeMult:inl?S.inlineMult:1});cash+=p.income*scale+(d<=5?(S.evPay[i]||0):0);cash-=Math.min(cash,S.life);if(cash>=S.debt)return d;if(!inl&&S.inlineDay>0&&d>=S.inlineDay&&cash>=S.inlinePrice){cash-=S.inlinePrice;inl=true}}return null}
+function chart(H,B){const W=900,HH=300,l=62,r=16,t=16,b=30,n=10;const mx=Math.max(S.debt*1.25,...H.rows.slice(0,n).map(x=>x.cash),...B.rows.slice(0,n).map(x=>x.cash));
+  const X=d=>l+(d-1)*(W-l-r)/(n-1),Y=v=>HH-b-(v/mx)*(HH-b-t);let s='';
+  for(let i=0;i<=4;i++){const v=mx*i/4;s+=`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef0f2"/><text x="${l-8}" y="${Y(v)+4}" font-size="11" fill="#8a9099" text-anchor="end">${Math.round(v/1000)}천</text>`}
+  const a=X(S.targetLo)-14,z=X(S.targetHi)+14;s+=`<rect x="${a}" y="${t}" width="${z-a}" height="${HH-b-t}" fill="#B4532A" opacity=".06"/><text x="${(a+z)/2}" y="${t+13}" font-size="11" fill="#5a616b" text-anchor="middle">목표 ${S.targetLo}~${S.targetHi}일</text>`;
+  s+=`<line x1="${l}" x2="${W-r}" y1="${Y(S.debt)}" y2="${Y(S.debt)}" stroke="#5a616b" stroke-dasharray="5 4"/><text x="${W-r}" y="${Y(S.debt)-6}" font-size="11.5" fill="#5a616b" text-anchor="end">빚 ${won(S.debt)}</text>`;
+  const line=(o,c)=>{const pts=o.rows.slice(0,n);s+=`<polyline fill="none" stroke="${c}" stroke-width="2" points="${pts.map(x=>X(x.d)+','+Y(x.cash)).join(' ')}"/>`;pts.forEach(x=>s+=`<circle cx="${X(x.d)}" cy="${Y(x.cash)}" r="3.5" fill="${c}" stroke="#fff" stroke-width="2"/>`)};
+  line(B,'#2F6FA8');line(H,'#B4532A');
+  for(let d=1;d<=n;d++)s+=`<text x="${X(d)}" y="${HH-10}" font-size="11.5" fill="#5a616b" text-anchor="middle">${d}일</text><rect data-d="${d}" x="${X(d)-(W-l-r)/(n-1)/2}" y="${t}" width="${(W-l-r)/(n-1)}" height="${HH-b-t}" fill="transparent"/>`;
+  const svg=document.getElementById('chart');svg.innerHTML=s;const tip=document.getElementById('tip'),box=document.getElementById('chartBox');
+  svg.querySelectorAll('rect[data-d]').forEach(e=>{e.onmousemove=ev=>{const d=+e.dataset.d,h=H.rows[d-1],b=B.rows[d-1];tip.style.display='block';tip.innerHTML=`<b>${d}일차 마감</b><br>기준: 현금 ${won(h.cash)}, 그날 ${won(h.inc)}<br>봇: 현금 ${won(b.cash)}, 그날 ${won(b.inc)}`;const r=box.getBoundingClientRect();let x=ev.clientX-r.left+12;if(x>r.width-250)x-=270;tip.style.left=x+'px';tip.style.top=(ev.clientY-r.top+10)+'px'};e.onmouseleave=()=>tip.style.display='none'})}
+function render(){for(const a of SL.concat(MO)){const[k,,u,, ,,lo,hi]=a;document.getElementById('o_'+k).textContent=(u==='원'?Number(S[k]).toLocaleString('ko-KR'):S[k])+u;const w=document.getElementById('w_'+k);if(w)w.textContent=(lo!==undefined&&(S[k]<lo||S[k]>hi))?`측정 범위 밖 (${lo}~${hi}) · 믿기 어려움`:''}
+  document.getElementById('o_avoidK').textContent=S.avoidK;
+  const bad=S.act.map((a,i)=>{const[lo,hi]=R.activePerDay.byDay[i+1];return(a<lo||a>hi)?`${i+1}일 ${a}`:''}).filter(Boolean);document.getElementById('w_act').textContent=bad.length?'측정 범위 밖: '+bad.join(', '):'';
+  const H=run(S.avoidK),B=run(0),hi=clearWith(S.avoidK,1+M.displayError90.Income),lo=clearWith(S.avoidK,1-M.displayError90.Income);
+  const min=d=>d?d*S.dayLength/60:null,mH=min(H.clear),okD=H.clear&&H.clear>=S.targetLo&&H.clear<=S.targetHi,okM=mH&&mH>=S.minLo&&mH<=S.minHi,r1=H.rows[0],r4=H.rows[3];
+  document.getElementById('hero').innerHTML=`<div><div class="k">빚 갚는 날 (기준)</div><div class="v">${H.clear?H.clear+'일차':'12일 넘음'}</div><div class="s">오차 포함 ${hi||'?'}~${lo||'30+'}일 · 봇 ${B.clear?B.clear+'일차':'12일 넘음'}</div><div class="tag ${okD?'ok':'no'}">${okD?'목표 안':'목표 밖'} (${S.targetLo}~${S.targetHi}일)</div></div>
+  <div><div class="k">전체 플레이 시간</div><div class="v">${mH?Math.round(mH)+'분':'-'}</div><div class="s">하루 ${S.dayLength}초 × ${H.clear||'-'}일</div><div class="tag ${okM?'ok':'no'}">${okM?'목표 안':'목표 밖'} (${S.minLo}~${S.minHi}분)</div></div>
+  <div><div class="k">1일차 수입 (기준)</div><div class="v">${won(r1.inc)}</div><div class="s">콜 ${f1(r1.p.callsDone)}개 · 콜당 ${Math.round(r1.p.callSeconds)}초 · 맞는 수 ${f1(r1.p.hitsPerCall)}</div></div>
+  <div><div class="k">4일차 수입 (기준)</div><div class="v">${won(r4.inc)}</div><div class="s">콜 ${f1(r4.p.callsDone)}개 · 콜당 ${Math.round(r4.p.callSeconds)}초 · 맞는 수 ${f1(r4.p.hitsPerCall)}</div></div>`;
+  chart(H,B);
+  let t=`<tr><th>일차</th><th>콜당 거리</th><th>콜당 돈</th><th>콜당 시간 기준/봇</th><th>끝낸 콜 기준/봇</th><th>콜당 맞는 수 기준/봇</th><th>수입 기준</th><th>수입 봇</th><th>현금 기준</th><th>현금 봇</th><th>인라인</th></tr>`;
+  for(let i=0;i<9;i++){const h=H.rows[i],b=B.rows[i],c=H.clear===h.d?'clear':(H.clear&&h.d>H.clear?'tail':'');t+=`<tr class="${c}"><td>${h.d}${h.d>5?' (5일 값)':''}</td><td>${Math.round(h.p.distance)}m</td><td>${won(h.p.reward)}</td><td>${Math.round(h.p.callSeconds)} / ${Math.round(b.p.callSeconds)}초</td><td>${f1(h.p.callsDone)} / ${f1(b.p.callsDone)}</td><td>${f1(h.p.hitsPerCall)} / ${f1(b.p.hitsPerCall)}</td><td>${won(h.inc)}</td><td>${won(b.inc)}</td><td>${won(h.cash)}</td><td>${won(b.cash)}</td><td>${h.inl?'있음':''}</td></tr>`}
+  document.getElementById('tbl').innerHTML=t;
+  let dt='<tr><th>클리어 일차</th><th>기준선의 빚</th><th>봇 기준 빚</th></tr>';for(const d of [5,6,7,8,9]){dt+=`<tr><td>${d}일차</td><td>${won(Math.floor(H.rows[d-1].cash/1000)*1000)}</td><td>${won(Math.floor(B.rows[d-1].cash/1000)*1000)}</td></tr>`}
+  document.getElementById('debtTbl').innerHTML=dt;
+  const man=[40,54,70,84,84].map(x=>Math.round(x*S.objectScale)),hy=[38,38,38,38,38].map(x=>Math.round(x*S.objectScale));
+  document.getElementById('f1').textContent=`하루 길이: ${S.dayLength}초
+달리기 속도(플레이어): ${S.runSpeed} (기준 달리기 속도는 6 유지)
+맨홀 전체 맵 기준 1~5일: ${man.join(' / ')}
+소화전 전체 맵 기준 1~5일: ${hy.join(' / ')}
+콜당 트리거 activePerDay 1~5일: ${S.act.join(' / ')}
+보상: ${S.rewardBase} + ${S.rewardPerMeter}원/m
+시작 빚 ${S.debt} · 생활비 ${S.life} · 인라인 ${S.inlinePrice}`;
+  const e=M.displayError90;document.getElementById('errNote').textContent=`점: 일차 마감 현금. 식의 오차(90%)는 수입 ±${Math.round(e.Income*100)}%, 콜당 시간 ±${Math.round(e.T*100)}%, 끝낸 콜 ±${Math.round(e.N*100)}%입니다. 위 값은 여러 판 평균이고, 한 판의 수입은 같은 값에서도 25~30% 흔들립니다.`;
+  document.getElementById('trust').innerHTML=`<b>측정한 것:</b> 일차 1~5·7, 맨홀·소화전 .5~2배, 트리거(일차별 범위), 속도 5~8, 하루 300~600초. 봇 689판(고정 배치 488, 랜덤 배치 201), 최신 코드.<br><b>측정 안 한 것:</b> 고정 이벤트(가정 입력), 사람 회피(가정, 플레이로 맞출 것), 차 수 변경(근사), 인라인과 다른 값의 조합, 6일차.<br><b>약한 곳:</b> 1일차 속도 변경은 오차가 가장 큽니다(속도 7에서 +33% 사례). 맨홀·소화전은 2배로 요청해도 간격 때문에 약 1.5배까지만 놓입니다. 3·4일차는 측정상 어려움이 거의 같습니다.`;
+  history.replaceState(null,'','#'+encodeURIComponent(JSON.stringify(S)))}
+document.getElementById('ctl').addEventListener('input',ev=>{const e=ev.target;if(e.dataset.a){S[e.dataset.a][+e.dataset.i]=Number(e.value)||0}else if(e.id&&e.id in S){S[e.id]=e.type==='number'&&e.value===''?'':Number(e.value)}render()});
+document.getElementById('fit').onclick=()=>{const pts=[];const f=(day,v)=>{if(!v)return;let lo=0,hi=1.3;for(let i=0;i<30;i++){const m=(lo+hi)/2,p=predict(M,{day,dayLength:S.playLen,avoid:av(m)});if(p.callsDone<v)lo=m;else hi=m}pts.push([day,(lo+hi)/2])};f(1,S.play1);f(4,S.play4);const n=document.getElementById('fitNote');if(!pts.length){n.textContent='끝낸 콜 수를 넣어 주세요.';return}const k=pts.reduce((s,x)=>s+x[1],0)/pts.length;S.avoidK=Math.round(k*20)/20;document.getElementById('avoidK').value=S.avoidK;n.textContent=pts.map(x=>`${x[0]}일차 ${x[1].toFixed(2)}`).join(', ')+` → 평균 ${S.avoidK}. 한 판은 25~30% 흔들리니 여러 판이면 더 정확합니다.`;render()};
+document.getElementById('reset').onclick=()=>{location.hash='';S=JSON.parse(JSON.stringify(DEF));location.reload()};
+document.getElementById('copy').onclick=()=>navigator.clipboard.writeText(document.getElementById('f1').textContent);
+document.getElementById('link').onclick=()=>navigator.clipboard.writeText(location.href);
+render();
+</script></body></html>
