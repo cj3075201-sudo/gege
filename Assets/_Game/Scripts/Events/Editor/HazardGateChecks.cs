@@ -167,7 +167,7 @@ namespace DeliveryRider.Editor
             bool Can(string type, bool carrying, bool requireFood)
             {
                 Set(planner, "triggersRequireFood", requireFood);
-                session.GetType().GetProperty("Stage").SetValue(session, carrying ? DeliveryStage.Carrying : DeliveryStage.FoodLost);
+                session.GetType().GetProperty("Stage").SetValue(session, carrying ? DeliveryStage.Carrying : DeliveryStage.Pickup);
                 var slot = new GameObject(type).AddComponent<HazardSlot>();
                 slot.Configure(type, kinds[type], 1, Array.Empty<int>());
                 bool result = (bool)Call(planner, "CanStrike", slot);
@@ -194,6 +194,7 @@ namespace DeliveryRider.Editor
             Set(hazard, "volume", hazard.GetComponent<BoxCollider>());
             Set(hazard, "session", session);
             Set(hazard, "nextRouteTryAt", 0f);
+            Set(hazard, "windSeconds", Vector2.zero);
             Physics.SyncTransforms();
             Call(hazard, "FixedUpdate");
             float waitUntil = (float)Field(hazard, "nextRouteTryAt").GetValue(hazard);

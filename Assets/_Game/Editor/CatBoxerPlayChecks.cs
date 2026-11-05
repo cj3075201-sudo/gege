@@ -89,7 +89,7 @@ namespace DeliveryRider.Editor
             motor.Punched += () => punches++;
             var staging = new GameObject("InactiveCatStaging"); staging.SetActive(false);
             catRoot = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(CatBoxerPrefabBuilder.PrefabPath), staging.transform);
-            catRoot.name = "CatBoxerProbe"; slot = catRoot.AddComponent<HazardSlot>(); slot.Configure("cat", HazardRole.Trigger, 2, Array.Empty<int>());
+            catRoot.name = "CatBoxerProbe"; slot = catRoot.AddComponent<HazardSlot>(); slot.Configure("cat", HazardRole.Trigger, 2, Array.Empty<int>()); slot.StrikeAllowed = HazardPlanner.DeliveryInProgress(session);
             if (scenario == 7)
             {
                 zones = ScriptableObject.CreateInstance<ZoneMap>();
@@ -125,7 +125,7 @@ namespace DeliveryRider.Editor
                         else if (step == 1 && observedHits > 0)
                         {
                             Check(cat.TakenHits == 1 && session.Stage == DeliveryStage.Carrying && cat.KeepsFoodOnCurrentHit, "jab registered once and retained food");
-                            Check(Mathf.Abs(launch.z - 11f) < .01f && Mathf.Abs(launch.y - 2.4525f) < .01f, "converted jab velocity"); Pass();
+                            Check(Mathf.Abs(launch.z - 11f) < .01f && Mathf.Abs(launch.y - 5.5f) < .01f, "HTML jab velocity"); Pass();
                         }
                         break;
                     case 4:
@@ -209,11 +209,11 @@ namespace DeliveryRider.Editor
             else if (step == 1 && cat.TakenHits == 1) { Recover(); Tell(CatBoxerHazard.Attack.Hook, 1f); Next(); }
             else if (step == 2 && cat.TakenHits == 2)
             {
-                Check(Mathf.Abs(launch.x) > 14f && Mathf.Abs(launch.y - 3.567273f) < .01f, "hook launches sideways"); Recover(); Tell(CatBoxerHazard.Attack.Uppercut, 1f); Next();
+                Check(Mathf.Abs(launch.x) > 14f && Mathf.Abs(launch.y - 8f) < .01f, "hook launches sideways"); Recover(); Tell(CatBoxerHazard.Attack.Uppercut, 1f); Next();
             }
             else if (step == 3 && cat.State == CatBoxerHazard.Mode.Leaving)
             {
-                Check(cat.TakenHits == 3 && launch.x > 14f && launch.y >= 10.70f && launch.y <= 12.05f, "third hit launches toward destination with converted loss height");
+                Check(cat.TakenHits == 3 && launch.x > 14f && launch.y >= 24f && launch.y <= 27f, "third hit launches toward destination with HTML loss height");
                 Next();
             }
             else if (step == 4 && cat.State == CatBoxerHazard.Mode.Spent) { Check(!view.gameObject.activeSelf, "losing cat leaves"); Pass(); }
@@ -228,7 +228,7 @@ namespace DeliveryRider.Editor
             else if (step == 1 && cat.Phase == CatBoxerHazard.Beat.Chase) { Release(); Next(); }
             else if (step == 2 && cat.State == CatBoxerHazard.Mode.Leaving)
             {
-                Check(observedHits == 1 && launch.z > 14f && Mathf.Abs(launch.y - 3.121364f) < .01f, "running away triggers forward chase punch"); Pass();
+                Check(observedHits == 1 && launch.z > 14f && Mathf.Abs(launch.y - 7f) < .01f, $"running away triggers forward chase punch hits={observedHits} launch={launch} player={rider.position} cat={cat.Position}"); Pass();
             }
         }
         private static void FoodRecovery(float since)
@@ -251,13 +251,13 @@ namespace DeliveryRider.Editor
             else if (step == 2 && session.Stage == DeliveryStage.FoodLost) Next();
             else if (step == 3 && since > .2f)
             {
-                Check(!view.gameObject.activeSelf, "food loss ends duel"); Recover(); Next();
+                Check(view.gameObject.activeSelf && cat.State == CatBoxerHazard.Mode.Bout && slot.StrikeAllowed, "food recovery keeps duel armed and visible"); Recover(); Next();
             }
             else if (step == 4 && since > 2f)
             {
-                rider.position = food.transform.position; Physics.SyncTransforms(); Next();
+                Recover(); rider.position = food.transform.position; Physics.SyncTransforms(); Next();
             }
-            else if (step == 5 && session.Stage == DeliveryStage.Carrying) { Check(!session.IsChasingFood, "walking over dropped food recovers order"); Pass(); }
+            else if (step == 5 && session.Stage == DeliveryStage.Carrying) { Check(!session.IsChasingFood && slot.StrikeAllowed && cat.State != CatBoxerHazard.Mode.Spent, "walking over dropped food recovers order without cancelling duel"); Pass(); }
         }
         private static void PauseMapSettlement(float since)
         {
@@ -310,7 +310,11 @@ namespace DeliveryRider.Editor
         }
         private static object Get(object owner, string name) => owner.GetType().GetField(name, Any).GetValue(owner);
         private static void Set(object owner, string name, object value) => owner.GetType().GetField(name, Any).SetValue(owner, value);
-        private static void Property(object owner, string name, object value) => owner.GetType().GetProperty(name, Any).SetValue(owner, value);
+        private static void Property(object owner, string name, object value)
+        {
+            owner.GetType().GetProperty(name, Any).SetValue(owner, value);
+            if (ReferenceEquals(owner, session) && name == "Stage" && slot != null) slot.StrikeAllowed = HazardPlanner.DeliveryInProgress(session);
+        }
         private static object Call(object owner, string name, params object[] args) => owner.GetType().GetMethod(name, Any).Invoke(owner, args);
     }
 }

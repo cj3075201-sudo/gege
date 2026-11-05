@@ -29,7 +29,7 @@ namespace DeliveryRider.Editor
                 foreach (var pair in new[] { ("jabUp", 5.5f), ("hookUp", 8f), ("chaseUp", 7f) })
                 {
                     float converted = (float)typeof(CatBoxerHazard).GetField(pair.Item1, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(cat);
-                    Check(Mathf.Abs(2f * converted / 9.81f - 2f * pair.Item2 / 22f) < .00001f, pair.Item1 + " preserves flight time at g=9.81");
+                    Check(Mathf.Abs(converted - pair.Item2) < .00001f, pair.Item1 + " uses HTML upward speed with accident gravity 2.24");
                 }
                 var slotHost = new GameObject("CatScaleProbe");
                 try

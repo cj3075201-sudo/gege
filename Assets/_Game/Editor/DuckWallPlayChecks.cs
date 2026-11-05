@@ -18,6 +18,7 @@ namespace DeliveryRider.Editor
         private const string ExitCode = "DuckWallPlayChecks.ExitCode";
         private static readonly string[] Modes = { "run", "jump", "inline-jump", "sidewalk", "wait", "repeat", "high-flight", "no-food", "lose-food" };
         private static Keyboard keyboard;
+        private static DeliverySession probeSession;
         private static RiderMotor motor;
         private static Rigidbody body;
         private static CrossingFlockHazard ducks;
@@ -26,7 +27,8 @@ namespace DeliveryRider.Editor
         private static float started, width, openedAt, secondHitAt, jumpPeak, farthest, highCrossHeight, hitHeight, maximumFlightHeight;
         private static int fixedSamples;
         private static double deadline;
-        private static bool jumpSent, waitingReleased, launchSent, lostFood;
+        private static bool jumpSent, waitingReleased, launchSent, lostFood, repeatReturning;
+        private static float repeatSide;
 
         static DuckWallPlayChecks() => EditorApplication.playModeStateChanged += OnMode;
 
@@ -103,7 +105,8 @@ namespace DeliveryRider.Editor
                 wall.transform.localScale = new Vector3(1f, 8f, 240f);
             }
             var host = new GameObject("InactiveServices"); host.SetActive(false);
-            var session = host.AddComponent<DeliverySession>();
+            var session = host.AddComponent<DeliverySession>(); probeSession=session;
+            typeof(DeliverySession).GetProperty("Stage").SetValue(session, Mode=="no-food"?DeliveryStage.Pickup:DeliveryStage.Carrying);
             var network = host.AddComponent<RoadNetwork>();
             network.Configure(new[] { floor.GetComponent<Collider>() });
             var player = new GameObject("ProbeRider"); player.SetActive(false);
@@ -137,7 +140,7 @@ namespace DeliveryRider.Editor
                 if (hits == 2) secondHitAt = Time.time - started;
                 Check(body.linearVelocity.z < 1f, "contact launch replaces incoming movement");
             };
-            hits = 0; jumpSent = waitingReleased = launchSent = lostFood = false;
+            hits = 0; jumpSent = waitingReleased = launchSent = lostFood = repeatReturning = false; repeatSide=0f;
             started = Time.time; openedAt = secondHitAt = jumpPeak = farthest = 0f;
             highCrossHeight = hitHeight = 0f;
             fixedSamples = 0; maximumFlightHeight = 0f;
@@ -148,7 +151,7 @@ namespace DeliveryRider.Editor
             {
                 // Launch at a deterministic fixture boundary, before any simulation steps can move the rider.
                 motor.SetInputBlocked(true);
-                Check(motor.TryHazardCrash(motor, new Vector3(0f, 12f, 6f), .8f), "high-launch fixture accepted by real motor");
+                Check(motor.TryHazardCrash(motor, new Vector3(0f, 15.6f, 6f), .8f), "high-launch fixture accepted by real motor");
                 launchSent = true;
             }
         }
@@ -189,7 +192,16 @@ namespace DeliveryRider.Editor
                 }
                 if (Mode == "repeat")
                 {
-                    if (hits > 0 && !motor.IsRecovering) Keys(Key.W);
+                    if(hits>0&&!motor.IsRecovering)
+                    {
+                        if(repeatSide==0f)repeatSide=body.position.z>=0f?1f:-1f;
+                        if(!repeatReturning)
+                        {
+                            if(Mathf.Abs(body.position.z)<12f)Keys(repeatSide>0f?Key.W:Key.S);else Keys();
+                            if(!crossing&&Mathf.Abs(body.position.z)>9f)repeatReturning=true;
+                        }
+                        else Keys(body.position.z>0f?Key.S:Key.W);
+                    }
                     if (hits >= 2) { Check(secondHitAt > 1f, "rider returns after recovery and is hit twice"); Pass(); return; }
                 }
                 if (Mode == "high-flight")
@@ -204,9 +216,11 @@ namespace DeliveryRider.Editor
                 }
                 if (Mode == "lose-food" && crossing && body.position.z > -3f && !lostFood)
                 {
-                    slot.StrikeAllowed = false; lostFood = true;
+                    typeof(DeliverySession).GetProperty("Stage").SetValue(probeSession,DeliveryStage.FoodLost);
+                    slot.StrikeAllowed = HazardPlanner.DeliveryInProgress(probeSession); lostFood = true;
                 }
-                if ((Mode == "no-food" || Mode == "lose-food") && body.position.z > 3f)
+                if(Mode=="lose-food"&&lostFood&&hits>0){Check(slot.StrikeAllowed,"food recovery remains armed");Pass();return;}
+                if (Mode == "no-food" && body.position.z > 3f)
                 {
                     Check(hits == 0, "disabled strike gate permits passage"); Pass(); return;
                 }

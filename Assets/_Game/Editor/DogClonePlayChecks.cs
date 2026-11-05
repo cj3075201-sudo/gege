@@ -113,7 +113,7 @@ namespace DeliveryRider.Editor
             var asset = AssetDatabase.LoadAssetAtPath<GameObject>(DogClonePrefabBuilder.Folder + (isDog ? "Dog" : "CloneRider") + ".prefab");
             var instance = UnityEngine.Object.Instantiate(asset, staging.transform);
             instance.transform.position = isDog ? new Vector3(0f, 0.02f, name == "dog_trigger_scale" ? -20f : -6f) : new Vector3(0f, 0.02f, name == "clone_trigger_scale" ? -15f : -2f);
-            slot = instance.AddComponent<HazardSlot>(); slot.Configure(isDog ? "dog" : "clone", HazardRole.Trigger, 2, Array.Empty<int>());
+            slot = instance.AddComponent<HazardSlot>(); slot.Configure(isDog ? "dog" : "clone", HazardRole.Trigger, 2, Array.Empty<int>()); slot.StrikeAllowed = HazardPlanner.DeliveryInProgress(session);
             slot.StrikeAllowed = !name.EndsWith("no_food");
             if (name.EndsWith("trigger_scale")) slot.SetTriggerScale(2f);
             foreach (var hazard in instance.GetComponents<IPlacedHazard>()) hazard.Place(session, network, new HazardCandidate());
@@ -256,6 +256,10 @@ namespace DeliveryRider.Editor
         private static void Check(bool condition, string message) => DogCloneChecks.Check(condition, Cases[scenario] + ": " + message);
         private static T Get<T>(object owner, string field) => (T)owner.GetType().GetField(field, Any).GetValue(owner);
         private static void Set(object owner, string field, object value) => owner.GetType().GetField(field, Any).SetValue(owner, value);
-        private static void Property(object owner, string property, object value) => owner.GetType().GetProperty(property, Any).SetValue(owner, value);
+        private static void Property(object owner, string property, object value)
+        {
+            owner.GetType().GetProperty(property, Any).SetValue(owner, value);
+            if (ReferenceEquals(owner, session) && property == "Stage" && slot != null) slot.StrikeAllowed = HazardPlanner.DeliveryInProgress(session);
+        }
     }
 }

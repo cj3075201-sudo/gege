@@ -133,7 +133,7 @@ namespace DeliveryRider.Editor
             var instance = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(FallingObjectChecks.PrefabPath), staging.transform);
             hazard = instance.GetComponent<FallingObjectHazard>();
             slot = instance.AddComponent<HazardSlot>(); slot.Configure("falling", HazardRole.Trigger, 1, Array.Empty<int>());
-            slot.StrikeAllowed = scenario != 3;
+            slot.StrikeAllowed = scenario != 3 && HazardPlanner.DeliveryInProgress(session);
             if (scenario == 5 || scenario == 6)
             {
                 map = ScriptableObject.CreateInstance<ZoneMap>();
@@ -196,7 +196,7 @@ namespace DeliveryRider.Editor
                     if (scenario == 4) { Set(session, "mapOpen", true); acted = true; }
                     if (scenario == 7) { hazard.gameObject.SetActive(false); acted = true; CheckHidden(); }
                     if (scenario == 8) { Property(session, "ActiveOrder", Order(2)); acted = true; }
-                    if (scenario == 9) { Property(session, "Stage", DeliveryStage.FoodLost); slot.StrikeAllowed = false; acted = true; }
+                    if (scenario == 9) { Property(session, "Stage", DeliveryStage.FoodLost); slot.StrikeAllowed = true; acted = true; }
                     if (scenario == 10)
                     {
                         // Move after target lock, still inside the scaled impact radius (outside the 1.7 m base).
@@ -218,7 +218,7 @@ namespace DeliveryRider.Editor
                 }
                 float end = scenario == 0 ? 6f : scenario == 8 ? 5.7f : 4.9f;
                 if (age < end) return;
-                bool shouldHit = scenario == 0 || scenario == 6 || scenario == 8 || scenario == 10 || scenario == 11;
+                bool shouldHit = scenario == 0 || scenario == 6 || scenario == 8 || scenario == 9 || scenario == 10 || scenario == 11;
                 int expectedHits = scenario == 12 ? 2 : shouldHit ? 1 : 0;
                 Check(hits == expectedHits, "hit count expected " + expectedHits + ", got " + hits);
                 if (shouldHit)
