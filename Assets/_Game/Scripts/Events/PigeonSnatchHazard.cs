@@ -68,8 +68,14 @@ namespace DeliveryRider
         private void OnDisable()
         {
             SetLamp(false);
-            // A pigeon still carrying food is a live recovery target; it keeps flying on its own.
-            if (phase != Phase.Flying && pigeon != null) pigeon.gameObject.SetActive(false);
+            // A consumed/hidden slot cannot leave an invisible recovery target behind.
+            if(phase==Phase.Flying&&session!=null&&pigeon!=null)
+            {
+                session.RequireReplacement(pigeon.transform);
+                pigeon.Rest();
+            }
+            if(pigeon!=null)pigeon.gameObject.SetActive(false);
+            phase=Phase.Spent;
         }
 
         private void Update() { if (session.IsSettled && phase != Phase.Spent && phase != Phase.Flying) { SetLamp(false); Perch(); phase = Phase.Spent; } }
