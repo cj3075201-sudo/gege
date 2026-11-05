@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using Unity.Profiling;
+#endif
 
 namespace DeliveryRider
 {
@@ -26,8 +28,10 @@ namespace DeliveryRider
         [SerializeField, Range(0f, 1f)] private float comboFirst = .35f;
         [Tooltip("Display the call's selected triggers before food pickup without allowing them to strike.")]
         [SerializeField] private bool showSelectedBeforePickup;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         private static readonly ProfilerMarker RollSample = new ProfilerMarker("HazardPlanner.RollCall");
         public string LastRollAllocationUnit { get; private set; }
+#endif
         private string allowedSteal;
         private DeliveryOrderOffer rolledOrder;
         private System.Random callRandom;
@@ -38,9 +42,11 @@ namespace DeliveryRider
         private readonly Dictionary<string, int> callCounts = new Dictionary<string, int>();
         private readonly Dictionary<HazardSlot, float> rollKeys = new Dictionary<HazardSlot, float>();
         private readonly List<HazardSlot> group = new List<HazardSlot>();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         public double LastRollMilliseconds { get; private set; }
         public long LastRollAllocatedBytes { get; private set; }
         public long LastRollHeapDeltaBytes { get; private set; }
+#endif
         public int SelectedTriggers { get; private set; }
         public int NearSelectedTriggers { get; private set; }
         public int PendingSlotChanges => pendingSlots.Count;
@@ -70,11 +76,13 @@ namespace DeliveryRider
 
         private void RollCall()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             using var sample = RollSample.Auto();
             using var allocation = ProfilerRecorder.StartNew(ProfilerCategory.Memory,"GC.Alloc",1,
                 ProfilerRecorderOptions.StartImmediately|ProfilerRecorderOptions.SumAllSamplesInFrame|ProfilerRecorderOptions.CollectOnlyOnCurrentThread);
             long heapBefore = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();
             var timer = System.Diagnostics.Stopwatch.StartNew();
+#endif
             callPool.Clear(); nearPool.Clear(); callCounts.Clear(); rollKeys.Clear();
             foreach (var slot in slots)
             {
@@ -132,10 +140,12 @@ namespace DeliveryRider
             special.Sort((a,b) => rollKeys[a].CompareTo(rollKeys[b]));
             int specialWant = new[] {6,9,12,16}[Mathf.Clamp(day - 1, 0, 3)];
             for (int i = 0; i < special.Count && i < specialWant; i++){special[i].Selected = true;special[i].StrikeAllowed=CanStrike(special[i])&&!special[i].NeedsCallReset;}
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             timer.Stop(); LastRollMilliseconds = timer.Elapsed.TotalMilliseconds;
             LastRollAllocationUnit = allocation.Valid ? allocation.UnitType.ToString() : "Unavailable";
             LastRollAllocatedBytes = LastRollAllocationUnit == "Bytes" ? allocation.CurrentValue : -1;
             LastRollHeapDeltaBytes = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() - heapBefore;
+#endif
         }
 
         private float SpecDistance(HazardSlot slot) => candidates != null
