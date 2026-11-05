@@ -252,11 +252,11 @@ namespace DeliveryRider
             HazardSlot closest = null; float best = igniteRadius * igniteRadius;
             foreach (var slot in slots)
             {
-                if (slot.Role != HazardRole.Trigger || slot.Type == "celebrity" || slot.Type == "duck" || slot.Selected || slot.Consumed || slot.UnlockDay > day || !CallRoom(slot)) continue;
+                if (slot.Role != HazardRole.Trigger || slot.Type == "celebrity" || slot.Type == "duck" || slot.Selected || slot.Consumed || slot.UnlockDay > day) continue;
                 if ((slot.Type == "theft" || slot.Type == "clone") && (slot.Type != allowedSteal
                     || callCounts.ContainsKey("theft") || callCounts.ContainsKey("clone"))) continue;
                 float distance = (slot.transform.position - sourceSlot.transform.position).sqrMagnitude;
-                if (distance < best) { best = distance; closest = slot; }
+                if (distance < best && CallRoom(slot)) { best = distance; closest = slot; }
             }
             if (closest != null) { Select(closest); closest.StrikeAllowed = CanStrike(closest); }
         }
