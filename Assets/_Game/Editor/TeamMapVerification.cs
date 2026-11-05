@@ -36,6 +36,13 @@ namespace DeliveryRider.Editor
             Directory.CreateDirectory(Output);EditorSceneManager.OpenScene(MeasureRunner.ScenePath,OpenSceneMode.Single);CompareProtected();
             SessionState.SetString(Pending+".stage","after");SessionState.SetBool(Pending,true);EditorApplication.EnterPlaymode();
         }
+        public static void Restored()
+        {
+            TeamMapOriginalRestoration.Verify();var shots=JArray.Parse(File.ReadAllText(Path.Combine(Output,"restoration_views.json")));TeamMapOriginalRestoration.AdjustCaptureViews(shots);
+            foreach(var view in JArray.Parse(File.ReadAllText(Path.Combine(Output,"views.json"))).Where(v=>(string)v["label"]=="original_E06"||(string)v["label"]=="expanded_A_Expanded_001"))
+            {var copy=(JObject)view.DeepClone();copy["label"]="followup_"+(string)view["label"];shots.Add(copy);}
+            Write("restoration_capture_views.json",shots);SessionState.SetString(Pending+".stage","restored");SessionState.SetBool(Pending,true);EditorApplication.EnterPlaymode();
+        }
         private static void Mode(PlayModeStateChange mode)
         {
             if(!SessionState.GetBool(Pending,false))return;
@@ -134,38 +141,40 @@ namespace DeliveryRider.Editor
         {
             yield return null;var session=FindFirstObjectByType<DeliverySession>();var planner=FindFirstObjectByType<HazardPlanner>();var rider=session.Player.GetComponent<RiderMotor>();
             Set(planner,"randomEachRun",false);Set(planner,"seed",111);rider.SetInputBlocked(true);rider.enabled=false;var body=rider.GetComponent<Rigidbody>();body.interpolation=RigidbodyInterpolation.None;body.isKinematic=true;
-            foreach(int day in new[]{1,4})
+            foreach(int day in TeamMapVerification.Stage=="restored"?new[]{4}:new[]{1,4})
             {
                 Property(session,"Progress",new RunProgress(day,100000));Set(session,"openZones",session.Economy.ZonesForDay(day));Set(planner,"day",day);var timer=Stopwatch.StartNew();planner.Respawn();timer.Stop();
                 rows.Add(new{kind="dayStartHazardRespawn",day,ms=timer.Elapsed.TotalMilliseconds,slots=planner.Slots.Count});yield return null;
             }
+            if(TeamMapVerification.Stage=="restored")session.GetType().GetMethod("Notify",Any).Invoke(session,null);
             Time.timeScale=0f;planner.enabled=false;var camera=Camera.main;foreach(var control in camera.GetComponents<ThirdPersonCamera>())control.enabled=false;
             var sky=FindFirstObjectByType<DaySky>();sky.Preview=.92f;sky.PreviewSpeed=0f;
-            var views=JArray.Parse(File.ReadAllText(Path.Combine(TeamMapVerification.Output,"views.json")));
+            var views=JArray.Parse(File.ReadAllText(Path.Combine(TeamMapVerification.Output,(TeamMapVerification.Stage=="restored"?"restoration_capture_views.json":"views.json"))));
             var target=new RenderTexture(1920,1080,24,RenderTextureFormat.ARGB32);target.Create();var pixels=new Texture2D(1920,1080,TextureFormat.RGB24,false);
             try
             {
                 foreach(var view in views)
                 {
-                    camera.transform.position=V(view["position"]);camera.transform.LookAt(V(view["look"]));camera.fieldOfView=65;body.position=V(view["look"])-camera.transform.forward*2;body.position=new Vector3(body.position.x,1,body.position.z);session.Player.position=body.position;session.Player.rotation=Quaternion.LookRotation(Vector3.ProjectOnPlane(camera.transform.forward,Vector3.up));Physics.SyncTransforms();
+                    camera.transform.position=V(view["position"]);camera.transform.LookAt(V(view["look"]));camera.fieldOfView=65;body.position=TeamMapVerification.Stage=="restored"&&!((string)view["label"]).StartsWith("followup_")?camera.transform.position-camera.transform.forward*1.5f:V(view["look"])-camera.transform.forward*2;body.position=new Vector3(body.position.x,1,body.position.z);session.Player.position=body.position;session.Player.rotation=Quaternion.LookRotation(Vector3.ProjectOnPlane(camera.transform.forward,Vector3.up));Physics.SyncTransforms();
                     for(int warm=0;warm<30;warm++)yield return null;
                     if(Vector3.Distance(camera.transform.position,V(view["position"]))>.01f||Vector3.Distance(session.Player.position,body.position)>.01f)throw new InvalidOperationException("Frozen comparison pose drifted");
                     var cpu=new List<double>();var frame=new List<double>();var request=new UniversalRenderPipeline.SingleCameraRequest{destination=target};var timing=new FrameTiming[1];var gpu=new List<double>();
-                    for(int i=0;i<100;i++)
+                    for(int i=0;i<(TeamMapVerification.Stage=="restored"?0:100);i++)
                     {
                         var timer=Stopwatch.StartNew();RenderPipeline.SubmitRenderRequest(camera,request);timer.Stop();cpu.Add(timer.Elapsed.TotalMilliseconds);frame.Add(Time.unscaledDeltaTime*1000d);
                         FrameTimingManager.CaptureFrameTimings();if(FrameTimingManager.GetLatestTimings(1,timing)>0&&timing[0].gpuFrameTime>0)gpu.Add(timing[0].gpuFrameTime);
                         yield return null;
                     }
+                    if(TeamMapVerification.Stage=="restored")FindFirstObjectByType<NeighborhoodEveningLights>().PreviewAt(.92f,camera.transform.position);
                     RenderPipeline.SubmitRenderRequest(camera,request);var previous=RenderTexture.active;RenderTexture.active=target;pixels.ReadPixels(new Rect(0,0,1920,1080),0,0);pixels.Apply();RenderTexture.active=previous;
                     string label=(string)view["label"];File.WriteAllBytes(Path.Combine(TeamMapVerification.Output,label+"_"+TeamMapVerification.Stage+".png"),pixels.EncodeToPNG());
-                    cpu.Sort();frame.Sort();gpu.Sort();rows.Add(new{kind="frame",label,renderSubmitMedianMs=cpu[cpu.Count/2],renderSubmitP95Ms=cpu[(int)(cpu.Count*.95)],frameMedianMs=frame[frame.Count/2],frameP95Ms=frame[(int)(frame.Count*.95)],gpuMedianMs=gpu.Count>0?gpu[gpu.Count/2]:-1,gpuSamples=gpu.Count,activeLights=FindObjectsByType<Light>(FindObjectsSortMode.None).Count(l=>l.enabled&&l.type!=LightType.Directional)});
+                    cpu.Sort();frame.Sort();gpu.Sort();if(cpu.Count==0){rows.Add(new{kind="restoredPhoto",label});continue;}rows.Add(new{kind="frame",label,renderSubmitMedianMs=cpu[cpu.Count/2],renderSubmitP95Ms=cpu[(int)(cpu.Count*.95)],frameMedianMs=frame[frame.Count/2],frameP95Ms=frame[(int)(frame.Count*.95)],gpuMedianMs=gpu.Count>0?gpu[gpu.Count/2]:-1,gpuSamples=gpu.Count,activeLights=FindObjectsByType<Light>(FindObjectsSortMode.None).Count(l=>l.enabled&&l.type!=LightType.Directional)});
                 }
             }
             finally{Destroy(pixels);target.Release();Destroy(target);Time.timeScale=1f;}
         }
         private static Vector3 V(JToken token)=>new Vector3((float)token[0],(float)token[1],(float)token[2]);
-        private void Save()=>TeamMapVerification.Write("performance_"+TeamMapVerification.Stage+".json",rows);
+        private void Save()=>TeamMapVerification.Write(TeamMapVerification.Stage=="restored"?"restoration_capture.json":"performance_"+TeamMapVerification.Stage+".json",rows);
         private static void Set(object o,string n,object v)=>o.GetType().GetField(n,Any).SetValue(o,v);
         private static void Property(object o,string n,object v)=>o.GetType().GetProperty(n,Any).SetValue(o,v);
     }

@@ -103,7 +103,7 @@ namespace DeliveryRider.Editor
                 for(int j=0;j<=n;j++){var p=Vector3.Lerp(points[i-1],points[i],j/(float)n);output.Add(new Bounds(new Vector3(p.x,p.y+1,p.z),new Vector3(radius*2,2,radius*2)),reason);}
             }
         }
-        private static Bounds RotateBounds(Bounds local,Vector3 position,Quaternion rotation)
+        internal static Bounds RotateBounds(Bounds local,Vector3 position,Quaternion rotation)
         {
             var result=new Bounds(position+rotation*local.center,Vector3.zero);for(int x=-1;x<=1;x+=2)for(int y=-1;y<=1;y+=2)for(int z=-1;z<=1;z+=2)result.Encapsulate(position+rotation*(local.center+Vector3.Scale(local.extents,new Vector3(x,y,z))));return result;
         }
@@ -209,8 +209,18 @@ namespace DeliveryRider.Editor
             if(overlap.Count>0)throw new InvalidOperationException("Decorative protected-volume overlap remains: "+overlap.Count);
             foreach(var p in placed)if(p.Value>limits[p.Key])throw new InvalidOperationException("Team density exceeded: "+p.Key);
         }
+        internal static Func<Bounds,string> CreateBlocker(Scene scene)
+        {
+            var space=MakeProtected(scene);var roads=RoadsFor(scene).Roads;
+            return b=>
+            {
+                string reason=space.Hit(b);float radius=new Vector2(b.extents.x,b.extents.z).magnitude;
+                if(reason==null&&roads.Any(r=>r.FootprintContains(b.center,radius)&&r.DistanceToCentre(b.center)<r.HalfWidth+r.SidewalkWidth+radius+.12f))reason="roadOrSidewalk";
+                return reason;
+            };
+        }
         // Read-only check after reopening the saved scene, independent of the placement loop.
-        public static void Audit(Scene scene)
+        public static void Audit(Scene scene,int expectedCount=220)
         {
             var space=MakeProtected(scene);var roads=RoadsFor(scene).Roads;
             var groups=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<Transform>(true)).Where(t=>t.name=="StreetGreenery"||t.name=="EntranceDetails"||t.name=="StreetDetails").ToArray();
@@ -227,7 +237,7 @@ namespace DeliveryRider.Editor
                 if(!AssetDatabase.GetAssetPath(mesh).StartsWith(TeamMapDetailInstaller.Art+"/"))failures.Add(t.name+": non-team mesh");
             }
             TeamMapVerification.Write("saved_placement_audit.json",new{count,failures,colliderShapes="Tree: team1.16x3x1.16 at y1.5; other props: team mesh bounds; all scale1, solid",method="Saved scene reopened; full protected-volume and road/sidewalk checks repeated without changing placements"});
-            if(count!=220||failures.Count>0)throw new InvalidOperationException("Saved art audit failed: "+count+" "+string.Join("; ",failures.Take(10)));
+            if(count!=expectedCount||failures.Count>0)throw new InvalidOperationException("Saved art audit failed: "+count+" "+string.Join("; ",failures.Take(10)));
             Debug.Log("TEAM_MAP_SAVED_PLACEMENT_PASS count="+count+" overlap=0 colliderShapeDifferences=0");
         }
         private static float Distance(Vector3 p,Vector3 a,Vector3 b){p.y=a.y=b.y=0;var d=b-a;return Vector3.Distance(p,a+d*Mathf.Clamp01(Vector3.Dot(p-a,d)/Mathf.Max(.0001f,d.sqrMagnitude)));}
