@@ -232,10 +232,15 @@ namespace DeliveryRider
                     if (visibilityCamera == null || viewport.z > 0f && viewport.x >= -.1f && viewport.x <= 1.1f && viewport.y >= -.1f && viewport.y <= 1.1f)
                     { if(!active||slot.NeedsCallReset)slot.PauseKeepingVisuals(); continue; }
                 }
-                slot.StrikeAllowed = slot.Selected && CanStrike(slot) && !slot.Consumed;
-                slot.SetRuntimeActive(active,slot.NeedsCallReset);
-                slot.NeedsCallReset = false;
+                // Teardown may change food ownership and synchronously reenter through session.Changed.
+                // Remove the queue entry and finish its state before invoking component callbacks.
+                var order=rolledOrder;
+                bool reset=slot.NeedsCallReset;slot.NeedsCallReset=false;
                 pendingSlots.RemoveAt(i);
+                slot.StrikeAllowed = slot.Selected && CanStrike(slot) && !slot.Consumed;
+                slot.SetRuntimeActive(active,reset);
+                if(!ReferenceEquals(order,rolledOrder))return;
+                i=Mathf.Min(i,pendingSlots.Count);
             }
         }
 
