@@ -127,6 +127,18 @@ namespace DeliveryRider.Editor
                 Check(!File.ReadAllText(source).Contains(", ~0,"), "no everything-mask query in " + Path.GetFileName(source));
         }
 
+        // The tuning copy must not share a save folder with the team project.
+        public static void PrintDataPath()
+        {
+            string path = Application.persistentDataPath, team = "CapstoneGameEngine_Team_3_BaeminRider";
+            Debug.Log($"HazardZoneChecks DATAPATH product={PlayerSettings.productName} company={PlayerSettings.companyName} path={path} saveExists={File.Exists(Path.Combine(path, "save.json"))}");
+            string teamFolder = Path.Combine(Path.GetDirectoryName(path), team);
+            Debug.Log($"HazardZoneChecks TEAMPATH path={teamFolder} folderExists={Directory.Exists(teamFolder)} saveExists={File.Exists(Path.Combine(teamFolder, "save.json"))}");
+            bool separate = !string.Equals(Path.GetFileName(path), team, StringComparison.OrdinalIgnoreCase);
+            Debug.Log("HazardZoneChecks " + (separate ? "PASS" : "FAIL") + ": data path is separate from the team project.");
+            EditorApplication.Exit(separate ? 0 : 1);
+        }
+
         // On the real scene, day by day with the same walls ZoneBarrier would switch on: recovery and dropped food never
         // pick a point inside or behind a closed wall, and each wall really stands between the zones it separates.
         public static void RunBarrierAudit()
