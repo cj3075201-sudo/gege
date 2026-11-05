@@ -439,6 +439,7 @@ MonoBehaviour:
   spacing: 1.6
   hitRadius: 0.85
   blockingSeconds: 6
+  maximumCrossingWidth: 24
   boundarySearchDistance: 256
   boundaryStep: 0.2
   birdClearance: 0.5

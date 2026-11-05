@@ -83,6 +83,7 @@ namespace DeliveryRider
             { "maximumLeadDistance", "최대 앞지름 거리" }, { "arrivalMargin", "도착 여유" }, { "waitingSpacing", "대기 간격" },
             { "walkSpeed", "걷기 속도" }, { "CrossingFlockHazard.spacing", "오리 간격" }, { "hitRadius", "충돌 반경" },
             { "blockingSeconds", "길 전체 막는 시간(초)" }, { "boundarySearchDistance", "벽 탐색 최대 거리" },
+            { "maximumCrossingWidth", "최대 횡단 폭" },
             { "boundaryStep", "바닥 탐색 간격" }, { "birdClearance", "오리 벽 여유" }, { "maximumGroundStep", "허용 바닥 높이 차" },
             { "jumpReactionRange", "오리 점프 반응 거리" }, { "highFlightPassHeight", "높은 날림 통과 문턱" },
             { "duckJumpHeight", "오리 점프 높이" }, { "duckJumpSeconds", "오리 점프 시간(초)" },

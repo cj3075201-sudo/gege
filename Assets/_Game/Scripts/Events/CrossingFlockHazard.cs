@@ -23,7 +23,9 @@ namespace DeliveryRider
         [Tooltip("Time for which the moving queue covers the entire corridor simultaneously.")]
         [SerializeField, Min(0f)] private float blockingSeconds = 6f;
         [Header("벽과 바닥 탐색 (시험값)")]
-        [SerializeField, Min(1f)] private float boundarySearchDistance = 256f;
+        [Tooltip("Total horizontal width about the source road centre. Open ends permit a lateral detour. Never shrinks below the carriageway.")]
+        [SerializeField, Min(2f)] private float maximumCrossingWidth = 24f;
+        [SerializeField, HideInInspector] private float boundarySearchDistance = 256f; // Retain legacy data; no longer searches across the map.
         [SerializeField, Min(0.05f)] private float boundaryStep = 0.2f;
         [SerializeField, Min(0.5f)] private float birdClearance = 0.5f;
         [SerializeField, Min(0.01f)] private float maximumGroundStep = 0.4f;
@@ -52,18 +54,27 @@ namespace DeliveryRider
         private bool[] hopped = Array.Empty<bool>();
         private Vector3[] groundLine = Array.Empty<Vector3>();
         private bool placementValid = true;
+        private RoadNetwork placedGround;
+        private HazardCandidate placedSpot;
+        private bool hasPlacement;
+        private float preparedWidth;
         private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
 
         public void Place(DeliverySession owner, RoadNetwork ground, HazardCandidate spot)
         {
             session = owner;
+            placedGround = ground;
+            placedSpot = spot;
+            hasPlacement = true;
+            preparedWidth = maximumCrossingWidth;
             var center = transform.position;
             placementValid = TryFloor(center, out center);
             if (!placementValid) { HideBirds(); return; }
             var across = Vector3.ProjectOnPlane(transform.right, Vector3.up).normalized * (spot.side < 0 ? -1f : 1f);
-            Vector3 start = FindBoundary(center, across, out bool startClosed);
-            Vector3 end = FindBoundary(center, -across, out bool endClosed);
-            placementValid = startClosed && endClosed && Vector3.Distance(start, end) >= 1f;
+            CrossingLimits(ground, spot, across, out float startLimit, out float endLimit);
+            Vector3 start = FindBoundary(center, across, startLimit);
+            Vector3 end = FindBoundary(center, -across, endLimit);
+            placementValid = Vector3.Distance(start, end) >= 1f;
             localStart = transform.InverseTransformPoint(start);
             localEnd = transform.InverseTransformPoint(end);
             approachCenter = transform.InverseTransformPoint((start + end) * 0.5f) + Vector3.up;
@@ -74,29 +85,81 @@ namespace DeliveryRider
         }
 
         // Check supported feet, then the full duck volume. A kerb is support, not a wall.
-        private Vector3 FindBoundary(Vector3 center, Vector3 direction, out bool closed)
+        private Vector3 FindBoundary(Vector3 center, Vector3 direction, float limit)
         {
             Vector3 point = center;
-            closed = true;
             float step = Mathf.Max(0.05f, boundaryStep);
             var facing = Quaternion.LookRotation(direction);
-            for (float distance = 0f; distance < boundarySearchDistance; distance += step)
+            for (float distance = 0f; distance < limit - .001f;)
             {
-                var next = point + direction * step;
+                float travel = Mathf.Min(step, limit - distance);
+                var next = point + direction * travel;
                 if (!TrySupportedPoint(next, direction, out next) || Mathf.Abs(next.y - point.y) > maximumGroundStep)
                     return point;
-                int count = Physics.OverlapBoxNonAlloc(next + Vector3.up * .34f,
-                    new Vector3(.25f, .3f, birdClearance), placementOverlaps, facing, PlacementMask, QueryTriggerInteraction.Ignore);
+                // Reserve the whole jump envelope as well as the standing body, including facade overhangs.
+                float jump = duckJumpHeight * .5f;
+                int count = Physics.OverlapBoxNonAlloc(next + Vector3.up * (.34f + jump),
+                    new Vector3(.25f, .3f + jump, birdClearance), placementOverlaps, facing, PlacementMask, QueryTriggerInteraction.Ignore);
                 for (int i = 0; i < count; i++)
                 {
                     var collider = placementOverlaps[i];
                     if (collider.attachedRigidbody == null && !collider.transform.IsChildOf(transform)) return point;
                 }
                 point = next;
+                distance += travel;
             }
-            // An arbitrary scan limit is not a wall; suppress this unsuitable placement.
-            closed = false;
+            // A capped, supported open end is intentional: the rider can choose to go around it.
             return point;
+        }
+
+        private void CrossingLimits(RoadNetwork ground, HazardCandidate spot, Vector3 across, out float start, out float end)
+        {
+            float half = Mathf.Max(spot.halfWidth, maximumCrossingWidth * .5f);
+            start = end = half;
+            if (ground == null) return;
+            var roads = ground.Roads;
+            RoadSurface source = null;
+            float nearest = float.PositiveInfinity;
+            var center = Vector3.ProjectOnPlane(transform.position, Vector3.up);
+            var forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+            foreach (var road in roads)
+            {
+                Vector3 a = road.Container.EvaluatePosition(0f), b = road.Container.EvaluatePosition(1f);
+                a.y = b.y = 0f;
+                var line = b - a;
+                if (line.sqrMagnitude < .01f || Mathf.Abs(road.HalfWidth - spot.halfWidth) > .25f
+                    || Mathf.Abs(Vector3.Dot(line.normalized, forward)) < .95f) continue;
+                float t = Mathf.Clamp01(Vector3.Dot(center - a, line) / line.sqrMagnitude);
+                float distance = (center - Vector3.Lerp(a, b, t)).sqrMagnitude;
+                if (distance < nearest) { nearest = distance; source = road; }
+            }
+            foreach (var road in roads)
+            {
+                if (road == source) continue;
+                Vector3 a = road.Container.EvaluatePosition(0f), b = road.Container.EvaluatePosition(1f);
+                a.y = b.y = 0f;
+                var line = b - a;
+                if (line.sqrMagnitude < .01f) continue;
+                var along = line.normalized;
+                var right = Vector3.Cross(Vector3.up, along);
+                var offset = center - (a + b) * .5f;
+                float lo = -half - birdClearance, hi = half + birdClearance;
+                if (!ClipRoadAxis(Vector3.Dot(offset, along), Vector3.Dot(across, along), line.magnitude * .5f, ref lo, ref hi)
+                    || !ClipRoadAxis(Vector3.Dot(offset, right), Vector3.Dot(across, right), road.HalfWidth, ref lo, ref hi)) continue;
+                // Do not enter another street or continue along a junction arm beyond this road's own edge.
+                float ownEdge = spot.halfWidth + birdClearance;
+                if (hi > spot.halfWidth + .01f) start = Mathf.Min(start, Mathf.Max(ownEdge, lo - birdClearance));
+                if (lo < -spot.halfWidth - .01f) end = Mathf.Min(end, Mathf.Max(ownEdge, -hi - birdClearance));
+            }
+        }
+
+        private static bool ClipRoadAxis(float origin, float direction, float half, ref float lo, ref float hi)
+        {
+            if (Mathf.Abs(direction) < .0001f) return Mathf.Abs(origin) <= half;
+            float a = (-half - origin) / direction, b = (half - origin) / direction;
+            lo = Mathf.Max(lo, Mathf.Min(a, b));
+            hi = Mathf.Min(hi, Mathf.Max(a, b));
+            return lo <= hi;
         }
 
         private bool TrySupportedPoint(Vector3 point, Vector3 along, out Vector3 floor)
@@ -165,7 +228,15 @@ namespace DeliveryRider
 
         private void FixedUpdate()
         {
-            if (session == null || session.IsPaused || session.IsSettled || !placementValid) return;
+            if (session == null || session.IsPaused || session.IsSettled) return;
+            if (hasPlacement && !Mathf.Approximately(preparedWidth, maximumCrossingWidth))
+            {
+                float traveled = Mathf.Max(0f, head - configuredSpan);
+                Place(session, placedGround, placedSpot);
+                if (phase == Phase.Crossing) head = configuredSpan + traveled;
+                if (phase == Phase.Spent) HideBirds();
+            }
+            if (!placementValid) return;
             EnsureFlock(); // Rebuild only when an F1 value actually changes, including trigger scale.
             if (session.IsMapOpen && phase == Phase.Crossing) { Finish(); return; }
             switch (phase)
