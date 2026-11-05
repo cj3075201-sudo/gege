@@ -162,7 +162,7 @@ namespace DeliveryRider
             Vector3 result = point;
             foreach (var road in roads)
             {
-                if (road == null) continue;
+                if (road == null || !road.FootprintContains(point,Mathf.Max(0f,closest))) continue;
                 var spline = road.Container;
                 SplineUtility.GetNearestPoint(spline.Spline, (float3)spline.transform.InverseTransformPoint(point), out float3 nearest, out _, 4, 2);
                 var center = spline.transform.TransformPoint(nearest);
