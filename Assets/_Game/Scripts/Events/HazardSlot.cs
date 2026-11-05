@@ -74,6 +74,11 @@ namespace DeliveryRider
             pausedBodies=GetComponentsInChildren<Rigidbody>(true);bodyKinematic=new bool[pausedBodies.Length];
             for(int i=0;i<pausedBodies.Length;i++){bodyKinematic[i]=pausedBodies[i].isKinematic;pausedBodies[i].isKinematic=true;}
             foreach(var controller in controllers)if(controller!=null)controller.enabled=false;
+            if(GetComponent<CloneRiderHazard>()!=null)
+            {
+                foreach(var volume in volumes)if(volume!=null)volume.enabled=false;
+                visualsPaused=true;return;
+            }
             for(int i=0;i<nodes.Length;i++)if(nodes[i]!=null){nodes[i].localPosition=positions[i];nodes[i].localRotation=rotations[i];if(nodes[i]!=transform)nodes[i].gameObject.SetActive(states[i]);}
             for(int i=0;i<visuals.Length;i++)if(visuals[i]!=null)visuals[i].enabled=visible[i];
             foreach(var volume in volumes)if(volume!=null)volume.enabled=false;
