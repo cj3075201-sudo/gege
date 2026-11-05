@@ -203,7 +203,7 @@ namespace DeliveryRider
                     if (Time.time >= getUpStartedAt + getUpSeconds)
                     {
                         nextTrafficHitAt = Mathf.Max(nextTrafficHitAt, Time.time + 1f);
-                        if (safeRecovery == null || safeRecovery.IsSafe(body.position)) spawn = body.position;
+                        if (SpawnAllowedHere) spawn = body.position;
                         SetReactionState(RiderReactionState.Normal);
                     }
                     break;

@@ -346,6 +346,7 @@ namespace DeliveryRider
             }
             KnockPedestriansAhead();
             if (TickReaction()) return;
+            if (TryReturnFromClosedZone()) return;
             var forward = Vector3.ProjectOnPlane(view.forward, Vector3.up).normalized;
             var right = Vector3.ProjectOnPlane(view.right, Vector3.up).normalized;
             var direction = session.CanMove ? forward * movement.y + right * movement.x : Vector3.zero;
@@ -393,7 +394,7 @@ namespace DeliveryRider
                 body.linearVelocity = tangent;
                 // Cancel gravity only while grounded; airborne accident impulses remain untouched.
                 body.AddForce(-Physics.gravity, ForceMode.Acceleration);
-                if (session.CanMove && (safeRecovery == null || safeRecovery.IsSafe(body.position))) spawn = body.position;
+                if (session.CanMove && SpawnAllowedHere) spawn = body.position;
             }
             else body.linearVelocity = new Vector3(horizontal.x, current.y, horizontal.z);
             if (direction.sqrMagnitude > 0.01f)

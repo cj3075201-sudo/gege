@@ -2,7 +2,9 @@ using UnityEngine;
 
 namespace DeliveryRider
 {
-    // A rider thrown into a closed zone hops back to the nearest open road once they stop tumbling.
+    // A rider who ends up in a closed zone hops back to the nearest open road: after a tumble once they stop, otherwise
+    // whenever they are found standing there (a jump round a wall end, landing on a wall, pushed by a car). Crossing in
+    // the air is fine; only standing counts.
     // The arc is fixed and passes through walls, like a recovery; food, order and timers are left alone.
     public sealed partial class RiderMotor
     {
@@ -14,6 +16,9 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float zoneHopHeightPerMeter = 0.054f;
         [Tooltip("Share of the hop's horizontal speed kept on landing.")]
         [SerializeField, Range(0f, 1f)] private float zoneHopKeptSpeed = 0.3f;
+        [Tooltip("How often a rider standing normally is checked for being in a closed zone. A failed search is retried at the next check.")]
+        [SerializeField, Min(0.02f)] private float zoneCheckSeconds = 0.25f;
+        private float nextZoneCheckAt;
         private HazardZoneFilter openRoads;
         private bool zoneHopping;
         private Vector3 zoneHopFrom, zoneHopTo;
@@ -38,6 +43,17 @@ namespace DeliveryRider
             float k = Mathf.Clamp01(progress);
             return Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * arc);
         }
+
+        private bool TryReturnFromClosedZone()
+        {
+            if (Time.time < nextZoneCheckAt) return false;
+            nextZoneCheckAt = Time.time + zoneCheckSeconds;
+            return groundedForHazards && !normalJumpActive && !session.IsSettled && TryBeginZoneHop();
+        }
+
+        // A closed-zone position must never become the place to recover to.
+        private bool SpawnAllowedHere => (safeRecovery == null || safeRecovery.IsSafe(body.position))
+            && (OpenRoads == null || OpenRoads.PointOpen(body.position));
 
         private bool TryBeginZoneHop()
         {

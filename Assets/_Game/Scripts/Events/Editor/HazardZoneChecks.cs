@@ -62,7 +62,11 @@ namespace DeliveryRider.Editor
                 Check(onlyC.LandingClosed(closedCentre, true), "landing on a closed road");
                 Check(onlyC.LandingClosed(new Vector3(103f, 0f, 50f), true), "landing on a road just past the wall");
                 Check(onlyC.LandingClosed(new Vector3(100f, 0f, 50f), true), "landing on the border itself");
-                Check(!onlyC.LandingClosed(new Vector3(99.5f, 0f, 50f), true), "resting against the wall on the open side is not a closed landing");
+                Check(!onlyC.LandingClosed(new Vector3(100f - 0.8f, 0f, 50f), true), "standing against the wall on the open side is not a closed landing");
+                Check(HazardZoneFilter.OnWallReach >= 0.3f && HazardZoneFilter.OnWallReach < 0.8f, "on-wall reach covers the wall's top and not a rider beside it");
+                Check(onlyC.LandingClosed(new Vector3(100f - 0.29f, 0f, 50f), true), "standing on top of the wall, open half");
+                Check(onlyC.LandingClosed(new Vector3(100f + 0.29f, 0f, 50f), true), "standing on top of the wall, closed half");
+                Check(!new HazardZoneFilter(map, _ => true).LandingClosed(new Vector3(100f, 0f, 50f), true), "no wall between two open zones");
                 Check(!onlyC.LandingClosed(centre, false), "off road inside an open zone");
                 Check(onlyC.LandingClosed(closedCentre, false), "off road inside a closed zone");
                 Check(onlyC.LandingClosed(new Vector3(500f, 0f, 500f), false), "off road outside every zone");
@@ -162,6 +166,7 @@ namespace DeliveryRider.Editor
                 // Each wall has exactly its two zones on its two sides, and each barricade sits on such a border.
                 int wallSamples = 0, walls = 0, barricades = 0;
                 var sources = new List<Vector3>();
+                var onTop = new List<(Vector3 point, ZoneBarrier barrier)>();
                 foreach (var barrier in barriers)
                 {
                     foreach (var wall in barrier.GetComponentsInChildren<BoxCollider>(true))
@@ -179,6 +184,17 @@ namespace DeliveryRider.Editor
                             sources.Add(at);
                             foreach (float out_ in new[] { 2f, 6f, 12f }) { sources.Add(at + wall.transform.right * out_); sources.Add(at - wall.transform.right * out_); }
                         }
+                        // Wall ends, where a jump can round the wall, and its top, where a launch can land.
+                        foreach (float end in new[] { -half, half })
+                        {
+                            var tip = wall.transform.position + wall.transform.forward * end;
+                            foreach (float past in new[] { 0f, 1f, 2.6f, 5.2f })
+                                foreach (float across in new[] { -5.2f, -2.6f, -0.9f, 0f, 0.9f, 2.6f, 5.2f })
+                                    sources.Add(tip + wall.transform.forward * (Mathf.Sign(end) * past) + wall.transform.right * across);
+                        }
+                        for (float d = -half; d <= half; d += 2f)
+                            foreach (float across in new[] { -0.29f, 0f, 0.29f })
+                                onTop.Add((wall.transform.position + wall.transform.forward * d + wall.transform.right * across, barrier));
                     }
                     foreach (Transform child in barrier.transform)
                     {
@@ -239,6 +255,17 @@ namespace DeliveryRider.Editor
                             if (recovery.LandedClosed(hop, filter)) throw new InvalidOperationException($"day {d + 1}: hop from {from} ends at {hop}, again a closed landing");
                         }
                     }
+                    // A rider standing on top of a wall that is up this day is a closed landing and hops to an open road.
+                    int topChecks = 0;
+                    foreach (var (point, barrier) in onTop)
+                    {
+                        if (required[barrier].All(z => open.Contains(z))) continue;
+                        topChecks++;
+                        if (!recovery.LandedClosed(point, filter)) throw new InvalidOperationException($"day {d + 1}: standing on the wall at {point} is not a closed landing");
+                        if (!recovery.TryFindOpenRoad(point, filter, out var off)) throw new InvalidOperationException($"day {d + 1}: no open road from the wall at {point}");
+                        Verify("hop from wall top", point, off);
+                    }
+                    Debug.Log($"HazardZoneChecks ok: day {d + 1}: {topChecks} points on top of closed walls all count as closed landings");
                     Debug.Log($"HazardZoneChecks ok: day {d + 1} open {string.Concat(open)}: {sources.Count} sources, {picks} picked points, {hops} closed landings, none in or behind a wall");
                 }
 
@@ -278,6 +305,8 @@ namespace DeliveryRider.Editor
                 Check(!dayOne.PointOpen(onWall), "a point on a closed wall is not open");
                 Check(!dayOne.PointOpen(new Vector3(-84f, 0f, -44.19f)), "day 1: the old recovery point behind the A wall is closed");
                 Check(recovery.LandedClosed(new Vector3(-84f, 0f, -44.19f), dayOne), "day 1: resting at the old recovery point is a closed landing");
+                Check(!recovery.LandedClosed(player.transform.position, dayOne) && dayOne.PointOpen(player.transform.position), "day 1: the rider's start is open");
+                CheckStandingReturn(player, session, recovery, new Vector3(-30f, 0f, 0f));
                 Debug.Log("HazardZoneChecks PASS: barrier audit.");
                 EditorApplication.Exit(0);
             }
@@ -286,6 +315,44 @@ namespace DeliveryRider.Editor
                 Debug.LogError("HazardZoneChecks FAIL: " + failure.Message);
                 EditorApplication.Exit(1);
             }
+        }
+
+        // The real motor, not just the rule: standing in a closed zone starts a hop, in the air it does not, and food stays.
+        private static void CheckStandingReturn(GameObject player, DeliverySession session, RiderSafeRecovery recovery, Vector3 closed)
+        {
+            const System.Reflection.BindingFlags any = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+            var motor = player.GetComponent<RiderMotor>();
+            void Set(string field, object value) => typeof(RiderMotor).GetField(field, any).SetValue(motor, value);
+            object Get(string field) => typeof(RiderMotor).GetField(field, any).GetValue(motor);
+            object Call(string method) => typeof(RiderMotor).GetMethod(method, any).Invoke(motor, null);
+            typeof(DeliverySession).GetField("openZones", any).SetValue(session, new List<string> { "C" });
+            typeof(DeliverySession).GetProperty("Stage").SetValue(session, DeliveryStage.Carrying);
+            typeof(RiderSafeRecovery).GetMethod("Awake", any).Invoke(recovery, null);
+            Call("Awake");
+            var body = player.GetComponent<Rigidbody>();
+            player.transform.position = closed;
+            body.position = closed;
+            Physics.SyncTransforms();
+            Check(!(bool)typeof(RiderMotor).GetProperty("SpawnAllowedHere", any).GetValue(motor), "a closed-zone position is never saved as the recovery spot");
+
+            Set("groundedForHazards", false);
+            Set("nextZoneCheckAt", 0f);
+            Check(!(bool)Call("TryReturnFromClosedZone") && !(bool)Get("zoneHopping"), "crossing a closed zone in the air starts no hop");
+
+            Set("groundedForHazards", true);
+            Set("nextZoneCheckAt", 0f);
+            Check((bool)Call("TryReturnFromClosedZone") && (bool)Get("zoneHopping"), "standing in a closed zone starts a hop");
+            var target = (Vector3)Get("zoneHopTo");
+            Check(session.ZoneMap.ZoneAt(target) == "C", "the hop goes to the open zone");
+            Check(session.Stage == DeliveryStage.Carrying, "the hop leaves the food alone");
+
+            Set("nextZoneCheckAt", Time.time + 1f);
+            Call("CancelZoneHop");
+            Check(!(bool)Call("TryReturnFromClosedZone"), "between checks nothing runs");
+            Set("nextZoneCheckAt", 0f);
+            typeof(DeliverySession).GetField("openZones", any).SetValue(session, new List<string>());
+            motor.GetType().GetField("openRoads", any).SetValue(motor, null);
+            Check(!(bool)Call("TryReturnFromClosedZone") && (float)Get("nextZoneCheckAt") > Time.time, "no open road: no hop, retried at the next check");
         }
 
         private static int PrefabMask(string path, Type component, string field)

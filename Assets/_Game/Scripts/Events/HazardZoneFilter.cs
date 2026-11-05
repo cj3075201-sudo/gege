@@ -11,7 +11,9 @@ namespace DeliveryRider
     {
         // Half a wall (0.3 m) + the rider's radius (0.5 m) + a margin, so nothing starts inside a wall.
         public const float WallClearance = 1f;
-        private const float RoadSampleSpacing = 4f, OnEdge = 0.0001f;
+        // A rider's centre this near a closed border is standing on the wall: beside it, the capsule keeps it 0.8 m away.
+        public const float OnWallReach = 0.35f;
+        private const float RoadSampleSpacing = 4f;
         private readonly ZoneMap zones;
         private readonly Func<string, bool> isZoneOpen;
 
@@ -24,11 +26,11 @@ namespace DeliveryRider
         // May something be put here today? Not in a closed zone, and not against one of its walls.
         public bool PointOpen(Vector3 position) => zones == null || !ClosedWithin(position, WallClearance);
 
-        // Did a rider come to rest in the wrong place? On or past a closed border, or off road outside every zone.
+        // Did a rider come to rest in the wrong place? Past a closed border, on top of its wall, or off road outside every zone.
         public bool LandingClosed(Vector3 position, bool onRoad)
         {
             if (zones == null) return false;
-            return ClosedWithin(position, OnEdge) || !onRoad && zones.ZoneAt(position) == null;
+            return ClosedWithin(position, OnWallReach) || !onRoad && zones.ZoneAt(position) == null;
         }
 
         // Share of the whole road length open today; counts in the settings are for the whole map.
