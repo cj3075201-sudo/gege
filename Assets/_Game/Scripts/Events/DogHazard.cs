@@ -39,6 +39,7 @@ namespace DeliveryRider
         private float feedbackUntil;
         private Camera viewCamera;
         private Vector3 heading, previous, home;
+        private Quaternion homeRotation;
         private float TriggerScale => slot != null ? slot.TriggerScale : 1f;
 
         public void Place(DeliverySession owner, RoadNetwork network, HazardCandidate spot)
@@ -52,7 +53,7 @@ namespace DeliveryRider
             slot = GetComponent<HazardSlot>();
             viewCamera = Camera.main;
             path = new PursuitHazardPath(session, ground, transform);
-            home = dog.localPosition;
+            home = dog.localPosition;homeRotation=dog.localRotation;
             foreach (var shape in dog.GetComponentsInChildren<Collider>(true))
                 foreach (var playerShape in rider.GetComponents<Collider>()) Physics.IgnoreCollision(shape, playerShape);
             dog.gameObject.SetActive(false);
@@ -61,6 +62,8 @@ namespace DeliveryRider
         private void OnEnable()
         {
             if (rider == null) return;
+            dog.SetLocalPositionAndRotation(home,homeRotation);
+            elapsed=travelled=0f;feedbackUntil=0f;
             rider.SafePositionRestored += Stop;
             rider.HazardHit += OnHazardHit;
             order = session.ActiveOrder;
