@@ -254,6 +254,8 @@ namespace DeliveryRider
             var body = target.attachedRigidbody;
             if (body == null || struck.Contains(body)) return;
             if (!body.TryGetComponent<RiderMotor>(out var player) && !body.TryGetComponent<TrafficPedestrian>(out _)) return;
+            // The food may be gone since the rush started: the runner passes the rider but still bowls over walkers.
+            if (player != null && slot != null && !slot.StrikeAllowed) return;
             struck.Add(body);
             var right = Vector3.Cross(Vector3.up, forward).normalized;
             float side = Vector3.Dot(body.position - runner.position, right) >= 0f ? 1f : -1f;

@@ -132,6 +132,9 @@ namespace DeliveryRider
                 for (int i = 0; i < birds.Length; i++) if (!attached[i]) birds[i].gameObject.SetActive(false);
                 if (!hasAttachedBirds) { Finish(); return; }
             }
+            bool mayStrike = slot == null || slot.StrikeAllowed;
+            // Losing the food shakes off attached birds at once, which also ends the slowdown.
+            if (hasAttachedBirds && !mayStrike) EndAttachedBirds();
             if (hasAttachedBirds)
             {
                 if (!rider.HasChickenAttachment(this))
@@ -173,7 +176,7 @@ namespace DeliveryRider
                 // Sweep the travelled segment so fast birds can touch the rider between fixed frames.
                 var flatStep = Vector3.ProjectOnPlane(position - before, Vector3.up);
                 float t = flatStep.sqrMagnitude > 0.0001f ? Mathf.Clamp01(Vector3.Dot(feet - before, flatStep) / flatStep.sqrMagnitude) : 0f;
-                if (Near(Vector3.Lerp(before, position, t), contactRadius) && !rider.IsRecovering)
+                if (mayStrike && Near(Vector3.Lerp(before, position, t), contactRadius) && !rider.IsRecovering)
                 {
                     if (rider.TryAttachChicken(this, attachmentSeconds, extraAttachmentSeconds)) { attached[i] = true; hasAttachedBirds = true; }
                 }

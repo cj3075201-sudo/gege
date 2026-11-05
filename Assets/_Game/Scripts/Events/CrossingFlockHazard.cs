@@ -131,7 +131,7 @@ namespace DeliveryRider
                 birds[i].position = Vector3.Lerp(start, end, along / length);
                 birds[i].rotation = Quaternion.LookRotation(end - start);
                 Vector3 offset = player - birds[i].position;
-                if (hitThisCrossing || Mathf.Abs(offset.y) > 1.8f || new Vector2(offset.x, offset.z).sqrMagnitude > hitRadius * hitRadius) continue;
+                if (hitThisCrossing || slot != null && !slot.StrikeAllowed || Mathf.Abs(offset.y) > 1.8f || new Vector2(offset.x, offset.z).sqrMagnitude > hitRadius * hitRadius) continue;
                 hitThisCrossing = true;
                 var push = Vector3.ProjectOnPlane(offset, Vector3.up).normalized;
                 if (push.sqrMagnitude < 0.01f) push = -transform.forward;

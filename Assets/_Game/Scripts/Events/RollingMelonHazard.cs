@@ -116,6 +116,8 @@ namespace DeliveryRider
         public void Contact(RollingMelon melon, RiderMotor target)
         {
             if (phase != Phase.Rolling || melon == null || target != rider || session.IsMapOpen || session.IsSettled) return;
+            // The food may be gone since this wave started: the melon rolls out its wave without a hit.
+            if (slot != null && !slot.StrikeAllowed) return;
             var away = Vector3.ProjectOnPlane(rider.transform.position - melon.transform.position, Vector3.up);
             if (away.sqrMagnitude < 0.0001f) away = -rider.transform.forward;
             // Each melon is its own source, so the next one can hit again once the 0.35 s hit gap has passed.

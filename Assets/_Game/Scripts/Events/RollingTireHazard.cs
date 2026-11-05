@@ -214,7 +214,8 @@ namespace DeliveryRider
                     else obstruction = Mathf.Min(obstruction, hit.distance);
                 }
             }
-            if (!hitThisCycle && playerDistance <= distance && playerDistance < obstruction)
+            // The food may be gone since the tire started: it keeps rolling and can still hit if the food comes back.
+            if (!hitThisCycle && (slot == null || slot.StrikeAllowed) && playerDistance <= distance && playerDistance < obstruction)
             {
                 hitThisCycle = true;
                 Vector3 push = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
