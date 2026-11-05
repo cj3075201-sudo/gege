@@ -174,6 +174,8 @@ namespace DeliveryRider
             switch (ReactionState)
             {
                 case RiderReactionState.Airborne:
+                    // Reserved legacy branch: current traffic/hazard launch paths keep physicalTumble false,
+                    // so vehicle accidents use the same ordinary floor-bounce response as other launches.
                     if (physicalTumble)
                     {
                         if (groundedForHazards && body.linearVelocity.y > -minimumBounceSpeed) SetReactionState(RiderReactionState.Rolling);

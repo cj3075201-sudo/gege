@@ -40,7 +40,7 @@ namespace DeliveryRider
         [SerializeField, Min(0.1f)] private float punchRange = 2.6f;
         [SerializeField, Min(0f)] private float idleTrackSpeed = 3.8f;
         [SerializeField, Min(0f)] private float idleTrackDistance = 12f;
-        [Header("Launch velocities — already converted from HTML gravity 22 to 9.81")]
+        [Header("Launch velocities — HTML values with accident gravity 2.24")]
         [SerializeField, Min(0f)] private float jabForward = 11f;
         [SerializeField, Min(0f)] private float jabUp = 5.5f;
         [SerializeField, Min(0f)] private float hookSide = 15f;

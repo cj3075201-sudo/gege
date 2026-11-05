@@ -25,7 +25,7 @@ namespace DeliveryRider
         [SerializeField, Min(1f)] private float dashSpeedMultiplier = 1.55f;
         [SerializeField, Min(0f)] private float dashSteering = 1.1f;
         [SerializeField, Min(0.1f)] private float obstacleRadius = 0.45f;
-        [Tooltip("Keep HTML horizontal speed 5; only vertical velocity scales by 9.81/22 to preserve flight time and distance.")]
+        [Tooltip("HTML wall rebound: horizontal speed 5 and upward speed 9, with accident gravity scale 2.24.")]
         [SerializeField, Min(0f)] private float bounceSpeed = 5f;
         [SerializeField, Min(0f)] private float bounceLift = 9f;
         private RiderMotor rider;
