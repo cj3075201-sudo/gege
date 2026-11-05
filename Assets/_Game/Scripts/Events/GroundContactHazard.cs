@@ -83,6 +83,19 @@ namespace DeliveryRider
             return Physics.ComputePenetration(volume,transform.position,transform.rotation,playerShape,
                 playerShape.transform.position,playerShape.transform.rotation,out _,out _);
         }
+        // Recovery also avoids a cooling-down burst: it may rearm after the one-second guard ends.
+        public bool BlocksRecovery(CapsuleCollider shape, Vector3 position)
+        {
+            if (!isActiveAndEnabled || !CanStrike || kind == GroundHazardKind.Melon || volume == null || !volume.enabled) return false;
+            var bounds = volume.bounds; var playerBounds = shape.bounds;
+            playerBounds.center += position - shape.transform.position;
+            var planar = Vector3.ProjectOnPlane(position - transform.position, Vector3.up);
+            float scale = slot != null ? slot.TriggerScale : 1f;
+            if (playerBounds.min.y <= bounds.max.y + .5f && playerBounds.max.y >= bounds.min.y - .2f
+                && planar.sqrMagnitude <= landingRadius * landingRadius * scale * scale) return true;
+            return bounds.Intersects(playerBounds) && Physics.ComputePenetration(volume, transform.position, transform.rotation,
+                shape, position, shape.transform.rotation, out _, out _);
+        }
         private void TryContact()
         {
             if (contactConsumed || session.IsMapOpen || kind == GroundHazardKind.Melon && !rider.IsGroundedForHazards) return;

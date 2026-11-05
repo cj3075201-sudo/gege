@@ -128,8 +128,12 @@ namespace DeliveryRider
             SetReactionState(RiderReactionState.Normal);
         }
 
-        private void RestoreSafePosition()
+        private void RestoreSafePosition() => RestoreSafePositionFor("Manual");
+        private void RestoreSafePositionFor(string reason)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"RIDER_RECOVERY reason={reason} time={Time.time:F3} from={body.position:F2} age={Time.time-reactionStartedAt:F3} still={noProgressTime:F3} supported={IsReactionGrounded}");
+#endif
             CancelZoneHop();
             Vector3 destination = spawn;
             if (safeRecovery != null) destination = safeRecovery.FindSafePosition(body.position, spawn, OpenRoads);
@@ -137,7 +141,7 @@ namespace DeliveryRider
             body.linearVelocity = body.angularVelocity = Vector3.zero;
             spawn = destination;
             ResetReaction();
-            nextTrafficHitAt = Time.time + 1f;
+            safeRecoveryGuardUntil = nextTrafficHitAt = Time.time + 1f;
             SafePositionRestored?.Invoke();
         }
 
@@ -168,7 +172,7 @@ namespace DeliveryRider
             if (!IsReactionGrounded && (Time.time - reactionStartedAt >= accidentTimeout
                 || noProgressTime >= stuckSeconds && body.linearVelocity.magnitude <= getUpSpeed))
             {
-                RestoreSafePosition();
+                RestoreSafePositionFor(Time.time - reactionStartedAt >= accidentTimeout ? "AccidentTimeout" : "Stuck");
                 return true;
             }
             switch (ReactionState)

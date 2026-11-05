@@ -44,6 +44,7 @@ namespace DeliveryRider
         private CapsuleCollider capsule;
         private float trafficRecoveryUntil;
         private float nextTrafficHitAt;
+        private float safeRecoveryGuardUntil;
         private float nextRelaunchAt;
         private bool trafficRecoveryActive;
         private UnityEngine.Object lastHazard;
@@ -196,7 +197,7 @@ namespace DeliveryRider
             if (repeatContact)
             {
                 // Each melon is consumed on contact, so a new melon can restart the accident reaction.
-                if (zoneHopping || source == null || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
+                if (Time.time < safeRecoveryGuardUntil || zoneHopping || source == null || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
                 hazardChainCount = lastHazard != null && Time.time - lastHazardHitAt <= 8f ? hazardChainCount + 1 : 1;
                 lastHazard = source;
                 lastHazardHitAt = Time.time;
@@ -233,7 +234,7 @@ namespace DeliveryRider
 
         private bool AcceptHazard(UnityEngine.Object source)
         {
-            if (zoneHopping || source == null || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
+            if (Time.time < safeRecoveryGuardUntil || zoneHopping || source == null || session == null || session.IsPaused || session.IsMapOpen || session.IsSettled) return false;
             bool chain = lastHazard != null && lastHazard != source && Time.time - lastHazardHitAt <= 8;
             if (Time.time - lastHazardHitAt < 0.35f) return false;
             if (!chain && (IsRecovering || Time.time < nextTrafficHitAt)) return false;
@@ -362,7 +363,7 @@ namespace DeliveryRider
             bool belowSafeGround = followSlopes && body.position.y < spawn.y - safeFallDepth;
             if (body.position.y < recoveryHeight || belowSafeGround)
             {
-                RestoreSafePosition();
+                RestoreSafePositionFor("BelowGround");
                 return;
             }
             KnockPedestriansAhead();
