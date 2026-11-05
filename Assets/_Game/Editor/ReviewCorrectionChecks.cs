@@ -16,7 +16,7 @@ namespace DeliveryRider.Editor
             var failures=new List<string>();
             foreach(var item in new[]{("M2",(Action)Schedules),("M3",(Action)FoodGravity)})
             {
-                if(!MeasureRunner.Arg("-reviewCases","M2").Split(',').Contains(item.Item1))continue;
+                if(!MeasureRunner.Arg("-reviewCases","M2,M3").Split(',').Contains(item.Item1))continue;
                 try{item.Item2();Debug.Log("REVIEW_CHECK_PASS "+item.Item1);}
                 catch(Exception error){string detail=item.Item1+": "+(error is TargetInvocationException&&error.InnerException!=null?error.InnerException:error);failures.Add(detail);Debug.LogError("REVIEW_CHECK_FAIL "+detail);}
             }

@@ -18,6 +18,14 @@ namespace DeliveryRider.Editor
             EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);
             Debug.Log("REVIEW_INSTALL five days, day5 copies day4; day6+ capped at5");
         }
+        public static void ApplyFoodGravity()
+        {
+            var scene=EditorSceneManager.OpenScene(MeasureRunner.ScenePath,OpenSceneMode.Single);
+            var so=new SerializedObject(UnityEngine.Object.FindFirstObjectByType<HazardPlanner>());
+            so.FindProperty("foodExtraUp").floatValue=5f;so.ApplyModifiedPropertiesWithoutUndo();
+            EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);
+            Debug.Log("REVIEW_INSTALL food uses accident gravity and HTML extra-up5");
+        }
         private static void Extend(UnityEngine.Object target,string name)
         {
             var so=new SerializedObject(target);var field=so.FindProperty(name);

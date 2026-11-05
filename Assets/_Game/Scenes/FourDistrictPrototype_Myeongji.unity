@@ -2995,7 +2995,7 @@ MonoBehaviour:
   foodSpeedShare: 0.55
   foodSpreadSpeed: 5
   foodUpShare: 0.7
-  foodExtraUp: 2.23
+  foodExtraUp: 5
   hazardCountScale: 1
   hazardTriggerScale: 1
 --- !u!4 &32693208

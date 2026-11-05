@@ -25,7 +25,7 @@ namespace DeliveryRider
         [SerializeField, Min(0f)] private float foodSpreadSpeed = 5f;
         [Tooltip("Upward speed = rider's launch upward speed x this + foodExtraUp.")]
         [SerializeField, Min(0f)] private float foodUpShare = 0.7f;
-        [SerializeField, Min(0f)] private float foodExtraUp = 2.23f;
+        [SerializeField, Min(0f)] private float foodExtraUp = 5f;
         [Header("함정 배율")]
         [Tooltip("종류별 열린 구역 개수를 계산한 뒤 곱합니다. 사건 다시 배치로 적용합니다.")]
         [SerializeField, Range(0.25f, 5f)] private float hazardCountScale = 1f;
@@ -175,7 +175,7 @@ namespace DeliveryRider
                 + new Vector3(Random.Range(-foodSpreadSpeed, foodSpreadSpeed), 0f, Random.Range(-foodSpreadSpeed, foodSpreadSpeed));
             float up = Mathf.Max(0f, launch.y) * foodUpShare + foodExtraUp;
             var start = rider.transform.position;
-            var landing = start + sideways * (2f * up / Mathf.Max(0.01f, -Physics.gravity.y));
+            var landing = start + sideways * (2f * up / Mathf.Max(0.01f, -Physics.gravity.y * rider.AccidentGravityScale));
             var recovery = rider.GetComponent<RiderSafeRecovery>();
             if (recovery != null) landing = FoodRestingPoint(recovery, session.ZoneMap != null ? openRoads : null, landing, start);
             droppedFood = new GameObject("DroppedFood").AddComponent<DroppedFood>();
